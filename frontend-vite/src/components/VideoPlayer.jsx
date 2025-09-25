@@ -85,12 +85,13 @@ const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner }) =
     navigate(`/profile/${video.user.username}`);
   };
 
-  const getVideoUrl = () => {
-    if (video.videoUrl.startsWith('http')) {
-      return video.videoUrl;
-    }
-    return `http://localhost:5000${video.videoUrl}`;
-  };
+const getVideoUrl = () => {
+  if (video.videoUrl.startsWith('http')) {
+    return video.videoUrl;
+  }
+  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  return `${baseURL}${video.videoUrl}`;
+};
 
   const getProfileImageUrl = () => {
     if (!video.user.profileImage) return '/default-avatar.png';

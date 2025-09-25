@@ -1,0 +1,46 @@
+.reply-swiper-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 10;
+}
+
+.reply-indicator {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 20px;
+  border-radius: 20px;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+}
+
+.reply-indicator span {
+  color: #fff;
+  font-size: 14px;
+}
+
+.reply-swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.reply-swiper .swiper-button-next,
+.reply-swiper .swiper-button-prev {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+}
+
+.reply-swiper .swiper-button-next::after,
+.reply-swiper .swiper-button-prev::after {
+  font-size: 20px;
+}

@@ -1,0 +1,138 @@
+.video-player {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background-color: #000;
+}
+
+.video-player video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+.video-info {
+  position: absolute;
+  bottom: 100px;
+  left: 20px;
+  right: 80px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+  border: 2px solid #fff;
+}
+
+.username {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.description {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-top: 10px;
+}
+
+.video-actions {
+  position: absolute;
+  right: 20px;
+  bottom: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.action-btn svg {
+  font-size: 24px;
+  margin-bottom: 2px;
+}
+
+.action-btn span {
+  font-size: 12px;
+}
+
+.action-btn.liked {
+  color: #fe2c55;
+}
+
+.delete-btn {
+  background: rgba(255, 0, 0, 0.2);
+}
+
+.delete-btn:hover {
+  background: rgba(255, 0, 0, 0.4);
+}
+
+.delete-confirm {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirm-dialog {
+  background: #1a1a1a;
+  padding: 30px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.confirm-dialog p {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn-danger {
+  background-color: #ff4458;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #e63946;
+}

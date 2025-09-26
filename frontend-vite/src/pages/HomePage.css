@@ -962,3 +962,291 @@
 }
 
 /* ==================== نهاية الملف ==================== */
+/* أضف هذا في نهاية HomePage.css */
+
+/* ==================== Video Error State ==================== */
+.video-error {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+  color: #666;
+  font-family: 'Cairo', sans-serif;
+  text-align: center;
+  padding: 20px;
+}
+
+.video-error p {
+  font-size: 14px;
+}
+
+/* ==================== Play Button Overlay ==================== */
+.video-play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px;
+  height: 70px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 5;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.video-play-overlay:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+  background: #fff;
+}
+
+.video-play-overlay svg {
+  font-size: 24px;
+  color: #000;
+  margin-left: 3px; /* لتوسيط الأيقونة بشكل أفضل */
+}
+
+/* حجم أصغر للموبايل */
+@media (max-width: 768px) {
+  .video-play-overlay {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .video-play-overlay svg {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .video-play-overlay {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .video-play-overlay svg {
+    font-size: 18px;
+  }
+}
+
+/* ==================== Fullscreen Styles ==================== */
+.fullscreen-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9998;
+  animation: fadeIn 0.3s ease;
+}
+
+.fullscreen-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.fullscreen-video-wrapper {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullscreen-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* أزرار التحكم في وضع ملء الشاشة */
+.fullscreen-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 15px;
+  z-index: 10;
+}
+
+.fullscreen-control-btn {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.fullscreen-control-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.fullscreen-control-btn:active {
+  transform: scale(0.95);
+}
+
+/* زر الإغلاق في وضع ملء الشاشة */
+.fullscreen-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.fullscreen-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* دعم safe area للأجهزة الحديثة */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .fullscreen-close-btn {
+    top: calc(20px + env(safe-area-inset-top));
+    right: calc(20px + env(safe-area-inset-right));
+  }
+  
+  .fullscreen-controls {
+    bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ==================== تحسينات إضافية ==================== */
+
+/* تأكد من أن الفيديوهات قابلة للنقر */
+.main-video-container,
+.reply-video-container {
+  cursor: pointer;
+}
+
+/* إضافة مؤشر التحميل للفيديو */
+.video-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  z-index: 5;
+}
+
+/* تحسين مظهر الفيديو أثناء التحميل */
+.video-player-split.loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #000;
+  z-index: 1;
+}
+
+/* ==================== حالات خاصة ==================== */
+
+/* عندما يكون الفيديو في وضع التشغيل */
+.video-player-split.playing .play-overlay {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* عندما يكون الفيديو متوقف */
+.video-player-split:not(.playing) .play-overlay {
+  opacity: 1;
+}
+
+/* تأثير hover للفيديو */
+.video-player-split:hover .play-overlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.video-player-split:hover .play-button {
+  transform: scale(1.1);
+}
+
+/* ==================== تحسينات الأداء للموبايل ==================== */
+@media (max-width: 768px) {
+  /* تقليل جودة الظلال للأداء الأفضل */
+  .video-play-overlay,
+  .play-button {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* تعطيل بعض التأثيرات للأجهزة الضعيفة */
+  @media (max-resolution: 2dppx) {
+    .fullscreen-control-btn,
+    .fullscreen-close-btn {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background: rgba(0, 0, 0, 0.8);
+    }
+  }
+}
+
+/* ==================== رسائل التنبيه ==================== */
+.video-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-family: 'Cairo', sans-serif;
+  z-index: 10;
+  pointer-events: none;
+  animation: fadeInOut 3s ease;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}

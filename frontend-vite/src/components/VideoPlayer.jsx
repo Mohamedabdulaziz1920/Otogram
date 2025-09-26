@@ -53,10 +53,12 @@ const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner, onV
   const handleVideoClick = () => {
     // إظهار/إخفاء الكنترولز
     setShowControls(true);
-      if (onVideoClick) {
+    
+    // استدعاء callback من الـ parent
+    if (onVideoClick && typeof onVideoClick === 'function') {
       onVideoClick();
     }
-  };
+    
     // إلغاء المؤقت السابق
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);

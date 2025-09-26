@@ -121,7 +121,7 @@ const RegisterPage = () => {
                 checked={formData.isCreator}
                 onChange={handleChange}
               />
-              <span>أريد أن أكون منشئ محتوى</span>
+              <span> أنا منشئ محتوى</span>
             </label>
           </div>
 

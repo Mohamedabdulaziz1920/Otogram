@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { FaHeart, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaHeart, FaPlus, FaTrash, FaVolumeMute, FaVolumeUp } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -12,6 +12,9 @@ const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner }) =
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(video.likes?.length || 0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const controlsTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (user && video.likes) {
@@ -31,7 +34,38 @@ const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner }) =
     }
   }, [isActive, video._id]);
 
-  const handleLike = async () => {
+  const handleVideoClick = () => {
+    // إظهار/إخفاء الكنترولز
+    setShowControls(true);
+    
+    // إلغاء المؤقت السابق
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    
+    // إخفاء الكنترولز بعد 3 ثواني
+    controlsTimeoutRef.current = setTimeout(() => {
+      setShowControls(false);
+    }, 3000);
+
+    // تشغيل/إيقاف الفيديو
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+    } else {
+      videoRef.current.pause();
+    }
+  };
+
+  const toggleMute = (e) => {
+    e.stopPropagation();
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const handleLike = async (e) => {
+    e.stopPropagation();
     if (!user) {
       alert('يجب تسجيل الدخول للإعجاب');
       navigate('/login');
@@ -47,7 +81,8 @@ const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner }) =
     }
   };
 
-  const handleReply = () => {
+  const handleReply = (e) => {
+    e.stopPropagation();
     if (!user) {
       alert('يجب تسجيل الدخول للرد');
       navigate('/login');
@@ -73,104 +108,109 @@ const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner }) =
     }
   };
 
-  // تحديد صلاحيات الحذف
   const canDelete = user && (
-    // صاحب الفيديو يمكنه حذف فيديوه
     video.user._id === user.id || 
-    // صاحب الفيديو الأساسي يمكنه حذف أي رد
     (video.isReply && parentVideoOwner === user.id)
   );
 
-  const handleUserClick = () => {
+  const handleUserClick = (e) => {
+    e.stopPropagation();
     navigate(`/profile/${video.user.username}`);
   };
 
-const getVideoUrl = () => {
-  if (video.videoUrl.startsWith('http')) {
-    return video.videoUrl;
-  }
-  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  return `${baseURL}${video.videoUrl}`;
-};
+  const getVideoUrl = () => {
+    if (video.videoUrl.startsWith('http')) {
+      return video.videoUrl;
+    }
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${baseURL}${video.videoUrl}`;
+  };
 
   const getProfileImageUrl = () => {
     if (!video.user.profileImage) return '/default-avatar.png';
     if (video.user.profileImage.startsWith('http')) return video.user.profileImage;
-    return `http://localhost:5000${video.user.profileImage}`;
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${baseURL}${video.user.profileImage}`;
   };
 
   return (
-    <div className="video-player">
+    <div className="video-player" onClick={handleVideoClick}>
       <video
         ref={videoRef}
         src={getVideoUrl()}
         loop
-        muted
         playsInline
-        onClick={(e) => {
-          if (videoRef.current.paused) {
-            videoRef.current.play();
-          } else {
-            videoRef.current.pause();
-          }
-        }}
+        className="video-element"
       />
 
-      <div className="video-info">
-        <div 
-          className="user-info"
-          onClick={handleUserClick}
-        >
-          <img 
-            src={getProfileImageUrl()} 
-            alt={video.user.username}
-            className="user-avatar"
-            onError={(e) => {
-              e.target.src = '/default-avatar.png';
-            }}
-          />
-          <span className="username">@{video.user.username}</span>
+      {/* Controls - تظهر فقط عند النقر */}
+      <div className={`video-overlay ${showControls ? 'show' : ''}`}>
+        {/* معلومات المستخدم */}
+        <div className="video-info">
+          <div className="user-info" onClick={handleUserClick}>
+            <img 
+              src={getProfileImageUrl()} 
+              alt={video.user.username}
+              className="user-avatar"
+              onError={(e) => {
+                e.target.src = '/default-avatar.png';
+              }}
+            />
+            <span className="username">@{video.user.username}</span>
+          </div>
+          {video.description && (
+            <p className="description">{video.description}</p>
+          )}
+          <div className="video-stats">
+            <span>{video.views || 0} مشاهدة</span>
+          </div>
         </div>
-        {video.description && (
-          <p className="description">{video.description}</p>
-        )}
-        <div className="video-stats">
-          <span>{video.views || 0} مشاهدة</span>
+
+        {/* أزرار التفاعل */}
+        <div className="video-actions">
+          <button 
+            className={`action-btn ${liked ? 'liked' : ''}`}
+            onClick={handleLike}
+          >
+            <FaHeart />
+            <span>{likesCount}</span>
+          </button>
+
+          {!video.isReply && (
+            <button 
+              className="action-btn"
+              onClick={handleReply}
+            >
+              <FaPlus />
+              <span>رد</span>
+            </button>
+          )}
+
+          {canDelete && (
+            <button 
+              className="action-btn delete-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteConfirm(true);
+              }}
+            >
+              <FaTrash />
+              <span>حذف</span>
+            </button>
+          )}
+
+          <button 
+            className="action-btn mute-btn"
+            onClick={toggleMute}
+          >
+            {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+          </button>
         </div>
       </div>
 
-      <div className="video-actions">
-        <button 
-          className={`action-btn ${liked ? 'liked' : ''}`}
-          onClick={handleLike}
-        >
-          <FaHeart />
-          <span>{likesCount}</span>
-        </button>
-
-        {!video.isReply && (
-          <button 
-            className="action-btn"
-            onClick={handleReply}
-          >
-            <FaPlus />
-            <span>رد</span>
-          </button>
-        )}
-
-        {canDelete && (
-          <button 
-            className="action-btn delete-btn"
-            onClick={() => setShowDeleteConfirm(true)}
-          >
-            <FaTrash />
-            <span>حذف</span>
-          </button>
-        )}
-      </div>
-
+      {/* تأكيد الحذف */}
       {showDeleteConfirm && (
-        <div className="delete-confirm">
+        <div className="delete-confirm" onClick={(e) => e.stopPropagation()}>
           <div className="confirm-dialog">
             <p>هل أنت متأكد من حذف هذا الفيديو؟</p>
             <div className="confirm-buttons">

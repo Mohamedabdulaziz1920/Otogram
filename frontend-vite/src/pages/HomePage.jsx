@@ -81,30 +81,31 @@ const HomePage = () => {
         }}
         className="main-swiper"
       >
-        {videos.map((video, index) => (
-          <SwiperSlide key={video._id}>
-            <div className="video-container">
-              <VideoPlayer
-                video={video}
-                onReply={handleReply}
-                onDelete={handleDelete}
-                isActive={index === activeIndex && !showRepliesForVideo}
-                onVideoClick={() => handleVideoClick(video._id)}
-              />
-              
-              {/* قسم الردود - يظهر عند النقر على الفيديو */}
-              {showRepliesForVideo === video._id && video.replies && video.replies.length > 0 && (
-                <RepliesSection
-                  replies={video.replies}
-                  parentVideo={video}
-                  parentVideoOwner={video.user._id}
-                  onDelete={handleDelete}
-                  onClose={() => setShowRepliesForVideo(null)}
-                />
-              )}
-            </div>
-          </SwiperSlide>
-        ))}
+// في HomePage.jsx
+{videos.map((video, index) => (
+  <SwiperSlide key={video._id}>
+    <div className="video-container">
+      <VideoPlayer
+        video={video}
+        onReply={handleReply}
+        onDelete={handleDelete}
+        isActive={index === activeIndex && !showRepliesForVideo}
+        onVideoClick={() => handleVideoClick(video._id)}
+        parentVideoOwner={null} // للفيديو الأساسي، لا يوجد مالك أصلي
+      />
+      
+      {showRepliesForVideo === video._id && video.replies && video.replies.length > 0 && (
+        <RepliesSection
+          replies={video.replies}
+          parentVideo={video}
+          parentVideoOwner={video.user._id} // تمرير معرف مالك الفيديو الأساسي
+          onDelete={handleDelete}
+          onClose={() => setShowRepliesForVideo(null)}
+        />
+      )}
+    </div>
+  </SwiperSlide>
+))}
       </Swiper>
 
       <NavigationBar currentPage="home" />

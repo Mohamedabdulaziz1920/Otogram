@@ -1,10 +1,11 @@
 .home-page {
   width: 100%;
   height: 100vh;
+  height: 100dvh; /* للدعم الأفضل على الموبايل */
   position: relative;
   background-color: #000;
+  overflow: hidden;
 }
-
 .loading {
   display: flex;
   align-items: center;
@@ -16,22 +17,13 @@
 
 .main-swiper {
   width: 100%;
-  height: 100vh;
+  height: 100%;
 }
 
 .video-container {
   width: 100%;
   height: 100%;
   position: relative;
-}
-
-/* أضف padding للمحتوى ليظهر فوق NavigationBar */
-.home-page {
-  width: 100%;
-  height: 100vh;
-  position: relative;
-  background-color: #000;
-  padding-bottom: 60px; /* ارتفاع NavigationBar */
 }
 
 .nav-btn {
@@ -97,7 +89,19 @@
   height: 100%;
   object-fit: contain; /* للحفاظ على نسبة العرض إلى الارتفاع */
 }
+/* تحسينات للموبايل */
+@media (max-width: 768px) {
+  .home-page {
+    padding-bottom: 60px; /* لـ NavigationBar */
+  }
+}
 
+/* لشاشات iPhone X وما بعدها */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .home-page {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  }
+}
 /* للفيديوهات العمودية على الشاشات الأفقية */
 @media (orientation: landscape) {
   .video-element {

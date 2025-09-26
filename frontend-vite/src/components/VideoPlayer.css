@@ -131,27 +131,29 @@
 .username {
   font-weight: 600;
   font-size: 16px;
+  font-family: 'Cairo', sans-serif;
 }
 
 .description {
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.6;
   margin-top: 10px;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 400;
 }
 
 .video-stats {
   margin-top: 5px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.8);
+  font-family: 'Cairo', sans-serif;
+  font-weight: 500;
 }
 
-.video-actions {
-  position: absolute;
-  right: 20px;
-  bottom: 100px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.action-btn span {
+  font-size: 10px;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 600;
 }
 
 .action-btn {

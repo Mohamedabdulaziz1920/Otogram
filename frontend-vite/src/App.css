@@ -1,17 +1,59 @@
+/* في بداية الملف */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 body {
-  font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: #000;
   color: #fff;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* تحديث جميع العناصر لاستخدام Cairo */
+h1, h2, h3, h4, h5, h6,
+p, span, div, button, input, textarea, select,
+label, a, li, td, th {
+  font-family: 'Cairo', sans-serif !important;
+}
+
+/* تحسين مظهر النص العربي */
+body {
+  letter-spacing: 0;
+  line-height: 1.6;
+}
+
+/* أوزان الخط المختلفة */
+.font-light {
+  font-weight: 300;
+}
+
+.font-regular {
+  font-weight: 400;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-extrabold {
+  font-weight: 800;
+}
+
+/* باقي الأنماط الموجودة */
 .App {
   min-height: 100vh;
   position: relative;
@@ -28,8 +70,10 @@ body {
   border: none;
   border-radius: 4px;
   font-size: 16px;
+  font-weight: 600; /* Cairo SemiBold */
   cursor: pointer;
   transition: all 0.3s ease;
+  font-family: 'Cairo', sans-serif;
 }
 
 .btn-primary {
@@ -62,6 +106,8 @@ body {
   margin-bottom: 5px;
   color: #fff;
   font-size: 14px;
+  font-weight: 500; /* Cairo Medium */
+  font-family: 'Cairo', sans-serif;
 }
 
 .form-group input,
@@ -73,6 +119,8 @@ body {
   background-color: #121212;
   color: #fff;
   font-size: 16px;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 400;
 }
 
 .form-group input:focus,
@@ -86,6 +134,8 @@ body {
   color: #ff4458;
   font-size: 14px;
   margin-top: 5px;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 500;
 }
 
 /* Success message */
@@ -93,20 +143,12 @@ body {
   color: #00f2ea;
   font-size: 14px;
   margin-top: 5px;
-}
-/* أضف في App.css */
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  font-size: 20px;
-  color: #fff;
-  background-color: #000;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 500;
 }
 
-/* تأكد من أن جميع الصفحات لديها padding-bottom */
-.profile-page,
-.upload-page {
-  padding-bottom: 60px;
+/* Loading text */
+.loading {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 600;
 }

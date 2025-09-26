@@ -208,7 +208,6 @@ const canDelete = user && (
             </button>
           )}
 
-         // في قسم الأزرار
 {canDelete && (
   <button 
     className="action-btn delete-btn"

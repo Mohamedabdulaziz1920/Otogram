@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaPlay, FaPause, FaExpand } from 'react-icons/fa';
 import './VideoPlayerSplit.css';
 
 const VideoPlayerSplit = ({ 
@@ -8,60 +8,89 @@ const VideoPlayerSplit = ({
   onPlay, 
   onPause,
   className = '',
-  showPlayButton = true
+  showPlayButton = true,
+  autoPlay = false
 }) => {
   const videoRef = useRef(null);
+  const fullscreenVideoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (videoRef.current && isActive) {
-      videoRef.current.play().catch(err => {
-        console.log('Play error:', err);
-        setIsPlaying(false);
-      });
-      setIsPlaying(true);
-    } else if (videoRef.current) {
-      videoRef.current.pause();
-      setIsPlaying(false);
+    if (videoRef.current && isActive && autoPlay) {
+      playVideo();
+    } else if (videoRef.current && !isActive) {
+      pauseVideo();
     }
-  }, [isActive]);
+  }, [isActive, autoPlay]);
 
-  const togglePlay = () => {
+  const playVideo = () => {
     if (videoRef.current) {
-      if (videoRef.current.paused) {
-        videoRef.current.play();
-        setIsPlaying(true);
-        onPlay?.();
-      } else {
-        videoRef.current.pause();
-        setIsPlaying(false);
-        onPause?.();
-      }
+      videoRef.current.play()
+        .then(() => {
+          setIsPlaying(true);
+          onPlay?.();
+        })
+        .catch(err => {
+          console.log('Play error:', err);
+          setIsPlaying(false);
+        });
     }
   };
 
-  const openFullscreen = (e) => {
-    e.stopPropagation();
-    setShowFullscreen(true);
-    // إيقاف الفيديو الأصلي
+  const pauseVideo = () => {
     if (videoRef.current) {
       videoRef.current.pause();
+      setIsPlaying(false);
+      onPause?.();
     }
+  };
+
+  const togglePlay = (e) => {
+    e?.stopPropagation();
+    if (isPlaying) {
+      pauseVideo();
+    } else {
+      playVideo();
+    }
+  };
+
+  const openFullscreen = () => {
+    setShowFullscreen(true);
+    pauseVideo(); // إيقاف الفيديو الأصلي
+    
+    // تشغيل الفيديو في وضع ملء الشاشة
+    setTimeout(() => {
+      if (fullscreenVideoRef.current) {
+        fullscreenVideoRef.current.play();
+      }
+    }, 100);
   };
 
   const closeFullscreen = () => {
     setShowFullscreen(false);
+    
+    // إيقاف فيديو ملء الشاشة
+    if (fullscreenVideoRef.current) {
+      fullscreenVideoRef.current.pause();
+    }
+    
     // استئناف التشغيل إذا كان نشطاً
-    if (isActive && videoRef.current) {
-      videoRef.current.play();
+    if (isActive && autoPlay) {
+      setTimeout(() => playVideo(), 100);
     }
   };
 
   const handleVideoError = () => {
     setVideoError(true);
+    setIsLoading(false);
     console.error('Video failed to load:', videoUrl);
+  };
+
+  const handleVideoLoaded = () => {
+    setIsLoading(false);
   };
 
   const getVideoUrl = () => {
@@ -73,7 +102,10 @@ const VideoPlayerSplit = ({
 
   return (
     <>
-      <div className={`video-player-split ${className}`} onClick={openFullscreen}>
+      <div 
+        className={`video-player-split ${className} ${isPlaying ? 'playing' : ''} ${isLoading ? 'loading' : ''}`} 
+        onClick={openFullscreen}
+      >
         {!videoError ? (
           <>
             <video
@@ -84,14 +116,20 @@ const VideoPlayerSplit = ({
               playsInline
               className="video-element-split"
               onError={handleVideoError}
-              onClick={(e) => {
-                e.stopPropagation();
-                togglePlay();
-              }}
+              onLoadedData={handleVideoLoaded}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
             />
-            {showPlayButton && !isPlaying && (
-              <div className="play-overlay">
-                <div className="play-button">▶</div>
+            
+            {isLoading && (
+              <div className="video-loading"></div>
+            )}
+            
+            {showPlayButton && !isPlaying && !isLoading && (
+              <div className="play-overlay" onClick={togglePlay}>
+                <div className="play-button">
+                  <FaPlay />
+                </div>
               </div>
             )}
           </>
@@ -104,20 +142,29 @@ const VideoPlayerSplit = ({
 
       {/* Fullscreen Modal */}
       {showFullscreen && (
-        <div className="fullscreen-modal" onClick={closeFullscreen}>
-          <div className="fullscreen-video-container">
-            <video
-              src={getVideoUrl()}
-              controls
-              autoPlay
-              className="fullscreen-video"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <button className="fullscreen-close" onClick={closeFullscreen}>
-              <FaTimes />
-            </button>
+        <>
+          <div className="fullscreen-backdrop" onClick={closeFullscreen} />
+          <div className="fullscreen-container">
+            <div className="fullscreen-video-wrapper">
+              <video
+                ref={fullscreenVideoRef}
+                src={getVideoUrl()}
+                controls
+                autoPlay
+                className="fullscreen-video"
+                onClick={(e) => e.stopPropagation()}
+              />
+              
+              <button 
+                className="fullscreen-close-btn" 
+                onClick={closeFullscreen}
+                aria-label="إغلاق"
+              >
+                <FaTimes />
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );

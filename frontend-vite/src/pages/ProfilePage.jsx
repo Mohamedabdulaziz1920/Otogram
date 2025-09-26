@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import VideoGrid from '../components/VideoGrid';
 import './ProfilePage.css';
-import NavigationBar from '../components/NavigationBar';
+
 const ProfilePage = () => {
   const { username } = useParams();
   const { user, logout } = useAuth();
@@ -211,15 +211,7 @@ const ProfilePage = () => {
           </div>
         </div>
       )}
-          {isEditingProfile && (
-        <div className="edit-profile-modal">
-          {/* محتوى Modal */}
-        </div>
-      )}
-      
-      <NavigationBar currentPage="profile" />
     </div>
-
   );
 };
 

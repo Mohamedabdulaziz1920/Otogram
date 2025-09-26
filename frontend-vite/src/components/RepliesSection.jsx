@@ -205,16 +205,16 @@ const RepliesSection = ({ replies, parentVideo, parentVideoOwner, onDelete, onCl
               </button>
             )}
           </div>
-          <VideoPlayer
-            video={selectedReply}
-            onDelete={(videoId) => {
-              onDelete(videoId);
-              handleCloseFullscreen();
-            }}
-            isActive={true}
-            parentVideoOwner={parentVideoOwner}
-            isReply={true}
-          />
+    <VideoPlayer
+  video={selectedReply}
+  onDelete={(videoId) => {
+    onDelete(videoId);
+    handleCloseFullscreen();
+  }}
+  isActive={true}
+  parentVideoOwner={parentVideoOwner} // تمرير معرف مالك الفيديو الأساسي
+  isReply={true}
+/>
         </div>
       )}
 

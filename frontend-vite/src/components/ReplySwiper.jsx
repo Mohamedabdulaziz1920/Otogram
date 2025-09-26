@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper';
 import VideoPlayer from './VideoPlayer';
@@ -8,6 +8,13 @@ import './ReplySwiper.css';
 
 const ReplySwiper = ({ replies, parentVideoOwner, onDelete }) => {
   const [activeReplyIndex, setActiveReplyIndex] = useState(0);
+
+  // إيقاف جميع الفيديوهات عند إلغاء المكون
+  useEffect(() => {
+    return () => {
+      // سيتم التعامل مع هذا في VideoPlayer
+    };
+  }, []);
 
   return (
     <div className="reply-swiper-container">

@@ -257,15 +257,13 @@ const HomePage = () => {
           {videos.map((video, index) => (
             <SwiperSlide key={video._id}>
               <div className="main-video-container">
-                <video
-                  ref={(el) => (mainVideoRefs.current[index] = el)}
-                  src={video.videoUrl}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="main-video"
-                />
+    <VideoPlayerSplit
+  videoUrl={video.videoUrl}
+  isActive={index === activeVideoIndex}
+  autoPlay={true}
+  showPlayButton={true}
+  className="main-video"
+/>
 
                 {/* صورة الملف الشخصي */}
                 <div

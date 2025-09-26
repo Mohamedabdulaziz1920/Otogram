@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './VideoPlayer.css';
 
-const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner }) => {
+const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner, onVideoClick }) => {
   const videoRef = useRef(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -53,7 +53,10 @@ const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner }) =
   const handleVideoClick = () => {
     // إظهار/إخفاء الكنترولز
     setShowControls(true);
-    
+      if (onVideoClick) {
+      onVideoClick();
+    }
+  };
     // إلغاء المؤقت السابق
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);

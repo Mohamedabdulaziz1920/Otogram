@@ -129,10 +129,10 @@ const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner, onV
     }
   };
 
-  const canDelete = user && (
-    video.user._id === user.id || 
-    (video.isReply && parentVideoOwner === user.id)
-  );
+const canDelete = user && (
+  video.user._id === user.id || // صاحب الفيديو يمكنه حذف فيديوه
+  (video.isReply && parentVideoOwner === user.id) // صاحب الفيديو الأساسي يمكنه حذف أي رد
+);
 
   const handleUserClick = (e) => {
     e.stopPropagation();
@@ -208,18 +208,19 @@ const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner, onV
             </button>
           )}
 
-          {canDelete && (
-            <button 
-              className="action-btn delete-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDeleteConfirm(true);
-              }}
-            >
-              <FaTrash />
-              <span>حذف</span>
-            </button>
-          )}
+         // في قسم الأزرار
+{canDelete && (
+  <button 
+    className="action-btn delete-btn"
+    onClick={(e) => {
+      e.stopPropagation();
+      setShowDeleteConfirm(true);
+    }}
+  >
+    <FaTrash />
+    <span>حذف</span>
+  </button>
+)}
 
           <button 
             className="action-btn mute-btn"

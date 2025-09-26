@@ -1,4 +1,4 @@
-/* ==================== Split Layout ==================== */
+/* ==================== Split Layout - محدث للموبايل ==================== */
 .home-page-split {
   width: 100%;
   height: 100vh;
@@ -8,6 +8,8 @@
   background: #000;
   position: relative;
   overflow: hidden;
+  /* مساحة للـ NavigationBar */
+  padding-bottom: 60px;
 }
 
 /* ==================== النصف العلوي - الفيديو الأساسي ==================== */
@@ -17,6 +19,8 @@
   overflow: hidden;
   background: #000;
   border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  min-height: 40vh; /* حد أدنى للارتفاع */
+  max-height: 50vh; /* حد أقصى للارتفاع */
 }
 
 .main-video-swiper {
@@ -158,7 +162,9 @@
   position: relative;
   background: #0a0a0a;
   overflow: hidden;
-  padding: 20px 0;
+  padding: 15px 0;
+  min-height: 40vh; /* حد أدنى للارتفاع */
+  max-height: calc(50vh - 60px); /* حد أقصى مع مراعاة NavigationBar */
 }
 
 .replies-header {
@@ -191,6 +197,7 @@
   transform: scale(1.05);
 }
 
+/* تحديث حاوي فيديو الرد */
 .reply-video-container {
   width: 100%;
   height: 100%;
@@ -199,32 +206,35 @@
   overflow: hidden;
   background: #000;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  /* إضافة padding للأزرار */
+  padding-bottom: 60px;
 }
 
 .reply-video {
   width: 100%;
-  height: 100%;
+  height: calc(100% - 60px); /* مراعاة مساحة الأزرار */
   object-fit: contain;
   background: #000;
 }
 
-/* أزرار التفاعل للردود */
+/* أزرار التفاعل للردود - محدث */
 .reply-video-actions {
   position: absolute;
-  bottom: 15px;
-  left: 15px;
+  bottom: 10px; /* تقليل المسافة من الأسفل */
+  left: 10px;
   z-index: 10;
 }
 
 .reply-video-actions .action-btn {
-  padding: 8px 16px;
-  font-size: 13px;
+  padding: 6px 14px; /* تصغير الحجم */
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
 }
 
 .reply-video-actions .action-btn svg {
-  font-size: 16px;
+  font-size: 14px;
 }
-
 /* أزرار التنقل المخصصة */
 .swiper-button-prev-custom,
 .swiper-button-next-custom {
@@ -504,4 +514,325 @@
 .reply-video {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+}
+/* ==================== تحسينات خاصة بالموبايل ==================== */
+@media (max-width: 768px) {
+  .home-page-split {
+    padding-bottom: 60px;
+  }
+
+  /* توزيع أفضل للمساحة */
+  .main-video-section {
+    flex: 1.2;
+    min-height: 45vh;
+    max-height: 55vh;
+  }
+
+  .replies-section-split {
+    flex: 0.8;
+    min-height: 35vh;
+    max-height: calc(45vh - 60px);
+    padding: 10px 0;
+  }
+
+  /* تصغير header الردود */
+  .replies-header {
+    margin-bottom: 10px;
+    padding: 0 15px;
+  }
+
+  .replies-header h3 {
+    font-size: 16px;
+  }
+
+  /* تحسين Swiper للموبايل */
+  .replies-swiper {
+    height: calc(100% - 40px);
+    padding: 0 30px;
+  }
+
+  .replies-swiper .swiper-slide {
+    height: 100%;
+  }
+
+  /* تحسين حاوي فيديو الرد */
+  .reply-video-container {
+    height: 100%;
+    padding-bottom: 50px; /* مساحة أقل للأزرار */
+  }
+
+  .reply-video {
+    height: calc(100% - 50px);
+  }
+
+  /* صورة البروفايل أصغر */
+  .profile-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .profile-avatar.top-right {
+    top: 10px;
+    right: 10px;
+  }
+
+  .profile-avatar.small {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* أزرار أصغر للفيديو الأساسي */
+  .main-video-actions {
+    bottom: 10px;
+    right: 10px;
+    gap: 8px;
+  }
+
+  .action-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  .action-btn svg {
+    font-size: 14px;
+  }
+
+  .action-btn span {
+    font-size: 12px;
+  }
+
+  /* معلومات الفيديو */
+  .main-video-info {
+    bottom: 10px;
+    left: 10px;
+    right: 160px;
+  }
+
+  .video-description {
+    font-size: 12px;
+    -webkit-line-clamp: 1;
+  }
+
+  /* أزرار التنقل أصغر */
+  .swiper-button-prev-custom,
+  .swiper-button-next-custom {
+    width: 32px;
+    height: 32px;
+  }
+
+  .swiper-button-prev-custom {
+    right: 5px;
+  }
+
+  .swiper-button-next-custom {
+    left: 5px;
+  }
+
+  .swiper-button-prev-custom svg,
+  .swiper-button-next-custom svg {
+    font-size: 14px;
+  }
+}
+
+/* شاشات صغيرة جداً */
+@media (max-width: 480px) {
+  .home-page-split {
+    padding-bottom: 55px;
+  }
+
+  /* توزيع المساحة للشاشات الصغيرة */
+  .main-video-section {
+    flex: 1.1;
+    min-height: 50vh;
+    max-height: 60vh;
+  }
+
+  .replies-section-split {
+    flex: 0.9;
+    min-height: 30vh;
+    max-height: calc(40vh - 55px);
+    padding: 8px 0;
+  }
+
+  /* أزرار أصغر */
+  .main-video-actions {
+    flex-direction: row;
+    gap: 6px;
+    bottom: 8px;
+    right: 8px;
+  }
+
+  .action-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .action-btn svg {
+    font-size: 12px;
+  }
+
+  .action-btn span {
+    font-size: 10px;
+  }
+
+  /* أزرار الردود */
+  .reply-video-actions {
+    bottom: 8px;
+    left: 8px;
+  }
+
+  .reply-video-actions .action-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  /* تقليل padding للسلايدر */
+  .replies-swiper {
+    padding: 0 25px;
+  }
+
+  /* حاوي فيديو الرد */
+  .reply-video-container {
+    padding-bottom: 45px;
+  }
+
+  .reply-video {
+    height: calc(100% - 45px);
+  }
+}
+
+/* شاشات صغيرة جداً (320px) */
+@media (max-width: 360px) {
+  .home-page-split {
+    padding-bottom: 50px;
+  }
+
+  .main-video-section {
+    min-height: 48vh;
+    max-height: 58vh;
+  }
+
+  .replies-section-split {
+    min-height: 32vh;
+    max-height: calc(42vh - 50px);
+  }
+
+  /* إخفاء النص في الأزرار الصغيرة */
+  .action-btn span {
+    display: none;
+  }
+
+  .action-btn {
+    padding: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    justify-content: center;
+  }
+
+  .reply-video-actions .action-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* تصغير الصور */
+  .profile-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .profile-avatar.small {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* ==================== دعم iPhone X وما بعده ==================== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .home-page-split {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  }
+
+  @media (max-width: 768px) {
+    .replies-section-split {
+      max-height: calc(45vh - 60px - env(safe-area-inset-bottom));
+    }
+
+    .reply-video-actions {
+      bottom: calc(10px + env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* ==================== الشاشات الأفقية للموبايل ==================== */
+@media (orientation: landscape) and (max-height: 500px) {
+  .home-page-split {
+    flex-direction: row;
+    padding-bottom: 0;
+    padding-left: 60px; /* مساحة للـ NavigationBar الجانبي */
+  }
+
+  .main-video-section {
+    flex: 1.5;
+    border-bottom: none;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+    min-height: auto;
+    max-height: 100%;
+  }
+
+  .replies-section-split {
+    flex: 1;
+    min-height: auto;
+    max-height: 100%;
+  }
+
+  .main-video-actions {
+    bottom: 15px;
+    right: 15px;
+  }
+
+  .reply-video-container {
+    padding-bottom: 0;
+    padding-left: 50px;
+  }
+
+  .reply-video {
+    height: 100%;
+  }
+
+  .reply-video-actions {
+    bottom: 15px;
+    left: 60px;
+  }
+}
+
+/* ==================== تحسينات إضافية للأداء ==================== */
+/* منع التمرير غير المرغوب */
+.home-page-split {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* تحسين الأداء للفيديوهات */
+.main-video,
+.reply-video {
+  will-change: transform;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* تأكد من عدم تداخل العناصر */
+.replies-section-split {
+  isolation: isolate;
+}
+
+/* منع اختيار النص في الأزرار */
+.action-btn,
+.swiper-button-prev-custom,
+.swiper-button-next-custom {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }

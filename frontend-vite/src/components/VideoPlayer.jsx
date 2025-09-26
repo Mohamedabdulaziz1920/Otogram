@@ -25,14 +25,30 @@ const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner }) =
   useEffect(() => {
     if (videoRef.current) {
       if (isActive) {
+        // تشغيل الفيديو النشط
         videoRef.current.play().catch(err => console.log('Play error:', err));
         // تسجيل المشاهدة
         axios.post(`/api/videos/${video._id}/view`).catch(err => console.log('View error:', err));
       } else {
+        // إيقاف الفيديو غير النشط وكتم صوته
         videoRef.current.pause();
+        videoRef.current.currentTime = 0; // إعادة الفيديو للبداية
       }
     }
   }, [isActive, video._id]);
+
+  // تنظيف عند إلغاء المكون
+  useEffect(() => {
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.src = '';
+      }
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleVideoClick = () => {
     // إظهار/إخفاء الكنترولز
@@ -141,6 +157,7 @@ const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner }) =
         loop
         playsInline
         className="video-element"
+        muted={isMuted}
       />
 
       {/* Controls - تظهر فقط عند النقر */}

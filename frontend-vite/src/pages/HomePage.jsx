@@ -14,7 +14,7 @@ const HomePage = () => {
   const [videos, setVideos] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [showReplies, setShowReplies] = useState(false);
+  const [showRepliesForVideo, setShowRepliesForVideo] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -43,10 +43,19 @@ const HomePage = () => {
 
   const handleDelete = (videoId) => {
     setVideos(videos.filter(v => v._id !== videoId));
+    // إذا كان الفيديو المحذوف له ردود مفتوحة، أغلقها
+    if (showRepliesForVideo === videoId) {
+      setShowRepliesForVideo(null);
+    }
   };
 
-  const handleVideoClick = () => {
-    setShowReplies(true);
+  const handleVideoClick = (videoId) => {
+    // إظهار/إخفاء الردود للفيديو المحدد
+    if (showRepliesForVideo === videoId) {
+      setShowRepliesForVideo(null);
+    } else {
+      setShowRepliesForVideo(videoId);
+    }
   };
 
   if (loading) {
@@ -63,7 +72,7 @@ const HomePage = () => {
         modules={[Mousewheel, Keyboard]}
         onSlideChange={(swiper) => {
           setActiveIndex(swiper.activeIndex);
-          setShowReplies(false);
+          setShowRepliesForVideo(null); // إخفاء الردود عند تغيير الفيديو
           // إيقاف جميع الفيديوهات
           const videos = document.querySelectorAll('video');
           videos.forEach(video => {
@@ -79,17 +88,18 @@ const HomePage = () => {
                 video={video}
                 onReply={handleReply}
                 onDelete={handleDelete}
-                isActive={index === activeIndex}
-                onVideoClick={handleVideoClick}
+                isActive={index === activeIndex && !showRepliesForVideo}
+                onVideoClick={() => handleVideoClick(video._id)}
               />
               
               {/* قسم الردود - يظهر عند النقر على الفيديو */}
-              {showReplies && video.replies && video.replies.length > 0 && (
+              {showRepliesForVideo === video._id && video.replies && video.replies.length > 0 && (
                 <RepliesSection
                   replies={video.replies}
+                  parentVideo={video}
                   parentVideoOwner={video.user._id}
                   onDelete={handleDelete}
-                  onClose={() => setShowReplies(false)}
+                  onClose={() => setShowRepliesForVideo(null)}
                 />
               )}
             </div>

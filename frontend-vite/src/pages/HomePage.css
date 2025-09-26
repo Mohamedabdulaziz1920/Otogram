@@ -1,79 +1,86 @@
+/* ==================== الصفحة الرئيسية ==================== */
 .home-page {
   width: 100%;
   height: 100vh;
-  height: 100dvh; /* للدعم الأفضل على الموبايل */
+  height: 100dvh;
   position: relative;
   background-color: #000;
   overflow: hidden;
+  font-family: 'Cairo', sans-serif;
 }
+
+/* ==================== شاشة التحميل ==================== */
 .loading {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  font-size: 20px;
-  color: #fff;
+  background: #000;
+  position: relative;
 }
 
+.loading::before {
+  content: '';
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(254, 44, 85, 0.1);
+  border-top-color: #fe2c55;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+.loading::after {
+  content: 'جاري التحميل...';
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: 'Cairo', sans-serif;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ==================== Swiper الرئيسي ==================== */
 .main-swiper {
   width: 100%;
   height: 100%;
+  background: #000;
 }
 
+.main-swiper .swiper-slide {
+  transition: opacity 0.3s ease;
+}
+
+/* تحسين الانتقال بين الفيديوهات */
+.main-swiper .swiper-slide-active {
+  opacity: 1;
+}
+
+.main-swiper .swiper-slide:not(.swiper-slide-active) {
+  opacity: 0.3;
+}
+
+/* ==================== حاوي الفيديو ==================== */
 .video-container {
   width: 100%;
   height: 100%;
   position: relative;
-}
-
-.nav-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 14px;
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.nav-btn:hover {
-  color: #fe2c55;
-}
-
-.nav-btn.active {
-  color: #fe2c55;
-}
-
-.nav-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 30px;
-  height: 3px;
-  background: #fe2c55;
-  border-radius: 2px;
-}
-
-.upload-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #fe2c55;
-  color: #fff;
-  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.02) 0%, #000 100%);
 }
 
-.upload-btn:hover {
-  background: #e91e3a;
-  transform: scale(1.1);
-}
+/* ==================== مشغل الفيديو ==================== */
 .video-player {
   position: relative;
   width: 100%;
@@ -82,45 +89,335 @@
   background-color: #000;
   cursor: pointer;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .video-element {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* للحفاظ على نسبة العرض إلى الارتفاع */
+  object-fit: contain;
+  background: #000;
 }
-/* تحسينات للموبايل */
-@media (max-width: 768px) {
-  .home-page {
-    padding-bottom: 60px; /* لـ NavigationBar */
+
+/* تأثير التحميل للفيديو */
+.video-player::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #fe2c55;
+  border-radius: 50%;
+  animation: videoLoading 1s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.video-player.loading::before {
+  opacity: 1;
+}
+
+@keyframes videoLoading {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ==================== Overlay والتحكمات ==================== */
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.5) 0%,
+    transparent 20%,
+    transparent 70%,
+    rgba(0,0,0,0.7) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.video-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ==================== معلومات الفيديو ==================== */
+.video-info {
+  position: absolute;
+  bottom: 80px;
+  left: 20px;
+  right: 80px;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  z-index: 10;
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
-/* لشاشات iPhone X وما بعدها */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .home-page {
-    padding-bottom: calc(60px + env(safe-area-inset-bottom));
-  }
+.user-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
-/* للفيديوهات العمودية على الشاشات الأفقية */
-@media (orientation: landscape) {
-  .video-element {
-    object-fit: contain;
+
+.user-info:hover {
+  transform: translateX(-5px);
+}
+
+.user-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  margin-right: 12px;
+  border: 2px solid #fff;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.user-info:hover .user-avatar {
+  transform: scale(1.1);
+  border-color: #fe2c55;
+}
+
+.username {
+  font-weight: 600;
+  font-size: 17px;
+  font-family: 'Cairo', sans-serif;
+  letter-spacing: 0.3px;
+}
+
+.description {
+  font-size: 15px;
+  line-height: 1.6;
+  margin-top: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 400;
+  max-width: 80%;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.video-stats {
+  margin-top: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'Cairo', sans-serif;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* ==================== أزرار التفاعل ==================== */
+.video-actions {
+  position: absolute;
+  right: 20px;
+  bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 10;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
-/* للفيديوهات على الموبايل */
+.action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 12px;
+  gap: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.action-btn:hover::before {
+  width: 100px;
+  height: 100px;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+.action-btn svg {
+  font-size: 20px;
+  z-index: 1;
+}
+
+.action-btn span {
+  font-size: 11px;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 600;
+  z-index: 1;
+}
+
+/* أنماط خاصة للأزرار */
+.action-btn.liked {
+  background: rgba(254, 44, 85, 0.2);
+  color: #fe2c55;
+  border-color: rgba(254, 44, 85, 0.3);
+}
+
+.action-btn.liked:hover {
+  background: rgba(254, 44, 85, 0.3);
+  transform: scale(1.15);
+}
+
+.delete-btn {
+  background: rgba(255, 68, 88, 0.2);
+  border-color: rgba(255, 68, 88, 0.3);
+}
+
+.delete-btn:hover {
+  background: rgba(255, 68, 88, 0.4);
+}
+
+.mute-btn {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ==================== تحسينات الأجهزة المحمولة ==================== */
 @media (max-width: 768px) {
+  .home-page {
+    padding-bottom: 60px;
+  }
+
   .video-info {
-    bottom: 70px;
-    left: 10px;
-    right: 60px;
+    bottom: 75px;
+    left: 15px;
+    right: 70px;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .username {
+    font-size: 16px;
+  }
+
+  .description {
+    font-size: 14px;
+    -webkit-line-clamp: 2;
+  }
+
+  .video-stats {
+    font-size: 12px;
   }
 
   .video-actions {
-    right: 10px;
+    right: 15px;
+    bottom: 75px;
+    gap: 16px;
+  }
+
+  .action-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .action-btn svg {
+    font-size: 18px;
+  }
+
+  .action-btn span {
+    font-size: 10px;
+  }
+}
+
+/* شاشات صغيرة جداً */
+@media (max-width: 360px) {
+  .video-info {
     bottom: 70px;
-    gap: 15px;
+    left: 12px;
+    right: 65px;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+  }
+
+  .username {
+    font-size: 15px;
+  }
+
+  .description {
+    font-size: 13px;
+  }
+
+  .video-actions {
+    right: 12px;
+    gap: 14px;
   }
 
   .action-btn {
@@ -129,7 +426,7 @@
   }
 
   .action-btn svg {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .action-btn span {
@@ -137,23 +434,52 @@
   }
 }
 
-/* لشاشات صغيرة جداً */
-@media (max-width: 360px) {
+/* ==================== الشاشات الأفقية ==================== */
+@media (orientation: landscape) and (max-height: 500px) {
   .video-info {
-    bottom: 65px;
-    font-size: 14px;
+    bottom: 60px;
+  }
+
+  .video-actions {
+    bottom: 60px;
   }
 
   .user-avatar {
-    width: 35px;
-    height: 35px;
+    width: 36px;
+    height: 36px;
   }
 
-  .username {
-    font-size: 14px;
+  .action-btn {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* ==================== دعم iPhone X وما بعده ==================== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .home-page {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
   }
 
-  .description {
-    font-size: 12px;
+  .video-info {
+    bottom: calc(75px + env(safe-area-inset-bottom));
   }
+
+  .video-actions {
+    bottom: calc(75px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ==================== تحسينات الأداء ==================== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==================== الوضع الداكن/الفاتح ==================== */
+@media (prefers-color-scheme: light) {
+  /* يمكن إضافة أنماط للوضع الفاتح هنا إذا أردت */
 }

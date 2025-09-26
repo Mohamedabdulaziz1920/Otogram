@@ -1,234 +1,181 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { FaHeart, FaPlus, FaTrash, FaVolumeMute, FaVolumeUp } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import './VideoPlayer.css';
+import NavigationBar from '../components/NavigationBar';
+import './UploadPage.css';
 
-const VideoPlayer = ({ video, onReply, onDelete, isActive, parentVideoOwner }) => {
-  const videoRef = useRef(null);
-  const { user } = useAuth();
+const UploadPage = () => {
+  const [searchParams] = useSearchParams();
+  const replyToId = searchParams.get('replyTo');
+  
+  const [videoFile, setVideoFile] = useState(null);
+  const [description, setDescription] = useState('');
+  const [uploadPassword, setUploadPassword] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [preview, setPreview] = useState(null);
+  
   const navigate = useNavigate();
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(video.likes?.length || 0);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showControls, setShowControls] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const controlsTimeoutRef = useRef(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (user && video.likes) {
-      setLiked(video.likes.includes(user.id));
+    if (!user) {
+      navigate('/login');
     }
-  }, [user, video.likes]);
+  }, [user, navigate]);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      if (isActive) {
-        videoRef.current.play().catch(err => console.log('Play error:', err));
-        // تسجيل المشاهدة
-        axios.post(`/api/videos/${video._id}/view`).catch(err => console.log('View error:', err));
-      } else {
-        videoRef.current.pause();
-      }
-    }
-  }, [isActive, video._id]);
-
-  const handleVideoClick = () => {
-    // إظهار/إخفاء الكنترولز
-    setShowControls(true);
-    
-    // إلغاء المؤقت السابق
-    if (controlsTimeoutRef.current) {
-      clearTimeout(controlsTimeoutRef.current);
-    }
-    
-    // إخفاء الكنترولز بعد 3 ثواني
-    controlsTimeoutRef.current = setTimeout(() => {
-      setShowControls(false);
-    }, 3000);
-
-    // تشغيل/إيقاف الفيديو
-    if (videoRef.current.paused) {
-      videoRef.current.play();
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('video/')) {
+      setVideoFile(file);
+      setPreview(URL.createObjectURL(file));
     } else {
-      videoRef.current.pause();
+      setError('يرجى اختيار ملف فيديو صحيح');
     }
   };
 
-  const toggleMute = (e) => {
-    e.stopPropagation();
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(!isMuted);
-    }
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
 
-  const handleLike = async (e) => {
-    e.stopPropagation();
-    if (!user) {
-      alert('يجب تسجيل الدخول للإعجاب');
-      navigate('/login');
+    if (!videoFile) {
+      setError('يرجى اختيار فيديو');
       return;
     }
 
-    try {
-      const response = await axios.post(`/api/videos/${video._id}/like`);
-      setLiked(response.data.liked);
-      setLikesCount(response.data.likesCount);
-    } catch (error) {
-      console.error('Error liking video:', error);
-    }
-  };
-
-  const handleReply = (e) => {
-    e.stopPropagation();
-    if (!user) {
-      alert('يجب تسجيل الدخول للرد');
-      navigate('/login');
+    // التحقق من كلمة مرور الرفع للفيديوهات الأساسية فقط
+    if (!replyToId && !uploadPassword) {
+      setError('يرجى إدخال كلمة مرور الرفع');
       return;
     }
-    if (onReply) {
-      onReply(video._id);
-    }
-  };
 
-  const handleDelete = async () => {
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append('video', videoFile);
+    formData.append('description', description);
+    
+    // إضافة كلمة مرور الرفع للفي
+        // إضافة كلمة مرور الرفع للفيديوهات الأساسية فقط
+    if (!replyToId) {
+      formData.append('uploadPassword', uploadPassword);
+    }
+
     try {
-      if (video.isReply) {
-        await axios.delete(`/api/videos/reply/${video._id}`);
+      let response;
+      if (replyToId) {
+        // رفع كرد - لا يحتاج كلمة مرور
+        response = await axios.post(`/api/videos/reply/${replyToId}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       } else {
-        await axios.delete(`/api/videos/${video._id}`);
+        // رفع كفيديو أساسي - يحتاج كلمة مرور
+        response = await axios.post('/api/videos/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       }
-      onDelete(video._id);
-      setShowDeleteConfirm(false);
+
+      navigate('/');
     } catch (error) {
-      console.error('Error deleting video:', error);
-      alert('فشل حذف الفيديو');
+      setError(error.response?.data?.error || 'فشل رفع الفيديو');
+    } finally {
+      setUploading(false);
     }
-  };
-
-  const canDelete = user && (
-    video.user._id === user.id || 
-    (video.isReply && parentVideoOwner === user.id)
-  );
-
-  const handleUserClick = (e) => {
-    e.stopPropagation();
-    navigate(`/profile/${video.user.username}`);
-  };
-
-  const getVideoUrl = () => {
-    if (video.videoUrl.startsWith('http')) {
-      return video.videoUrl;
-    }
-    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    return `${baseURL}${video.videoUrl}`;
-  };
-
-  const getProfileImageUrl = () => {
-    if (!video.user.profileImage) return '/default-avatar.png';
-    if (video.user.profileImage.startsWith('http')) return video.user.profileImage;
-    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    return `${baseURL}${video.user.profileImage}`;
   };
 
   return (
-    <div className="video-player" onClick={handleVideoClick}>
-      <video
-        ref={videoRef}
-        src={getVideoUrl()}
-        loop
-        playsInline
-        className="video-element"
-      />
+    <div className="upload-page">
+      <div className="upload-container">
+        <h1>
+          {replyToId ? 'رفع رد على الفيديو' : 'رفع فيديو جديد'}
+        </h1>
 
-      {/* Controls - تظهر فقط عند النقر */}
-      <div className={`video-overlay ${showControls ? 'show' : ''}`}>
-        {/* معلومات المستخدم */}
-        <div className="video-info">
-          <div className="user-info" onClick={handleUserClick}>
-            <img 
-              src={getProfileImageUrl()} 
-              alt={video.user.username}
-              className="user-avatar"
-              onError={(e) => {
-                e.target.src = '/default-avatar.png';
-              }}
+        {/* عرض تنبيه للفيديوهات الأساسية */}
+        {!replyToId && (
+          <div className="upload-notice">
+            <p>⚠️ رفع الفيديوهات يتطلب كلمة مرور الرفع</p>
+            <p>سيظهر الفيديو في ملفك الشخصي وفي الصفحة الرئيسية للجميع</p>
+          </div>
+        )}
+
+        {/* عرض تنبيه للردود */}
+        {replyToId && (
+          <div className="reply-notice">
+            <p>✅ الردود لا تحتاج كلمة مرور</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="video-upload-area">
+            {preview ? (
+              <div className="video-preview">
+                <video src={preview} controls />
+                <button 
+                  type="button" 
+                  className="change-video-btn"
+                  onClick={() => {
+                    setVideoFile(null);
+                    setPreview(null);
+                  }}
+                >
+                  تغيير الفيديو
+                </button>
+              </div>
+            ) : (
+              <label htmlFor="video-input" className="upload-label">
+                <div className="upload-icon">📹</div>
+                <p>اضغط لاختيار فيديو</p>
+                <input
+                  id="video-input"
+                  type="file"
+                  accept="video/*"
+                  onChange={handleFileSelect}
+                  hidden
+                />
+              </label>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>الوصف (اختياري)</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="أضف وصفاً للفيديو..."
+              rows="3"
             />
-            <span className="username">@{video.user.username}</span>
           </div>
-          {video.description && (
-            <p className="description">{video.description}</p>
-          )}
-          <div className="video-stats">
-            <span>{video.views || 0} مشاهدة</span>
-          </div>
-        </div>
 
-        {/* أزرار التفاعل */}
-        <div className="video-actions">
-          <button 
-            className={`action-btn ${liked ? 'liked' : ''}`}
-            onClick={handleLike}
-          >
-            <FaHeart />
-            <span>{likesCount}</span>
-          </button>
-
-          {!video.isReply && (
-            <button 
-              className="action-btn"
-              onClick={handleReply}
-            >
-              <FaPlus />
-              <span>رد</span>
-            </button>
-          )}
-
-          {canDelete && (
-            <button 
-              className="action-btn delete-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDeleteConfirm(true);
-              }}
-            >
-              <FaTrash />
-              <span>حذف</span>
-            </button>
-          )}
-
-          <button 
-            className="action-btn mute-btn"
-            onClick={toggleMute}
-          >
-            {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-          </button>
-        </div>
-      </div>
-
-      {/* تأكيد الحذف */}
-      {showDeleteConfirm && (
-        <div className="delete-confirm" onClick={(e) => e.stopPropagation()}>
-          <div className="confirm-dialog">
-            <p>هل أنت متأكد من حذف هذا الفيديو؟</p>
-            <div className="confirm-buttons">
-              <button onClick={handleDelete} className="btn btn-danger">
-                نعم، احذف
-              </button>
-              <button 
-                onClick={() => setShowDeleteConfirm(false)} 
-                className="btn btn-secondary"
-              >
-                إلغاء
-              </button>
+          {/* عرض حقل كلمة المرور للفيديوهات الأساسية فقط */}
+          {!replyToId && (
+            <div className="form-group password-field">
+              <label>كلمة مرور الرفع *</label>
+              <input
+                type="password"
+                value={uploadPassword}
+                onChange={(e) => setUploadPassword(e.target.value)}
+                placeholder="أدخل كلمة مرور الرفع"
+                required
+              />
+              <small>احصل على كلمة المرور من مدير التطبيق</small>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+
+          {error && <div className="error-message">{error}</div>}
+
+          <button 
+            type="submit" 
+            className="btn btn-primary"
+            disabled={uploading || !videoFile}
+          >
+            {uploading ? 'جاري الرفع...' : 'رفع الفيديو'}
+          </button>
+        </form>
+      </div>
+      <NavigationBar currentPage="upload" />
     </div>
   );
 };
 
-export default VideoPlayer;
+export default UploadPage;

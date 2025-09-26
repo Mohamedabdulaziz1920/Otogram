@@ -1,15 +1,13 @@
 .replies-section {
   position: absolute;
-  bottom: 0;
+  bottom: 60px; /* فوق NavigationBar */
   left: 0;
   right: 0;
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(20px);
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
-  padding: 20px;
-  max-height: 50vh;
-  overflow-y: auto;
+  padding: 20px 0;
   z-index: 50;
   animation: slideUp 0.3s ease-out;
 }
@@ -27,7 +25,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  padding: 0 20px;
 }
 
 .replies-header h3 {
@@ -37,25 +36,52 @@
 }
 
 .close-replies {
-  background: none;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
   color: #fff;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
-  padding: 5px;
+  padding: 8px;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
-.replies-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+.close-replies:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.replies-slider {
+  padding: 0 20px;
+}
+
+.replies-swiper {
+  width: 100%;
+}
+
+.replies-swiper .swiper-button-next,
+.replies-swiper .swiper-button-prev {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.replies-swiper .swiper-button-next::after,
+.replies-swiper .swiper-button-prev::after {
+  font-size: 14px;
 }
 
 .reply-thumbnail {
   position: relative;
   aspect-ratio: 9/16;
   background: #1a1a1a;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.2s ease;
@@ -71,29 +97,55 @@
   object-fit: cover;
 }
 
+.reply-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.reply-thumbnail:hover .reply-overlay {
+  opacity: 1;
+}
+
+.play-icon {
+  color: #fff;
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
 .reply-info {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 8px;
-  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  padding: 10px;
+  background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .reply-user-avatar {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 1px solid #fff;
+  object-fit: cover;
 }
 
 .reply-info span {
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 /* عرض الرد بملء الشاشة */
@@ -121,10 +173,10 @@
   position: absolute;
   top: 20px;
   right: 20px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   border: none;
   color: #fff;
-  font-size: 24px;
+  font-size: 20px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -133,42 +185,40 @@
   justify-content: center;
   cursor: pointer;
   z-index: 101;
+  backdrop-filter: blur(10px);
+}
+
+.close-fullscreen:hover {
+  background: rgba(0, 0, 0, 0.9);
 }
 
 /* تحسينات للموبايل */
 @media (max-width: 768px) {
   .replies-section {
-    padding: 15px;
-    max-height: 60vh;
+    padding: 15px 0;
+    bottom: 60px;
   }
 
-  .replies-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+  .replies-header {
+    padding: 0 15px;
+  }
+
+  .replies-slider {
+    padding: 0 15px;
   }
 
   .replies-header h3 {
     font-size: 16px;
   }
-}
 
-@media (max-width: 480px) {
-  .replies-section {
-    max-height: 70vh;
+  .reply-thumbnail {
+    border-radius: 8px;
   }
 }
 
-/* Scrollbar styling */
-.replies-section::-webkit-scrollbar {
-  width: 4px;
-}
-
-.replies-section::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-}
-
-.replies-section::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
+/* لشاشات iPhone X وما بعدها */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .replies-section {
+    bottom: calc(60px + env(safe-area-inset-bottom));
+  }
 }

@@ -89,6 +89,7 @@
   font-size: 28px;
   font-weight: 700;
   margin: 0 0 20px 0;
+  font-family: 'Cairo', sans-serif;
 }
 
 .profile-stats {
@@ -106,15 +107,18 @@
 .stat-value {
   display: block;
   font-size: 24px;
-  font-weight: bold;
+  font-weight: 700;
   color: #fff;
   margin-bottom: 5px;
+  font-family: 'Cairo', sans-serif;
 }
 
 .stat-label {
   display: block;
   font-size: 14px;
   color: #888;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 500;
 }
 
 .stat-divider {
@@ -159,8 +163,6 @@
   background: none;
   border: none;
   color: #888;
-  font-size: 15px;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
@@ -168,6 +170,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Cairo', sans-serif;
 }
 
 .tab svg {

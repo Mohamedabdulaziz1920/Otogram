@@ -22,7 +22,7 @@ const HomePage = () => {
   
   const navigate = useNavigate();
   const { user } = useAuth();
-
+const videoRefs = useRef([]);
   // Fetch Videos
   const fetchVideos = useCallback(async () => {
     try {
@@ -278,56 +278,42 @@ const HomePage = () => {
               <h3>الردود ({currentVideo.replies.length})</h3>
             </div>
             
-            <Swiper
-              spaceBetween={10}
-              slidesPerView={1.5}
-              centeredSlides={true}
-              navigation={{
-                prevEl: '.swiper-button-prev-custom',
-                nextEl: '.swiper-button-next-custom',
-              }}
-              modules={[Navigation]}
-              onSlideChange={(swiper) => setActiveReplyIndex(swiper.activeIndex)}
-              className="replies-swiper"
-            >
-              {currentVideo.replies.map((reply, index) => (
-                <SwiperSlide key={reply._id}>
-                  <div className="reply-video-container">
-                    <video
-                      src={reply.videoUrl}
-                      autoPlay={index === activeReplyIndex}
-                      loop
-                      muted
-                      playsInline
-                      className="reply-video"
-                    />
-                    
-                    {/* صورة الملف الشخصي - الزاوية اليمنى العلوية */}
-                    <div 
-                      className="profile-avatar top-right small"
-                      onClick={() => navigateToProfile(reply.user.username)}
-                    >
-                      <img 
-                        src={reply.user.profileImage || '/default-avatar.png'} 
-                        alt={reply.user.username}
-                      />
-                    </div>
+         <Swiper
+  direction="vertical"
+  slidesPerView={1}
+  mousewheel={true}
+  keyboard={true}
+  modules={[Mousewheel, Keyboard]}
+  onSlideChange={(swiper) => {
+    setActiveVideoIndex(swiper.activeIndex);
+    setActiveReplyIndex(0);
 
-                    {/* زر الإعجاب - الزاوية اليسرى السفلية */}
-                    <div className="reply-video-actions">
-                      <button 
-                        className={`action-btn ${likedReplies.has(reply._id) ? 'liked' : ''}`}
-                        onClick={() => handleLikeReply(reply._id, currentVideo._id)}
-                      >
-                        <FaHeart />
-                        <span>{reply.likes?.length || 0}</span>
-                      </button>
-                    </div>
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-
+    videoRefs.current.forEach((videoEl, idx) => {
+      if (!videoEl) return;
+      if (idx === swiper.activeIndex) {
+        videoEl.play().catch(err => console.warn("Autoplay blocked:", err));
+      } else {
+        videoEl.pause();
+        videoEl.currentTime = 0;
+      }
+    });
+  }}
+>
+  {videos.map((video, index) => (
+    <SwiperSlide key={video._id}>
+      <div className="main-video-container">
+        <video
+          ref={(el) => (videoRefs.current[index] = el)}
+          src={video.videoUrl}
+          loop
+          muted
+          playsInline
+          className="main-video"
+        />
+      </div>
+    </SwiperSlide>
+  ))}
+</Swiper>
             {/* أزرار التنقل المخصصة */}
             <button className="swiper-button-prev-custom">
               <FaChevronRight />

@@ -2,9 +2,72 @@
   position: relative;
   width: 100%;
   height: 100vh;
+  height: 100dvh;
   background-color: #000;
   cursor: pointer;
   overflow: hidden;
+}
+
+.video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* للحفاظ على نسبة العرض إلى الارتفاع */
+}
+
+/* للفيديوهات العمودية على الشاشات الأفقية */
+@media (orientation: landscape) {
+  .video-element {
+    object-fit: contain;
+  }
+}
+
+/* للفيديوهات على الموبايل */
+@media (max-width: 768px) {
+  .video-info {
+    bottom: 70px;
+    left: 10px;
+    right: 60px;
+  }
+
+  .video-actions {
+    right: 10px;
+    bottom: 70px;
+    gap: 15px;
+  }
+
+  .action-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .action-btn svg {
+    font-size: 18px;
+  }
+
+  .action-btn span {
+    font-size: 9px;
+  }
+}
+
+/* لشاشات صغيرة جداً */
+@media (max-width: 360px) {
+  .video-info {
+    bottom: 65px;
+    font-size: 14px;
+  }
+
+  .user-avatar {
+    width: 35px;
+    height: 35px;
+  }
+
+  .username {
+    font-size: 14px;
+  }
+
+  .description {
+    font-size: 12px;
+  }
 }
 
 .video-element {

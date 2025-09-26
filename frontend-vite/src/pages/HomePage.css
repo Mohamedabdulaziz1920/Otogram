@@ -1,25 +1,55 @@
-/* ==================== Split Layout ==================== */
+/* ==========================================
+   ملف تنسيق الصفحة الرئيسية
+   TikTok Clone - Split Layout Design
+   ========================================== */
+
+/* ==================== المتغيرات العامة ==================== */
+:root {
+  --primary-color: #fe2c55;
+  --secondary-color: #00f2ea;
+  --bg-primary: #000;
+  --bg-secondary: #0a0a0a;
+  --text-primary: #fff;
+  --text-secondary: #aaa;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --nav-height: 60px;
+  --safe-area-bottom: env(safe-area-inset-bottom);
+  --transition-speed: 0.3s;
+  --border-radius: 12px;
+  --shadow-default: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* ==================== الحاوي الرئيسي ==================== */
 .home-page-split {
   width: 100%;
   height: 100vh;
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: #000;
+  background: var(--bg-primary);
   position: relative;
   overflow: hidden;
+  padding-bottom: var(--nav-height);
+  font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* ==================== النصف العلوي - الفيديو الأساسي ==================== */
+/* ==================== قسم الفيديو الرئيسي (النصف العلوي) ==================== */
 .main-video-section {
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #000;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-primary);
+  border-bottom: 2px solid var(--border-color);
+  min-height: 45vh;
+  max-height: 55vh;
 }
 
 .main-video-swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.main-video-swiper .swiper-slide {
   width: 100%;
   height: 100%;
 }
@@ -31,42 +61,51 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--bg-primary);
 }
 
 .main-video {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background: #000;
+  background: var(--bg-primary);
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
-/* صورة الملف الشخصي */
+/* ==================== صورة الملف الشخصي ==================== */
 .profile-avatar {
   position: absolute;
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
+  border: 2px solid var(--text-primary);
+  box-shadow: var(--shadow-default);
+  transition: all var(--transition-speed) ease;
   z-index: 10;
+  background: var(--bg-secondary);
 }
 
 .profile-avatar.top-right {
-  top: 20px;
-  right: 20px;
+  top: 16px;
+  right: 16px;
 }
 
 .profile-avatar.small {
   width: 36px;
   height: 36px;
+  border-width: 1.5px;
 }
 
 .profile-avatar:hover {
   transform: scale(1.1);
-  border-color: #fe2c55;
+  border-color: var(--primary-color);
+}
+
+.profile-avatar:active {
+  transform: scale(0.95);
 }
 
 .profile-avatar img {
@@ -75,31 +114,34 @@
   object-fit: cover;
 }
 
-/* أزرار التفاعل للفيديو الأساسي */
+/* ==================== أزرار التفاعل للفيديو الرئيسي ==================== */
 .main-video-actions {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
+  bottom: 16px;
+  right: 16px;
   display: flex;
-  gap: 15px;
+  gap: 12px;
   z-index: 10;
 }
 
 .action-btn {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  padding: 10px 20px;
+  color: var(--text-primary);
+  padding: 8px 18px;
   border-radius: 25px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-speed) ease;
   font-family: 'Cairo', sans-serif;
   font-weight: 600;
   font-size: 14px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .action-btn:hover {
@@ -107,18 +149,26 @@
   transform: translateY(-2px);
 }
 
+.action-btn:active {
+  transform: translateY(0);
+}
+
 .action-btn.liked {
   background: rgba(254, 44, 85, 0.2);
-  color: #fe2c55;
+  color: var(--primary-color);
   border-color: rgba(254, 44, 85, 0.3);
 }
 
+.action-btn.liked:hover {
+  background: rgba(254, 44, 85, 0.3);
+}
+
 .action-btn svg {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .action-btn span {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -131,20 +181,21 @@
   background: rgba(0, 242, 234, 0.3);
 }
 
-/* معلومات الفيديو الأساسي */
+/* ==================== معلومات الفيديو ==================== */
 .main-video-info {
   position: absolute;
-  bottom: 20px;
-  left: 20px;
-  right: 200px;
-  color: #fff;
+  bottom: 16px;
+  left: 16px;
+  right: 180px;
+  color: var(--text-primary);
   z-index: 10;
 }
 
 .video-description {
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.5;
   font-family: 'Cairo', sans-serif;
+  font-weight: 400;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -152,87 +203,95 @@
   overflow: hidden;
 }
 
-/* ==================== النصف السفلي - الردود ==================== */
+/* ==================== قسم الردود (النصف السفلي) ==================== */
 .replies-section-split {
   flex: 1;
   position: relative;
-  background: #0a0a0a;
+  background: var(--bg-secondary);
   overflow: hidden;
-  padding: 20px 0;
+  padding: 16px 0;
+  min-height: 35vh;
+  max-height: calc(45vh - var(--nav-height));
 }
 
 .replies-header {
   text-align: center;
-  margin-bottom: 15px;
-  padding: 0 20px;
+  margin-bottom: 12px;
+  padding: 0 16px;
 }
 
 .replies-header h3 {
-  color: #fff;
-  font-size: 18px;
+  color: var(--text-primary);
+  font-size: 17px;
   font-family: 'Cairo', sans-serif;
   font-weight: 600;
 }
 
-/* Swiper الردود */
+/* ==================== Swiper الردود ==================== */
 .replies-swiper {
   width: 100%;
-  height: calc(100% - 50px);
-  padding: 0 40px;
+  height: calc(100% - 45px);
+  padding: 0 35px;
 }
 
 .replies-swiper .swiper-slide {
-  transition: all 0.3s ease;
-  opacity: 0.6;
+  transition: all var(--transition-speed) ease;
+  opacity: 0.7;
+  transform: scale(0.95);
 }
 
 .replies-swiper .swiper-slide-active {
   opacity: 1;
-  transform: scale(1.05);
+  transform: scale(1);
 }
 
 .reply-video-container {
   width: 100%;
   height: 100%;
   position: relative;
-  border-radius: 12px;
+  border-radius: var(--border-radius);
   overflow: hidden;
-  background: #000;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-default);
 }
 
 .reply-video {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background: #000;
+  background: var(--bg-primary);
 }
 
-/* أزرار التفاعل للردود */
+/* ==================== أزرار التفاعل للردود ==================== */
 .reply-video-actions {
   position: absolute;
-  bottom: 15px;
-  left: 15px;
+  bottom: 12px;
+  left: 12px;
   z-index: 10;
 }
 
 .reply-video-actions .action-btn {
-  padding: 8px 16px;
-  font-size: 13px;
+  padding: 6px 14px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .reply-video-actions .action-btn svg {
-  font-size: 16px;
+  font-size: 14px;
 }
 
-/* أزرار التنقل المخصصة */
+.reply-video-actions .action-btn span {
+  font-size: 11px;
+}
+
+/* ==================== أزرار التنقل المخصصة ==================== */
 .swiper-button-prev-custom,
 .swiper-button-next-custom {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -240,18 +299,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-speed) ease;
   z-index: 20;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .swiper-button-prev-custom {
-  right: 10px;
+  right: 8px;
 }
 
 .swiper-button-next-custom {
-  left: 10px;
+  left: 8px;
 }
 
 .swiper-button-prev-custom:hover,
@@ -260,12 +320,17 @@
   transform: translateY(-50%) scale(1.1);
 }
 
-.swiper-button-prev-custom svg,
-.swiper-button-next-custom svg {
-  font-size: 18px;
+.swiper-button-prev-custom:active,
+.swiper-button-next-custom:active {
+  transform: translateY(-50%) scale(0.95);
 }
 
-/* حالة عدم وجود ردود */
+.swiper-button-prev-custom svg,
+.swiper-button-next-custom svg {
+  font-size: 16px;
+}
+
+/* ==================== حالة عدم وجود ردود ==================== */
 .no-replies {
   display: flex;
   flex-direction: column;
@@ -277,18 +342,19 @@
 }
 
 .no-replies p {
-  color: #888;
+  color: var(--text-secondary);
   font-size: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   font-family: 'Cairo', sans-serif;
+  font-weight: 500;
 }
 
 .no-replies .btn {
-  padding: 10px 30px;
+  padding: 10px 24px;
   font-size: 14px;
 }
 
-/* ==================== Loading & Error States ==================== */
+/* ==================== حالات التحميل والخطأ ==================== */
 .loading-container,
 .error-container,
 .empty-state-container {
@@ -297,18 +363,18 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: #000;
+  background: var(--bg-primary);
   padding: 20px;
+  gap: 16px;
 }
 
 .loading-spinner {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   border: 3px solid rgba(254, 44, 85, 0.1);
-  border-top-color: #fe2c55;
+  border-top-color: var(--primary-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 20px;
 }
 
 @keyframes spin {
@@ -318,29 +384,79 @@
 .loading-text,
 .error-content h2,
 .empty-state-content h2 {
-  color: #fff;
+  color: var(--text-primary);
   font-family: 'Cairo', sans-serif;
   font-weight: 600;
-  margin-bottom: 10px;
+  font-size: 20px;
 }
 
 .error-content p,
 .empty-state-content p {
-  color: #aaa;
+  color: var(--text-secondary);
   font-family: 'Cairo', sans-serif;
-  margin-bottom: 20px;
+  font-size: 16px;
 }
 
-/* ==================== Responsive Design ==================== */
+.error-content,
+.empty-state-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+/* ==================== الأزرار العامة ==================== */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Cairo', sans-serif;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: var(--text-primary);
+}
+
+.btn-primary:hover {
+  background: #e91e3a;
+  transform: translateY(-2px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* ==================== Media Queries ==================== */
+
+/* تابلت وموبايل كبير */
 @media (max-width: 768px) {
-  .main-video-section,
+  .home-page-split {
+    padding-bottom: var(--nav-height);
+  }
+
+  .main-video-section {
+    min-height: 45vh;
+    max-height: 50vh;
+  }
+
   .replies-section-split {
-    flex: 1;
+    min-height: 35vh;
+    max-height: calc(50vh - var(--nav-height));
+    padding: 12px 0;
   }
 
   .profile-avatar {
     width: 40px;
     height: 40px;
+  }
+
+  .profile-avatar.top-right {
+    top: 12px;
+    right: 12px;
   }
 
   .profile-avatar.small {
@@ -349,60 +465,32 @@
   }
 
   .main-video-actions {
-    bottom: 15px;
-    right: 15px;
+    bottom: 12px;
+    right: 12px;
     gap: 10px;
   }
 
   .action-btn {
-    padding: 8px 16px;
+    padding: 7px 16px;
     font-size: 13px;
   }
 
   .action-btn svg {
-    font-size: 16px;
-  }
-
-  .main-video-info {
-    bottom: 15px;
-    left: 15px;
-    right: 180px;
-  }
-
-  .video-description {
-    font-size: 13px;
-  }
-
-  .replies-swiper {
-    padding: 0 30px;
-  }
-
-  .swiper-button-prev-custom,
-  .swiper-button-next-custom {
-    width: 35px;
-    height: 35px;
-  }
-
-  .swiper-button-prev-custom svg,
-  .swiper-button-next-custom svg {
-    font-size: 16px;
-  }
-}
-
-/* شاشات صغيرة */
-@media (max-width: 480px) {
-  .main-video-actions {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .action-btn {
-    padding: 6px 12px;
-    font-size: 12px;
+    font-size: 15px;
   }
 
   .action-btn span {
     font-size: 12px;
+  }
+
+  .main-video-info {
+    bottom: 12px;
+    left: 12px;
+    right: 170px;
+  }
+
+  .video-description {
+    font-size: 13px;
   }
 
   .replies-header h3 {
@@ -410,51 +498,424 @@
   }
 
   .replies-swiper {
-    padding: 0 20px;
+    height: calc(100% - 40px);
+    padding: 0 30px;
+  }
+
+  .reply-video-actions {
+    bottom: 10px;
+    left: 10px;
+  }
+
+  .reply-video-actions .action-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  .swiper-button-prev-custom,
+  .swiper-button-next-custom {
+    width: 32px;
+    height: 32px;
+  }
+
+   .swiper-button-prev-custom svg,
+  .swiper-button-next-custom svg {
+    font-size: 14px;
   }
 }
 
-/* الشاشات الأفقية */
-@media (orientation: landscape) and (max-height: 600px) {
+/* موبايل متوسط */
+@media (max-width: 480px) {
   .home-page-split {
-    flex-direction: row;
+    padding-bottom: calc(var(--nav-height) - 5px);
   }
 
   .main-video-section {
-    flex: 1.5;
-    border-bottom: none;
-    border-left: 2px solid rgba(255, 255, 255, 0.1);
+    min-height: 48vh;
+    max-height: 52vh;
   }
 
   .replies-section-split {
-    flex: 1;
+    min-height: 33vh;
+    max-height: calc(48vh - var(--nav-height) + 5px);
+    padding: 10px 0;
+  }
+
+  .profile-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .profile-avatar.top-right {
+    top: 10px;
+    right: 10px;
+  }
+
+  .profile-avatar.small {
+    width: 30px;
+    height: 30px;
+  }
+
+  .main-video-actions {
+    bottom: 10px;
+    right: 10px;
+    gap: 8px;
+  }
+
+  .action-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  .action-btn svg {
+    font-size: 14px;
+  }
+
+  .action-btn span {
+    font-size: 11px;
+  }
+
+  .main-video-info {
+    bottom: 10px;
+    left: 10px;
+    right: 160px;
+  }
+
+  .video-description {
+    font-size: 12px;
+    -webkit-line-clamp: 1;
+  }
+
+  .replies-header {
+    margin-bottom: 10px;
+  }
+
+  .replies-header h3 {
+    font-size: 15px;
+  }
+
+  .replies-swiper {
+    padding: 0 25px;
+  }
+
+  .reply-video-actions {
+    bottom: 8px;
+    left: 8px;
+  }
+
+  .reply-video-actions .action-btn {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  .reply-video-actions .action-btn svg {
+    font-size: 12px;
+  }
+
+  .swiper-button-prev-custom,
+  .swiper-button-next-custom {
+    width: 30px;
+    height: 30px;
+  }
+
+  .swiper-button-prev-custom {
+    right: 5px;
+  }
+
+  .swiper-button-next-custom {
+    left: 5px;
+  }
+}
+
+/* موبايل صغير */
+@media (max-width: 360px) {
+  .home-page-split {
+    padding-bottom: calc(var(--nav-height) - 10px);
+  }
+
+  .main-video-section {
+    min-height: 50vh;
+    max-height: 55vh;
+  }
+
+  .replies-section-split {
+    min-height: 30vh;
+    max-height: calc(45vh - var(--nav-height) + 10px);
+    padding: 8px 0;
+  }
+
+  .profile-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .profile-avatar.small {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* إخفاء النص في الأزرار للشاشات الصغيرة جداً */
+  .action-btn span {
+    display: none;
+  }
+
+  .action-btn {
+    padding: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    justify-content: center;
+  }
+
+  .main-video-actions {
+    gap: 6px;
+  }
+
+  .reply-video-actions .action-btn {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+
+  .main-video-info {
+    right: 130px;
+  }
+
+  .video-description {
+    font-size: 11px;
+  }
+
+  .replies-header h3 {
+    font-size: 14px;
   }
 
   .replies-swiper {
     padding: 0 20px;
   }
 
-  .replies-swiper .swiper-slide {
-    height: 100%;
+  .swiper-button-prev-custom,
+  .swiper-button-next-custom {
+    width: 28px;
+    height: 28px;
+  }
+
+  .swiper-button-prev-custom svg,
+  .swiper-button-next-custom svg {
+    font-size: 12px;
   }
 }
 
-/* دعم iPhone X وما بعده */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
+/* ==================== الشاشات الأفقية ==================== */
+@media (orientation: landscape) and (max-height: 600px) {
   .home-page-split {
-    padding-bottom: env(safe-area-inset-bottom);
+    flex-direction: row;
+    padding-bottom: 0;
+    padding-right: var(--nav-height);
+  }
+
+  .main-video-section {
+    flex: 1.5;
+    border-bottom: none;
+    border-left: 2px solid var(--border-color);
+    min-height: 100%;
+    max-height: 100%;
+  }
+
+  .replies-section-split {
+    flex: 1;
+    min-height: 100%;
+    max-height: 100%;
+    padding: 16px 0;
   }
 
   .main-video-actions {
-    bottom: calc(20px + env(safe-area-inset-bottom));
+    bottom: 20px;
+    right: 20px;
   }
 
   .main-video-info {
-    bottom: calc(20px + env(safe-area-inset-bottom));
+    bottom: 20px;
+    right: 200px;
+  }
+
+  .replies-swiper {
+    height: calc(100% - 50px);
+  }
+
+  .reply-video-actions {
+    bottom: 15px;
+    left: 15px;
   }
 }
 
-/* ==================== Animations ==================== */
+/* شاشات أفقية صغيرة */
+@media (orientation: landscape) and (max-height: 400px) {
+  .profile-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .profile-avatar.small {
+    width: 28px;
+    height: 28px;
+  }
+
+  .action-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+
+  .action-btn svg {
+    font-size: 12px;
+  }
+
+  .main-video-actions {
+    bottom: 10px;
+    right: 10px;
+  }
+
+  .replies-header h3 {
+    font-size: 14px;
+  }
+}
+
+/* ==================== دعم الأجهزة الخاصة ==================== */
+
+/* iPhone X وما بعده */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .home-page-split {
+    padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom));
+  }
+
+  @media (max-width: 768px) {
+    .replies-section-split {
+      max-height: calc(50vh - var(--nav-height) - var(--safe-area-bottom));
+    }
+  }
+
+  @media (orientation: landscape) {
+    .home-page-split {
+      padding-bottom: 0;
+      padding-right: calc(var(--nav-height) + env(safe-area-inset-right));
+    }
+  }
+}
+
+/* iPad Pro */
+@media (min-width: 1024px) and (max-width: 1366px) {
+  .main-video-section {
+    min-height: 50vh;
+    max-height: 60vh;
+  }
+
+  .replies-section-split {
+    min-height: 30vh;
+    max-height: calc(40vh - var(--nav-height));
+  }
+
+  .profile-avatar {
+    width: 56px;
+    height: 56px;
+  }
+
+  .profile-avatar.small {
+    width: 44px;
+    height: 44px;
+  }
+
+  .action-btn {
+    padding: 10px 24px;
+    font-size: 16px;
+  }
+
+  .replies-swiper {
+    padding: 0 50px;
+  }
+}
+
+/* ==================== تحسينات الأداء ==================== */
+
+/* تقليل الحركة لذوي الاحتياجات الخاصة */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* تحسين الأداء للأجهزة الضعيفة */
+@media (max-width: 768px) and (max-resolution: 2dppx) {
+  .action-btn,
+  .swiper-button-prev-custom,
+  .swiper-button-next-custom {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* ==================== الوضع الداكن/الفاتح ==================== */
+@media (prefers-color-scheme: light) {
+  /* يمكن إضافة تخصيصات للوضع الفاتح هنا */
+}
+
+/* ==================== تحسينات إضافية ==================== */
+
+/* منع التحديد غير المرغوب */
+.home-page-split {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* السماح بتحديد النص في الوصف فقط */
+.video-description {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* تحسين اللمس */
+.action-btn,
+.profile-avatar,
+.swiper-button-prev-custom,
+.swiper-button-next-custom {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* تحسين التمرير */
+.replies-swiper {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* إخفاء شريط التمرير */
+.home-page-split::-webkit-scrollbar,
+.replies-section-split::-webkit-scrollbar {
+  display: none;
+}
+
+/* تحسين جودة الصور */
+.profile-avatar img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* تحسين جودة الفيديو */
+.main-video,
+.reply-video {
+  will-change: transform;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ==================== الحركات والانتقالات ==================== */
+
+/* حركة الظهور */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -464,6 +925,7 @@
   }
 }
 
+/* حركة الانزلاق */
 @keyframes slideUp {
   from {
     transform: translateY(20px);
@@ -475,8 +937,18 @@
   }
 }
 
-.main-video-container,
-.reply-video-container {
+/* حركة النبض */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* تطبيق الحركات */
+.main-video-container {
   animation: fadeIn 0.5s ease;
 }
 
@@ -485,23 +957,8 @@
   animation: slideUp 0.5s ease;
 }
 
-/* ==================== تحسينات الأداء ==================== */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+.loading-text {
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* ==================== الوضع الداكن ==================== */
-.home-page-split {
-  color-scheme: dark;
-}
-
-/* تحسين جودة الفيديو */
-.main-video,
-.reply-video {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
+/* ==================== نهاية الملف ==================== */

@@ -50,15 +50,24 @@ const HomePage = () => {
 
   return (
     <div className="home-page">
-      <Swiper
-        direction="vertical"
-        slidesPerView={1}
-        mousewheel={true}
-        keyboard={true}
-        modules={[Mousewheel, Keyboard]}
-        onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
-        className="main-swiper"
-      >
+   <Swiper
+  direction="vertical"
+  slidesPerView={1}
+  mousewheel={true}
+  keyboard={true}
+  modules={[Mousewheel, Keyboard]}
+  onSlideChange={(swiper) => {
+    setActiveIndex(swiper.activeIndex);
+    // إيقاف جميع الفيديوهات
+    const videos = document.querySelectorAll('video');
+    videos.forEach(video => {
+      if (!video.paused) {
+        video.pause();
+      }
+    });
+  }}
+  className="main-swiper"
+>
         {videos.map((video, index) => (
           <SwiperSlide key={video._id}>
             <div className="video-container">

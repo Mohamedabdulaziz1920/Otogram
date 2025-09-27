@@ -65,29 +65,7 @@ const HomePage = () => {
   useEffect(() => {
     fetchVideos();
   }, [fetchVideos]);
-  // Handle wheel event for both sections
-  useEffect(() => {
-    const handleWheel = (e) => {
-      if (e.deltaY < 0 && activeVideoIndex > 0) {
-        // Scroll up - previous video
-        mainSwiperRef.current?.slidePrev();
-      } else if (e.deltaY > 0 && activeVideoIndex < videos.length - 1) {
-        // Scroll down - next video
-        mainSwiperRef.current?.slideNext();
-      }
-    };
 
-    const bottomHalf = document.querySelector('.bottom-half');
-    if (bottomHalf) {
-      bottomHalf.addEventListener('wheel', handleWheel);
-    }
-
-    return () => {
-      if (bottomHalf) {
-        bottomHalf.removeEventListener('wheel', handleWheel);
-      }
-    };
-  }, [activeVideoIndex, videos.length]);
   // Likes management
   const handleLikeMainVideo = async (videoId) => {
     if (!user) return navigate('/login');

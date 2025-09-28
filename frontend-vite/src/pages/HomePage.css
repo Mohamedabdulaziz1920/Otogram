@@ -5,11 +5,6 @@
   box-sizing: border-box;
 }
 
-/* منع التمرير في الصفحة */
-html, body {
-  overflow: hidden;
-  height: 100%;
-}
 
 /* الحاوي الرئيسي */
 .home-container {

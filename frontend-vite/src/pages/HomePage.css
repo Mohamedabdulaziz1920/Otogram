@@ -19,6 +19,7 @@ html, body {
   flex-direction: column;
   background: #000;
   position: relative;
+  font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* النصف العلوي - الفيديو الأساسي */

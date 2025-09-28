@@ -1,111 +1,86 @@
-/* ==========================================
-   ملف تنسيق الصفحة الرئيسية
-   TikTok Clone - Split Layout Design
-   ========================================== */
-
-/* ==================== المتغيرات العامة ==================== */
-:root {
-  --primary-color: #fe2c55;
-  --secondary-color: #00f2ea;
-  --bg-primary: #000;
-  --bg-secondary: #0a0a0a;
-  --text-primary: #fff;
-  --text-secondary: #aaa;
-  --border-color: rgba(255, 255, 255, 0.1);
-  --nav-height: 60px;
-  --safe-area-bottom: env(safe-area-inset-bottom);
-  --transition-speed: 0.3s;
-  --border-radius: 12px;
-  --shadow-default: 0 4px 15px rgba(0, 0, 0, 0.3);
+/* إعادة تعيين الأساسيات */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* ==================== الحاوي الرئيسي ==================== */
-.home-page-split {
-  width: 100%;
+/* منع التمرير في الصفحة */
+html, body {
+  overflow: hidden;
+  height: 100%;
+}
+
+/* الحاوي الرئيسي */
+.home-container {
+  width: 100vw;
   height: 100vh;
-  height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: var(--bg-primary);
+  background: #000;
+  position: relative;
+}
+
+/* النصف العلوي - الفيديو الأساسي */
+.top-section {
+  width: 100%;
+  height: 50vh;
   position: relative;
   overflow: hidden;
-  padding-bottom: var(--nav-height);
-  font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* ==================== قسم الفيديو الرئيسي (النصف العلوي) ==================== */
-.main-video-section {
-  flex: 1;
+/* النصف السفلي - الردود */
+.bottom-section {
+  width: 100%;
+  height: 50vh;
   position: relative;
   overflow: hidden;
-  background: var(--bg-primary);
-  border-bottom: 2px solid var(--border-color);
-  min-height: 45vh;
-  max-height: 55vh;
+  background: #000;
 }
 
-.main-video-swiper {
+/* Swiper الرئيسي */
+.main-swiper {
   width: 100%;
   height: 100%;
 }
 
-.main-video-swiper .swiper-slide {
+.main-swiper .swiper-slide {
   width: 100%;
   height: 100%;
 }
 
-.main-video-container {
+/* حاوي الفيديو */
+.video-container,
+.reply-container {
   width: 100%;
   height: 100%;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-primary);
 }
 
-.main-video {
+/* الفيديو بحجم كامل */
+.full-video {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  background: var(--bg-primary);
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+  object-fit: cover;
 }
 
-/* ==================== صورة الملف الشخصي ==================== */
+/* صورة البروفايل */
 .profile-avatar {
   position: absolute;
-  width: 44px;
-  height: 44px;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
-  border: 2px solid var(--text-primary);
-  box-shadow: var(--shadow-default);
-  transition: all var(--transition-speed) ease;
+  border: 2px solid #fff;
   z-index: 10;
-  background: var(--bg-secondary);
-}
-
-.profile-avatar.top-right {
-  top: 16px;
-  right: 16px;
-}
-
-.profile-avatar.small {
-  width: 36px;
-  height: 36px;
-  border-width: 1.5px;
+  transition: transform 0.3s ease;
 }
 
 .profile-avatar:hover {
   transform: scale(1.1);
-  border-color: var(--primary-color);
-}
-
-.profile-avatar:active {
-  transform: scale(0.95);
 }
 
 .profile-avatar img {
@@ -114,88 +89,71 @@
   object-fit: cover;
 }
 
-/* ==================== أزرار التفاعل للفيديو الرئيسي ==================== */
-.main-video-actions {
+.reply-avatar {
+  width: 40px;
+  height: 40px;
+}
+
+/* أزرار التفاعل */
+.video-actions,
+.reply-actions {
   position: absolute;
-  bottom: 16px;
-  right: 16px;
+  bottom: 20px;
+  right: 20px;
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 15px;
   z-index: 10;
 }
 
 .action-btn {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--text-primary);
-  padding: 8px 18px;
-  border-radius: 25px;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  color: #fff;
   cursor: pointer;
-  transition: all var(--transition-speed) ease;
-  font-family: 'Cairo', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
+  transition: all 0.3s ease;
 }
 
 .action-btn:hover {
   background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-}
-
-.action-btn:active {
-  transform: translateY(0);
+  transform: scale(1.1);
 }
 
 .action-btn.liked {
-  background: rgba(254, 44, 85, 0.2);
-  color: var(--primary-color);
-  border-color: rgba(254, 44, 85, 0.3);
-}
-
-.action-btn.liked:hover {
-  background: rgba(254, 44, 85, 0.3);
+  color: #fe2c55;
 }
 
 .action-btn svg {
-  font-size: 16px;
+  font-size: 20px;
+  margin-bottom: 2px;
 }
 
 .action-btn span {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
 }
 
-.reply-btn {
-  background: rgba(0, 242, 234, 0.2);
-  border-color: rgba(0, 242, 234, 0.3);
-}
-
-.reply-btn:hover {
-  background: rgba(0, 242, 234, 0.3);
-}
-
-/* ==================== معلومات الفيديو ==================== */
-.main-video-info {
+/* معلومات الفيديو */
+.video-info {
   position: absolute;
-  bottom: 16px;
-  left: 16px;
-  right: 180px;
-  color: var(--text-primary);
+  bottom: 20px;
+  left: 20px;
+  right: 100px;
+  color: #fff;
   z-index: 10;
 }
 
 .video-description {
   font-size: 14px;
   line-height: 1.5;
-  font-family: 'Cairo', sans-serif;
-  font-weight: 400;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -203,176 +161,113 @@
   overflow: hidden;
 }
 
-/* ==================== قسم الردود (النصف السفلي) ==================== */
-.replies-section-split {
-  flex: 1;
-  position: relative;
-  background: var(--bg-secondary);
-  overflow: hidden;
-  padding: 16px 0;
-  min-height: 35vh;
-  max-height: calc(45vh - var(--nav-height));
-}
-
-.replies-header {
-  text-align: center;
-  margin-bottom: 12px;
-  padding: 0 16px;
-}
-
-.replies-header h3 {
-  color: var(--text-primary);
-  font-size: 17px;
-  font-family: 'Cairo', sans-serif;
-  font-weight: 600;
-}
-
-/* ==================== Swiper الردود ==================== */
+/* Swiper الردود */
 .replies-swiper {
   width: 100%;
-  height: calc(100% - 45px);
-  padding: 0 35px;
+  height: 100%;
 }
 
 .replies-swiper .swiper-slide {
-  transition: all var(--transition-speed) ease;
-  opacity: 0.7;
-  transform: scale(0.95);
-}
-
-.replies-swiper .swiper-slide-active {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.reply-video-container {
   width: 100%;
   height: 100%;
-  position: relative;
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  background: var(--bg-primary);
-  box-shadow: var(--shadow-default);
 }
 
-.reply-video {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background: var(--bg-primary);
-}
-
-/* ==================== أزرار التفاعل للردود ==================== */
-.reply-video-actions {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  z-index: 10;
-}
-
-.reply-video-actions .action-btn {
-  padding: 6px 14px;
-  font-size: 12px;
-  background: rgba(0, 0, 0, 0.7);
-}
-
-.reply-video-actions .action-btn svg {
-  font-size: 14px;
-}
-
-.reply-video-actions .action-btn span {
-  font-size: 11px;
-}
-
-/* ==================== أزرار التنقل المخصصة ==================== */
-.swiper-button-prev-custom,
-.swiper-button-next-custom {
+/* أزرار التنقل للردود */
+.nav-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: none;
   border-radius: 50%;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-primary);
+  color: #fff;
   cursor: pointer;
-  transition: all var(--transition-speed) ease;
   z-index: 20;
-  -webkit-tap-highlight-color: transparent;
+  transition: all 0.3s ease;
 }
 
-.swiper-button-prev-custom {
-  right: 8px;
-}
-
-.swiper-button-next-custom {
-  left: 8px;
-}
-
-.swiper-button-prev-custom:hover,
-.swiper-button-next-custom:hover {
+.nav-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-50%) scale(1.1);
 }
 
-.swiper-button-prev-custom:active,
-.swiper-button-next-custom:active {
-  transform: translateY(-50%) scale(0.95);
+.nav-prev {
+  right: 10px;
 }
 
-.swiper-button-prev-custom svg,
-.swiper-button-next-custom svg {
-  font-size: 16px;
+.nav-next {
+  left: 10px;
 }
 
-/* ==================== حالة عدم وجود ردود ==================== */
+/* حالة عدم وجود ردود */
 .no-replies {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  text-align: center;
-  padding: 20px;
+  color: #fff;
+  gap: 20px;
 }
 
 .no-replies p {
-  color: var(--text-secondary);
+  font-size: 18px;
+  color: #999;
+}
+
+.primary-btn {
+  background: #fe2c55;
+  color: #fff;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 25px;
   font-size: 16px;
-  margin-bottom: 16px;
-  font-family: 'Cairo', sans-serif;
-  font-weight: 500;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.no-replies .btn {
-  padding: 10px 24px;
-  font-size: 14px;
+.primary-btn:hover {
+  background: #e91e3a;
+  transform: scale(1.05);
 }
 
-/* ==================== حالات التحميل والخطأ ==================== */
+/* شريط التنقل السفلي */
+.navigation-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+/* حالات التحميل والخطأ */
 .loading-container,
 .error-container,
 .empty-state-container {
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  background: var(--bg-primary);
-  padding: 20px;
-  gap: 16px;
+  background: #000;
+  color: #fff;
+  gap: 20px;
 }
 
 .loading-spinner {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   border: 3px solid rgba(254, 44, 85, 0.1);
-  border-top-color: var(--primary-color);
+  border-top-color: #fe2c55;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -381,872 +276,257 @@
   to { transform: rotate(360deg); }
 }
 
-.loading-text,
-.error-content h2,
-.empty-state-content h2 {
-  color: var(--text-primary);
-  font-family: 'Cairo', sans-serif;
-  font-weight: 600;
-  font-size: 20px;
-}
-
-.error-content p,
-.empty-state-content p {
-  color: var(--text-secondary);
-  font-family: 'Cairo', sans-serif;
-  font-size: 16px;
-}
-
-.error-content,
-.empty-state-content {
-  text-align: center;
-  max-width: 400px;
-}
-
-/* ==================== الأزرار العامة ==================== */
-.btn {
-  padding: 12px 24px;
+.error-container button {
+  background: #fe2c55;
+  color: #fff;
   border: none;
-  border-radius: 25px;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'Cairo', sans-serif;
+  padding: 10px 20px;
+  border-radius: 20px;
   cursor: pointer;
-  transition: all var(--transition-speed) ease;
-  -webkit-tap-highlight-color: transparent;
+  transition: all 0.3s ease;
 }
 
-.btn-primary {
-  background: var(--primary-color);
-  color: var(--text-primary);
-}
-
-.btn-primary:hover {
+.error-container button:hover {
   background: #e91e3a;
-  transform: translateY(-2px);
 }
 
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-/* ==================== Media Queries ==================== */
-
-/* تابلت وموبايل كبير */
+/* تحسينات للأجهزة المحمولة */
 @media (max-width: 768px) {
-  .home-page-split {
-    padding-bottom: var(--nav-height);
-  }
-
-  .main-video-section {
-    min-height: 45vh;
-    max-height: 50vh;
-  }
-
-  .replies-section-split {
-    min-height: 35vh;
-    max-height: calc(50vh - var(--nav-height));
-    padding: 12px 0;
-  }
-
   .profile-avatar {
     width: 40px;
     height: 40px;
+    top: 15px;
+    right: 15px;
   }
-
-  .profile-avatar.top-right {
-    top: 12px;
-    right: 12px;
+  
+  .reply-avatar {
+    width: 35px;
+    height: 35px;
   }
-
-  .profile-avatar.small {
-    width: 32px;
-    height: 32px;
+  
+  .action-btn {
+    width: 45px;
+    height: 45px;
   }
-
-  .main-video-actions {
-    bottom: 12px;
-    right: 12px;
+  
+  .action-btn svg {
+    font-size: 18px;
+  }
+  
+  .action-btn span {
+    font-size: 11px;
+  }
+  
+  .video-actions,
+  .reply-actions {
+    bottom: 15px;
+    right: 15px;
     gap: 10px;
   }
-
-  .action-btn {
-    padding: 7px 16px;
-    font-size: 13px;
+  
+  .video-info {
+    bottom: 15px;
+    left: 15px;
+    right: 80px;
   }
-
-  .action-btn svg {
-    font-size: 15px;
-  }
-
-  .action-btn span {
-    font-size: 12px;
-  }
-
-  .main-video-info {
-    bottom: 12px;
-    left: 12px;
-    right: 170px;
-  }
-
+  
   .video-description {
     font-size: 13px;
   }
-
-  .replies-header h3 {
-    font-size: 16px;
+  
+  .nav-btn {
+    width: 35px;
+    height: 35px;
   }
-
-  .replies-swiper {
-    height: calc(100% - 40px);
-    padding: 0 30px;
-  }
-
-  .reply-video-actions {
-    bottom: 10px;
-    left: 10px;
-  }
-
-  .reply-video-actions .action-btn {
-    padding: 6px 12px;
-    font-size: 11px;
-  }
-
-  .swiper-button-prev-custom,
-  .swiper-button-next-custom {
-    width: 32px;
-    height: 32px;
-  }
-
-   .swiper-button-prev-custom svg,
-  .swiper-button-next-custom svg {
+  
+  .nav-btn svg {
     font-size: 14px;
   }
 }
 
-/* موبايل متوسط */
 @media (max-width: 480px) {
-  .home-page-split {
-    padding-bottom: calc(var(--nav-height) - 5px);
-  }
-
-  .main-video-section {
-    min-height: 48vh;
-    max-height: 52vh;
-  }
-
-  .replies-section-split {
-    min-height: 33vh;
-    max-height: calc(48vh - var(--nav-height) + 5px);
-    padding: 10px 0;
-  }
-
   .profile-avatar {
-    width: 36px;
-    height: 36px;
-  }
-
-  .profile-avatar.top-right {
+    width: 35px;
+    height: 35px;
     top: 10px;
     right: 10px;
   }
-
-  .profile-avatar.small {
+  
+  .reply-avatar {
     width: 30px;
     height: 30px;
   }
-
-  .main-video-actions {
+  
+  .action-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .action-btn svg {
+    font-size: 16px;
+  }
+  
+  .action-btn span {
+    font-size: 10px;
+  }
+  
+  .video-actions,
+  .reply-actions {
     bottom: 10px;
     right: 10px;
     gap: 8px;
   }
-
-  .action-btn {
-    padding: 6px 14px;
-    font-size: 12px;
-  }
-
-  .action-btn svg {
-    font-size: 14px;
-  }
-
-  .action-btn span {
-    font-size: 11px;
-  }
-
-  .main-video-info {
+  
+  .video-info {
     bottom: 10px;
     left: 10px;
-    right: 160px;
+    right: 70px;
   }
-
+  
   .video-description {
     font-size: 12px;
     -webkit-line-clamp: 1;
   }
-
-  .replies-header {
-    margin-bottom: 10px;
-  }
-
-  .replies-header h3 {
-    font-size: 15px;
-  }
-
-  .replies-swiper {
-    padding: 0 25px;
-  }
-
-  .reply-video-actions {
-    bottom: 8px;
-    left: 8px;
-  }
-
-  .reply-video-actions .action-btn {
-    padding: 5px 10px;
-    font-size: 10px;
-  }
-
-  .reply-video-actions .action-btn svg {
-    font-size: 12px;
-  }
-
-  .swiper-button-prev-custom,
-  .swiper-button-next-custom {
+  
+  .nav-btn {
     width: 30px;
     height: 30px;
   }
-
-  .swiper-button-prev-custom {
-    right: 5px;
-  }
-
-  .swiper-button-next-custom {
-    left: 5px;
-  }
-}
-
-/* موبايل صغير */
-@media (max-width: 360px) {
-  .home-page-split {
-    padding-bottom: calc(var(--nav-height) - 10px);
-  }
-
-  .main-video-section {
-    min-height: 50vh;
-    max-height: 55vh;
-  }
-
-  .replies-section-split {
-    min-height: 30vh;
-    max-height: calc(45vh - var(--nav-height) + 10px);
-    padding: 8px 0;
-  }
-
-  .profile-avatar {
-    width: 32px;
-    height: 32px;
-  }
-
-  .profile-avatar.small {
-    width: 28px;
-    height: 28px;
-  }
-
-  /* إخفاء النص في الأزرار للشاشات الصغيرة جداً */
-  .action-btn span {
-    display: none;
-  }
-
-  .action-btn {
-    padding: 8px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    justify-content: center;
-  }
-
-  .main-video-actions {
-    gap: 6px;
-  }
-
-  .reply-video-actions .action-btn {
-    width: 32px;
-    height: 32px;
-    padding: 6px;
-  }
-
-  .main-video-info {
-    right: 130px;
-  }
-
-  .video-description {
-    font-size: 11px;
-  }
-
-  .replies-header h3 {
-    font-size: 14px;
-  }
-
-  .replies-swiper {
-    padding: 0 20px;
-  }
-
-  .swiper-button-prev-custom,
-  .swiper-button-next-custom {
-    width: 28px;
-    height: 28px;
-  }
-
-  .swiper-button-prev-custom svg,
-  .swiper-button-next-custom svg {
+  
+  .nav-btn svg {
     font-size: 12px;
   }
 }
 
-/* ==================== الشاشات الأفقية ==================== */
-@media (orientation: landscape) and (max-height: 600px) {
-  .home-page-split {
-    flex-direction: row;
-    padding-bottom: 0;
-    padding-right: var(--nav-height);
-  }
-
-  .main-video-section {
-    flex: 1.5;
-    border-bottom: none;
-    border-left: 2px solid var(--border-color);
-    min-height: 100%;
-    max-height: 100%;
-  }
-
-  .replies-section-split {
-    flex: 1;
-    min-height: 100%;
-    max-height: 100%;
-    padding: 16px 0;
-  }
-
-  .main-video-actions {
-    bottom: 20px;
-    right: 20px;
-  }
-
-  .main-video-info {
-    bottom: 20px;
-    right: 200px;
-  }
-
-  .replies-swiper {
-    height: calc(100% - 50px);
-  }
-
-  .reply-video-actions {
-    bottom: 15px;
-    left: 15px;
-  }
+/* إزالة أي مسافات أو حواف */
+.swiper {
+  margin: 0;
+  padding: 0;
 }
 
-/* شاشات أفقية صغيرة */
-@media (orientation: landscape) and (max-height: 400px) {
-  .profile-avatar {
-    width: 32px;
-    height: 32px;
-  }
-
-  .profile-avatar.small {
-    width: 28px;
-    height: 28px;
-  }
-
-  .action-btn {
-    padding: 5px 12px;
-    font-size: 11px;
-  }
-
-  .action-btn svg {
-    font-size: 12px;
-  }
-
-  .main-video-actions {
-    bottom: 10px;
-    right: 10px;
-  }
-
-  .replies-header h3 {
-    font-size: 14px;
-  }
+.swiper-wrapper {
+  height: 100%;
 }
 
-/* ==================== دعم الأجهزة الخاصة ==================== */
-
-/* iPhone X وما بعده */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .home-page-split {
-    padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom));
-  }
-
-  @media (max-width: 768px) {
-    .replies-section-split {
-      max-height: calc(50vh - var(--nav-height) - var(--safe-area-bottom));
-    }
-  }
-
-  @media (orientation: landscape) {
-    .home-page-split {
-      padding-bottom: 0;
-      padding-right: calc(var(--nav-height) + env(safe-area-inset-right));
-    }
-  }
+.swiper-slide {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-/* iPad Pro */
-@media (min-width: 1024px) and (max-width: 1366px) {
-  .main-video-section {
-    min-height: 50vh;
-    max-height: 60vh;
-  }
-
-  .replies-section-split {
-    min-height: 30vh;
-    max-height: calc(40vh - var(--nav-height));
-  }
-
-  .profile-avatar {
-    width: 56px;
-    height: 56px;
-  }
-
-  .profile-avatar.small {
-    width: 44px;
-    height: 44px;
-  }
-
-  .action-btn {
-    padding: 10px 24px;
-    font-size: 16px;
-  }
-
-  .replies-swiper {
-    padding: 0 50px;
-  }
+/* التأكد من عدم وجود مسافات بين النصفين */
+.top-section,
+.bottom-section {
+  margin: 0;
+  padding: 0;
+  border: none;
+  line-height: 0;
 }
 
-/* ==================== تحسينات الأداء ==================== */
-
-/* تقليل الحركة لذوي الاحتياجات الخاصة */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* إخفاء شريط التمرير */
+::-webkit-scrollbar {
+  display: none;
 }
 
-/* تحسين الأداء للأجهزة الضعيفة */
-@media (max-width: 768px) and (max-resolution: 2dppx) {
-  .action-btn,
-  .swiper-button-prev-custom,
-  .swiper-button-next-custom {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: rgba(0, 0, 0, 0.8);
-  }
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* ==================== الوضع الداكن/الفاتح ==================== */
-@media (prefers-color-scheme: light) {
-  /* يمكن إضافة تخصيصات للوضع الفاتح هنا */
-}
-
-/* ==================== تحسينات إضافية ==================== */
-
-/* منع التحديد غير المرغوب */
-.home-page-split {
+/* منع التحديد */
+.home-container {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
 }
 
-/* السماح بتحديد النص في الوصف فقط */
+/* السماح بتحديد النص في الوصف */
 .video-description {
   -webkit-user-select: text;
   user-select: text;
 }
 
-/* تحسين اللمس */
-.action-btn,
-.profile-avatar,
-.swiper-button-prev-custom,
-.swiper-button-next-custom {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-/* تحسين التمرير */
-.replies-swiper {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-}
-
-/* إخفاء شريط التمرير */
-.home-page-split::-webkit-scrollbar,
-.replies-section-split::-webkit-scrollbar {
-  display: none;
-}
-
-/* تحسين جودة الصور */
-.profile-avatar img {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
-
-/* تحسين جودة الفيديو */
-.main-video,
-.reply-video {
+/* تحسينات الأداء */
+.full-video {
   will-change: transform;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   backface-visibility: hidden;
 }
 
-/* ==================== الحركات والانتقالات ==================== */
-
-/* حركة الظهور */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
+/* دعم الأجهزة الخاصة */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .navigation-bar {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
-/* حركة الانزلاق */
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* حركة النبض */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* تطبيق الحركات */
-.main-video-container {
-  animation: fadeIn 0.5s ease;
-}
-
-.main-video-actions,
-.reply-video-actions {
-  animation: slideUp 0.5s ease;
-}
-
-.loading-text {
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-/* ==================== نهاية الملف ==================== */
-/* أضف هذا في نهاية HomePage.css */
-
-/* ==================== Video Error State ==================== */
-.video-error {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #1a1a1a;
-  color: #666;
-  font-family: 'Cairo', sans-serif;
-  text-align: center;
-  padding: 20px;
-}
-
-.video-error p {
-  font-size: 14px;
-}
-
-/* ==================== Play Button Overlay ==================== */
-.video-play-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 70px;
-  height: 70px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 5;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.video-play-overlay:hover {
-  transform: translate(-50%, -50%) scale(1.1);
-  background: #fff;
-}
-
-.video-play-overlay svg {
-  font-size: 24px;
-  color: #000;
-  margin-left: 3px; /* لتوسيط الأيقونة بشكل أفضل */
-}
-
-/* حجم أصغر للموبايل */
-@media (max-width: 768px) {
-  .video-play-overlay {
-    width: 60px;
-    height: 60px;
+/* الشاشات الأفقية */
+@media (orientation: landscape) and (max-height: 600px) {
+  .home-container {
+    flex-direction: row;
   }
   
-  .video-play-overlay svg {
-    font-size: 20px;
-  }
-}
-
-@media (max-width: 480px) {
-  .video-play-overlay {
-    width: 50px;
-    height: 50px;
+  .top-section {
+    width: 50vw;
+    height: 100vh;
   }
   
-  .video-play-overlay svg {
-    font-size: 18px;
-  }
-}
-
-/* ==================== Fullscreen Styles ==================== */
-.fullscreen-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.95);
-  z-index: 9998;
-  animation: fadeIn 0.3s ease;
-}
-
-.fullscreen-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.fullscreen-video-wrapper {
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.fullscreen-video {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-/* أزرار التحكم في وضع ملء الشاشة */
-.fullscreen-controls {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 15px;
-  z-index: 10;
-}
-
-.fullscreen-control-btn {
-  width: 50px;
-  height: 50px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.fullscreen-control-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
-}
-
-.fullscreen-control-btn:active {
-  transform: scale(0.95);
-}
-
-/* زر الإغلاق في وضع ملء الشاشة */
-.fullscreen-close-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: none;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 10;
-}
-
-.fullscreen-close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
-}
-
-/* دعم safe area للأجهزة الحديثة */
-@supports (padding-top: env(safe-area-inset-top)) {
-  .fullscreen-close-btn {
-    top: calc(20px + env(safe-area-inset-top));
-    right: calc(20px + env(safe-area-inset-right));
+  .bottom-section {
+    width: 50vw;
+    height: 100vh;
   }
   
-  .fullscreen-controls {
-    bottom: calc(20px + env(safe-area-inset-bottom));
+  .video-actions {
+    bottom: 30px;
+    right: 30px;
+  }
+  
+  .video-info {
+    bottom: 30px;
+    left: 30px;
+    right: 120px;
   }
 }
 
-/* ==================== تحسينات إضافية ==================== */
-
-/* تأكد من أن الفيديوهات قابلة للنقر */
-.main-video-container,
-.reply-video-container {
-  cursor: pointer;
+/* تحسين اللمس */
+.action-btn,
+.profile-avatar,
+.nav-btn {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-/* إضافة مؤشر التحميل للفيديو */
-.video-loading {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  z-index: 5;
+/* منع التمرير العمودي في قسم الردود */
+.bottom-section {
+  touch-action: pan-x;
 }
 
-/* تحسين مظهر الفيديو أثناء التحميل */
-.video-player-split.loading::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #000;
-  z-index: 1;
-}
-
-/* ==================== حالات خاصة ==================== */
-
-/* عندما يكون الفيديو في وضع التشغيل */
-.video-player-split.playing .play-overlay {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* عندما يكون الفيديو متوقف */
-.video-player-split:not(.playing) .play-overlay {
+/* تحسين الانتقالات */
+.swiper-slide-active .full-video {
   opacity: 1;
 }
 
-/* تأثير hover للفيديو */
-.video-player-split:hover .play-overlay {
-  background: rgba(0, 0, 0, 0.5);
+.swiper-slide:not(.swiper-slide-active) .full-video {
+  opacity: 0.8;
 }
 
-.video-player-split:hover .play-button {
-  transform: scale(1.1);
-}
-
-/* ==================== تحسينات الأداء للموبايل ==================== */
-@media (max-width: 768px) {
-  /* تقليل جودة الظلال للأداء الأفضل */
-  .video-play-overlay,
-  .play-button {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  }
-  
-  /* تعطيل بعض التأثيرات للأجهزة الضعيفة */
-  @media (max-resolution: 2dppx) {
-    .fullscreen-control-btn,
-    .fullscreen-close-btn {
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      background: rgba(0, 0, 0, 0.8);
-    }
-  }
-}
-
-/* ==================== رسائل التنبيه ==================== */
-.video-message {
+/* رسالة للمستخدم */
+.swipe-hint {
   position: absolute;
-  top: 50%;
+  bottom: 60px;
   left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.8);
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
   color: #fff;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: 20px;
-  font-size: 14px;
-  font-family: 'Cairo', sans-serif;
-  z-index: 10;
-  pointer-events: none;
+  font-size: 12px;
+  z-index: 15;
   animation: fadeInOut 3s ease;
 }
 
 @keyframes fadeInOut {
-  0% { opacity: 0; }
-  20% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; }
+  0%, 100% { opacity: 0; }
+  20%, 80% { opacity: 1; }
 }

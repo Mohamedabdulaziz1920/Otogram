@@ -19,10 +19,13 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const [likedVideos, setLikedVideos] = useState(new Set());
   const [likedReplies, setLikedReplies] = useState(new Set());
+  const [isScrolling, setIsScrolling] = useState(false);
 
   const navigate = useNavigate();
   const { user } = useAuth();
   const mainSwiperRef = useRef(null);
+  const repliesSwiperRef = useRef(null);
+  const scrollTimeoutRef = useRef(null);
 
   // Fetch Videos
   const fetchVideos = useCallback(async () => {
@@ -67,29 +70,101 @@ const HomePage = () => {
     fetchVideos();
   }, [fetchVideos]);
 
-  // Handle wheel event for bottom section
+  // معالج التمرير الموحد للصفحة بأكملها
   useEffect(() => {
     const handleWheel = (e) => {
       // منع التمرير الافتراضي
       e.preventDefault();
       
-      if (e.deltaY > 0 && activeVideoIndex < videos.length - 1) {
+      // منع التمرير المتكرر السريع
+      if (isScrolling) return;
+      
+      setIsScrolling(true);
+      
+      // إيقاف التمرير بعد فترة قصيرة
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrolling(false);
+      }, 800); // تأخير 800ms بين التمريرات
+
+      if (e.deltaY > 50 && activeVideoIndex < videos.length - 1) {
         // التمرير لأسفل - الفيديو التالي
         mainSwiperRef.current?.slideNext();
-      } else if (e.deltaY < 0 && activeVideoIndex > 0) {
+        setActiveReplyIndex(0); // إعادة تعيين الرد إلى الأول
+        if (repliesSwiperRef.current) {
+          repliesSwiperRef.current.slideTo(0);
+        }
+      } else if (e.deltaY < -50 && activeVideoIndex > 0) {
         // التمرير لأعلى - الفيديو السابق
         mainSwiperRef.current?.slidePrev();
+        setActiveReplyIndex(0); // إعادة تعيين الرد إلى الأول
+        if (repliesSwiperRef.current) {
+          repliesSwiperRef.current.slideTo(0);
+        }
       }
     };
 
-    const bottomSection = document.querySelector('.bottom-section');
-    if (bottomSection) {
-      bottomSection.addEventListener('wheel', handleWheel, { passive: false });
+    // إضافة مستمع الحدث للصفحة بأكملها
+    const container = document.querySelector('.home-container');
+    if (container) {
+      container.addEventListener('wheel', handleWheel, { passive: false });
     }
 
     return () => {
-      if (bottomSection) {
-        bottomSection.removeEventListener('wheel', handleWheel);
+      if (container) {
+        container.removeEventListener('wheel', handleWheel);
+      }
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [activeVideoIndex, videos.length, isScrolling]);
+
+  // معالج اللمس للأجهزة المحمولة
+  useEffect(() => {
+    let touchStartY = 0;
+    let touchEndY = 0;
+
+    const handleTouchStart = (e) => {
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e) => {
+      touchEndY = e.changedTouches[0].clientY;
+      const deltaY = touchStartY - touchEndY;
+
+      if (Math.abs(deltaY) > 50) { // حد أدنى للحركة
+        if (deltaY > 0 && activeVideoIndex < videos.length - 1) {
+          // السحب لأعلى - الفيديو التالي
+          mainSwiperRef.current?.slideNext();
+          setActiveReplyIndex(0);
+          if (repliesSwiperRef.current) {
+            repliesSwiperRef.current.slideTo(0);
+          }
+        } else if (deltaY < 0 && activeVideoIndex > 0) {
+          // السحب لأسفل - الفيديو السابق
+          mainSwiperRef.current?.slidePrev();
+          setActiveReplyIndex(0);
+          if (repliesSwiperRef.current) {
+            repliesSwiperRef.current.slideTo(0);
+          }
+        }
+      }
+    };
+
+    const container = document.querySelector('.home-container');
+    if (container) {
+      container.addEventListener('touchstart', handleTouchStart, { passive: true });
+      container.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('touchstart', handleTouchStart);
+        container.removeEventListener('touchend', handleTouchEnd);
       }
     };
   }, [activeVideoIndex, videos.length]);
@@ -169,9 +244,9 @@ const HomePage = () => {
         <Swiper
           direction="vertical"
           slidesPerView={1}
-          mousewheel
+          mousewheel={false} // تعطيل التمرير المدمج
           keyboard
-          modules={[Mousewheel, Keyboard]}
+          modules={[Keyboard]}
           onSwiper={(swiper) => {
             mainSwiperRef.current = swiper;
           }}
@@ -180,6 +255,7 @@ const HomePage = () => {
             setActiveReplyIndex(0);
           }}
           className="main-swiper"
+          allowTouchMove={false} // منع السحب المباشر
         >
           {videos.map((video, index) => (
             <SwiperSlide key={video._id}>
@@ -236,6 +312,9 @@ const HomePage = () => {
               nextEl: '.nav-next'
             }}
             modules={[Navigation]}
+            onSwiper={(swiper) => {
+              repliesSwiperRef.current = swiper;
+            }}
             onSlideChange={(s) => setActiveReplyIndex(s.activeIndex)}
             className="replies-swiper"
           >

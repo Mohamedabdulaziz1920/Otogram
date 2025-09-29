@@ -1,4 +1,24 @@
-/* ==================== إعادة تعيين الأساسيات ==================== */
+/* ====================================
+   GLOBAL RESET & VARIABLES
+   ==================================== */
+:root {
+  --primary-color: #fe2c55;
+  --bg-primary: #000;
+  --bg-secondary: #0a0a0a;
+  --text-primary: #fff;
+  --text-secondary: #aaa;
+  --nav-height: 60px; /* Base navigation height */
+  --font-main: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  /* Responsive font size using clamp() */
+  --font-size-small: clamp(0.65rem, 1.5vw + 0.2rem, 0.8rem); /* 10.4px -> 12.8px */
+  --font-size-base: clamp(0.8rem, 2vw + 0.3rem, 1rem);      /* 12.8px -> 16px */
+  --font-size-icon: clamp(1.25rem, 3vw + 0.5rem, 1.75rem);   /* 20px -> 28px */
+  
+  /* Safe area insets for modern devices */
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -8,146 +28,145 @@
 html, body {
   overflow: hidden;
   height: 100%;
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* إخفاء شريط التمرير لـ Webkit */
 ::-webkit-scrollbar {
   display: none;
 }
 
-/* ==================== الحاوي الرئيسي ==================== */
+/* ====================================
+   MAIN LAYOUT & SWIPER
+   ==================================== */
 .home-page-split {
   width: 100vw;
-  height: 100vh;
+  height: 100vh; /* Fallback for older browsers */
+  height: 100dvh; /* Dynamic viewport height */
   display: flex;
-  background: #000;
+  background: var(--bg-primary);
+  font-family: var(--font-main);
   position: relative;
-  font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none; /* Safari */
-  user-select: none;
+  /* Adjust padding for the bottom navigation bar */
+  padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom));
 }
 
-/* ==================== Swiper الرئيسي العمودي ==================== */
 .main-swiper {
   width: 100%;
   height: 100%;
 }
 
-/* كل شريحة (فيديو رئيسي + ردود) */
 .video-split-slide {
-  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-/* ==================== النصف العلوي والسفلي ==================== */
+/* ====================================
+   TOP & BOTTOM SECTIONS (50/50 SPLIT)
+   ==================================== */
 .split-top,
 .split-bottom {
-  flex: 1; /* يقسم الشاشة بالتساوي 50% */
+  flex: 1;
   height: 50%;
   position: relative;
   overflow: hidden;
-  background: #000;
+  background: var(--bg-primary);
 }
 
-/* عنصر الفيديو نفسه (يستخدم في الأعلى والأسفل) */
+.split-bottom {
+  background: var(--bg-secondary);
+}
+
 .video-element {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  will-change: transform;
-  -webkit-transform: translateZ(0);
+  object-fit: cover; /* Fill the container */
+  -webkit-transform: translateZ(0); /* Performance hack */
   transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
-/* ==================== العناصر المتراكبة (Overlays) ==================== */
+/* ====================================
+   OVERLAYS & INTERACTIVE ELEMENTS
+   ==================================== */
 .overlay-top,
 .overlay-bottom {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none; /* السماح بالتفاعل مع العناصر الداخلية فقط */
+  inset: 0; /* top, right, bottom, left: 0 */
+  pointer-events: none; /* Allow clicks to pass through to the video */
+  padding: 1rem; /* Base padding */
 }
 
-/* صورة الملف الشخصي */
 .profile-avatar {
   position: absolute;
-  top: 15px;
-  right: 15px;
-  width: 48px;
-  height: 48px;
+  top: 1rem;
+  right: 1rem;
+  width: clamp(38px, 10vw, 50px); /* Responsive size */
+  height: clamp(38px, 10vw, 50px);
   border-radius: 50%;
-  border: 2px solid #fff;
+  border: 2px solid var(--text-primary);
   overflow: hidden;
   cursor: pointer;
   z-index: 10;
-  pointer-events: auto; /* تفعيل التفاعل */
-  transition: transform 0.3s ease;
+  pointer-events: auto; /* Make it clickable */
+  transition: transform 0.2s ease-out;
 }
-
 .profile-avatar:hover {
   transform: scale(1.1);
 }
-
 .profile-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* أزرار التفاعل */
 .actions {
   position: absolute;
-  bottom: 15px;
-  right: 15px;
+  bottom: 1rem;
+  right: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 1rem;
   z-index: 10;
-  pointer-events: auto; /* تفعيل التفاعل */
+  pointer-events: auto;
 }
 
 .action-btn {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(30, 30, 30, 0.4);
   backdrop-filter: blur(8px);
-  border: none;
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
-  width: 48px;
-  height: 48px;
+  width: clamp(45px, 12vw, 55px);
+  height: clamp(45px, 12vw, 55px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 10px;
-  gap: 2px;
+  transition: background-color 0.2s, transform 0.2s;
+  font-size: var(--font-size-small);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
-
+.action-btn svg {
+  font-size: var(--font-size-icon);
+}
+.action-btn.liked svg {
+  color: var(--primary-color);
+}
 .action-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(50, 50, 50, 0.6);
   transform: scale(1.1);
 }
-
-.action-btn.liked svg {
-  color: #fe2c55;
+.action-btn:active {
+  transform: scale(0.95);
 }
 
-.action-btn svg {
-  font-size: 20px;
-}
-
-/* ==================== Swiper الردود الأفقي ==================== */
+/* ====================================
+   REPLIES SECTION
+   ==================================== */
 .replies-swiper-horizontal {
   width: 100%;
   height: 100%;
@@ -159,88 +178,158 @@ html, body {
   position: relative;
 }
 
-/* أزرار التنقل للردود */
 .nav-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
+  width: clamp(35px, 10vw, 45px);
+  height: clamp(35px, 10vw, 45px);
   background: rgba(0, 0, 0, 0.3);
+  color: var(--text-primary);
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
   cursor: pointer;
   z-index: 20;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 .nav-arrow:hover {
   background: rgba(0, 0, 0, 0.5);
 }
-.nav-arrow.left { left: 10px; }
-.nav-arrow.right { right: 10px; }
+.nav-arrow.left { left: 1rem; }
+.nav-arrow.right { right: 1rem; }
 
-/* حالة عدم وجود ردود */
 .no-replies {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #aaa;
-  gap: 20px;
+  color: var(--text-secondary);
+  gap: 1rem;
+  padding: 1rem;
+  text-align: center;
 }
-
 .primary-btn {
-  background: #fe2c55;
-  color: #fff;
+  background: var(--primary-color);
+  color: var(--text-primary);
   border: none;
-  padding: 12px 30px;
-  border-radius: 25px;
-  font-size: 16px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-size: var(--font-size-base);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.2s;
 }
 .primary-btn:hover {
-  background: #e91e3a;
   transform: scale(1.05);
 }
 
-/* ==================== حالات التحميل والخطأ ==================== */
+/* ====================================
+   LOADING & ERROR STATES
+   ==================================== */
 .loading-container,
 .error-container,
 .empty-state-container {
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #000;
-  color: #fff;
-  gap: 20px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  gap: 1rem;
+  padding: 1rem;
+  text-align: center;
 }
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 3px solid rgba(254, 44, 85, 0.1);
-  border-top-color: #fe2c55;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ==================== شريط التنقل السفلي ==================== */
-/* (يفترض أن له ملف CSS خاص به، ولكن هذا يضمن وضعه الصحيح) */
+/* ====================================
+   NAVIGATION BAR PLACEMENT
+   ==================================== */
 .navigation-bar {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 100;
+  height: calc(var(--nav-height) + var(--safe-area-bottom));
+}
+
+/* ====================================
+   MEDIA QUERIES FOR RESPONSIVENESS
+   ==================================== */
+
+/* For Tablets and larger screens */
+@media (min-width: 768px) {
+  .home-page-split {
+    flex-direction: row; /* Side-by-side layout */
+    padding-bottom: 0; /* Remove bottom padding */
+    padding-left: var(--nav-height); /* Space for vertical nav */
+  }
+
+  .video-split-slide {
+    flex-direction: row; /* Also side-by-side */
+  }
+
+  .split-top, .split-bottom {
+    flex: 1;
+    width: 50%;
+    height: 100%; /* Full height */
+  }
+
+  .split-top {
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .navigation-bar {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: auto; /* Unset right */
+    width: var(--nav-height);
+    height: 100%;
+  }
+
+  .actions {
+    right: 1.5rem;
+    bottom: 1.5rem;
+  }
+}
+
+/* For landscape mobile phones */
+@media (max-height: 500px) and (orientation: landscape) {
+  .home-page-split {
+    flex-direction: row;
+    padding-bottom: 0;
+  }
+  
+  .video-split-slide {
+    flex-direction: row;
+  }
+
+  .split-top, .split-bottom {
+    width: 50%;
+    height: 100%;
+  }
+
+  .actions {
+    gap: 0.5rem;
+  }
+
+  .navigation-bar {
+    display: none; /* Often hidden in landscape for more space */
+  }
 }

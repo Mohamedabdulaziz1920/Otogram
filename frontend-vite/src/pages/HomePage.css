@@ -1,81 +1,94 @@
-/* إعادة تعيين الأساسيات */
+/* ==================== إعادة تعيين الأساسيات ==================== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* منع التمرير في الصفحة */
 html, body {
   overflow: hidden;
   height: 100%;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
-/* الحاوي الرئيسي */
-.home-container {
+
+/* إخفاء شريط التمرير لـ Webkit */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* ==================== الحاوي الرئيسي ==================== */
+.home-page-split {
   width: 100vw;
   height: 100vh;
   display: flex;
-  flex-direction: column;
   background: #000;
   position: relative;
   font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  user-select: none;
 }
 
-/* النصف العلوي - الفيديو الأساسي */
-.top-section {
-  width: 100%;
-  height: 50vh;
-  position: relative;
-  overflow: hidden;
-}
-
-/* النصف السفلي - الردود */
-.bottom-section {
-  width: 100%;
-  height: 50vh;
-  position: relative;
-  overflow: hidden;
-  background: #000;
-}
-
-/* Swiper الرئيسي */
+/* ==================== Swiper الرئيسي العمودي ==================== */
 .main-swiper {
   width: 100%;
   height: 100%;
 }
 
-.main-swiper .swiper-slide {
+/* كل شريحة (فيديو رئيسي + ردود) */
+.video-split-slide {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-/* حاوي الفيديو */
-.video-container,
-.reply-container {
-  width: 100%;
-  height: 100%;
+/* ==================== النصف العلوي والسفلي ==================== */
+.split-top,
+.split-bottom {
+  flex: 1; /* يقسم الشاشة بالتساوي 50% */
+  height: 50%;
   position: relative;
+  overflow: hidden;
+  background: #000;
 }
 
-/* الفيديو بحجم كامل */
-.full-video {
+/* عنصر الفيديو نفسه (يستخدم في الأعلى والأسفل) */
+.video-element {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  will-change: transform;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
-/* صورة البروفايل */
+/* ==================== العناصر المتراكبة (Overlays) ==================== */
+.overlay-top,
+.overlay-bottom {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none; /* السماح بالتفاعل مع العناصر الداخلية فقط */
+}
+
+/* صورة الملف الشخصي */
 .profile-avatar {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 50px;
-  height: 50px;
+  top: 15px;
+  right: 15px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
+  border: 2px solid #fff;
   overflow: hidden;
   cursor: pointer;
-  border: 2px solid #fff;
   z-index: 10;
+  pointer-events: auto; /* تفعيل التفاعل */
   transition: transform 0.3s ease;
 }
 
@@ -89,30 +102,25 @@ html, body {
   object-fit: cover;
 }
 
-.reply-avatar {
-  width: 40px;
-  height: 40px;
-}
-
 /* أزرار التفاعل */
-.video-actions,
-.reply-actions {
+.actions {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
+  bottom: 15px;
+  right: 15px;
   display: flex;
   flex-direction: column;
   gap: 15px;
   z-index: 10;
+  pointer-events: auto; /* تفعيل التفاعل */
 }
 
 .action-btn {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
   border: none;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -120,66 +128,43 @@ html, body {
   color: #fff;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-size: 10px;
+  gap: 2px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .action-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
   transform: scale(1.1);
 }
 
-.action-btn.liked {
+.action-btn.liked svg {
   color: #fe2c55;
 }
 
 .action-btn svg {
   font-size: 20px;
-  margin-bottom: 2px;
 }
 
-.action-btn span {
-  font-size: 12px;
-  font-weight: 600;
-}
-
-/* معلومات الفيديو */
-.video-info {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  right: 100px;
-  color: #fff;
-  z-index: 10;
-}
-
-.video-description {
-  font-size: 14px;
-  line-height: 1.5;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Swiper الردود */
-.replies-swiper {
+/* ==================== Swiper الردود الأفقي ==================== */
+.replies-swiper-horizontal {
   width: 100%;
   height: 100%;
 }
 
-.replies-swiper .swiper-slide {
+.reply-wrapper {
   width: 100%;
   height: 100%;
+  position: relative;
 }
 
 /* أزرار التنقل للردود */
-.nav-btn {
+.nav-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: none;
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -190,36 +175,24 @@ html, body {
   cursor: pointer;
   z-index: 20;
   transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
-
-.nav-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-50%) scale(1.1);
+.nav-arrow:hover {
+  background: rgba(0, 0, 0, 0.5);
 }
-
-.nav-prev {
-  right: 10px;
-}
-
-.nav-next {
-  left: 10px;
-}
+.nav-arrow.left { left: 10px; }
+.nav-arrow.right { right: 10px; }
 
 /* حالة عدم وجود ردود */
 .no-replies {
-  width: 100%;
-  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  height: 100%;
+  color: #aaa;
   gap: 20px;
-}
-
-.no-replies p {
-  font-size: 18px;
-  color: #999;
 }
 
 .primary-btn {
@@ -233,22 +206,12 @@ html, body {
   cursor: pointer;
   transition: all 0.3s ease;
 }
-
 .primary-btn:hover {
   background: #e91e3a;
   transform: scale(1.05);
 }
 
-/* شريط التنقل السفلي */
-.navigation-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-}
-
-/* حالات التحميل والخطأ */
+/* ==================== حالات التحميل والخطأ ==================== */
 .loading-container,
 .error-container,
 .empty-state-container {
@@ -262,7 +225,6 @@ html, body {
   color: #fff;
   gap: 20px;
 }
-
 .loading-spinner {
   width: 50px;
   height: 50px;
@@ -271,262 +233,14 @@ html, body {
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.error-container button {
-  background: #fe2c55;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.error-container button:hover {
-  background: #e91e3a;
-}
-
-/* تحسينات للأجهزة المحمولة */
-@media (max-width: 768px) {
-  .profile-avatar {
-    width: 40px;
-    height: 40px;
-    top: 15px;
-    right: 15px;
-  }
-  
-  .reply-avatar {
-    width: 35px;
-    height: 35px;
-  }
-  
-  .action-btn {
-    width: 45px;
-    height: 45px;
-  }
-  
-  .action-btn svg {
-    font-size: 18px;
-  }
-  
-  .action-btn span {
-    font-size: 11px;
-  }
-  
-  .video-actions,
-  .reply-actions {
-    bottom: 15px;
-    right: 15px;
-    gap: 10px;
-  }
-  
-  .video-info {
-    bottom: 15px;
-    left: 15px;
-    right: 80px;
-  }
-  
-  .video-description {
-    font-size: 13px;
-  }
-  
-  .nav-btn {
-    width: 35px;
-    height: 35px;
-  }
-  
-  .nav-btn svg {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 480px) {
-  .profile-avatar {
-    width: 35px;
-    height: 35px;
-    top: 10px;
-    right: 10px;
-  }
-  
-  .reply-avatar {
-    width: 30px;
-    height: 30px;
-  }
-  
-  .action-btn {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .action-btn svg {
-    font-size: 16px;
-  }
-  
-  .action-btn span {
-    font-size: 10px;
-  }
-  
-  .video-actions,
-  .reply-actions {
-    bottom: 10px;
-    right: 10px;
-    gap: 8px;
-  }
-  
-  .video-info {
-    bottom: 10px;
-    left: 10px;
-    right: 70px;
-  }
-  
-  .video-description {
-    font-size: 12px;
-    -webkit-line-clamp: 1;
-  }
-  
-  .nav-btn {
-    width: 30px;
-    height: 30px;
-  }
-  
-  .nav-btn svg {
-    font-size: 12px;
-  }
-}
-
-/* إزالة أي مسافات أو حواف */
-.swiper {
-  margin: 0;
-  padding: 0;
-}
-
-.swiper-wrapper {
-  height: 100%;
-}
-
-.swiper-slide {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-/* التأكد من عدم وجود مسافات بين النصفين */
-.top-section,
-.bottom-section {
-  margin: 0;
-  padding: 0;
-  border: none;
-  line-height: 0;
-}
-
-/* إخفاء شريط التمرير */
-::-webkit-scrollbar {
-  display: none;
-}
-
-* {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* منع التحديد */
-.home-container {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* السماح بتحديد النص في الوصف */
-.video-description {
-  -webkit-user-select: text;
-  user-select: text;
-}
-
-/* تحسينات الأداء */
-.full-video {
-  will-change: transform;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-/* دعم الأجهزة الخاصة */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .navigation-bar {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-}
-
-/* الشاشات الأفقية */
-@media (orientation: landscape) and (max-height: 600px) {
-  .home-container {
-    flex-direction: row;
-  }
-  
-  .top-section {
-    width: 50vw;
-    height: 100vh;
-  }
-  
-  .bottom-section {
-    width: 50vw;
-    height: 100vh;
-  }
-  
-  .video-actions {
-    bottom: 30px;
-    right: 30px;
-  }
-  
-  .video-info {
-    bottom: 30px;
-    left: 30px;
-    right: 120px;
-  }
-}
-
-/* تحسين اللمس */
-.action-btn,
-.profile-avatar,
-.nav-btn {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-/* منع التمرير العمودي في قسم الردود */
-.bottom-section {
-  touch-action: pan-x;
-}
-
-/* تحسين الانتقالات */
-.swiper-slide-active .full-video {
-  opacity: 1;
-}
-
-.swiper-slide:not(.swiper-slide-active) .full-video {
-  opacity: 0.8;
-}
-
-/* رسالة للمستخدم */
-.swipe-hint {
+/* ==================== شريط التنقل السفلي ==================== */
+/* (يفترض أن له ملف CSS خاص به، ولكن هذا يضمن وضعه الصحيح) */
+.navigation-bar {
   position: absolute;
-  bottom: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 12px;
-  z-index: 15;
-  animation: fadeInOut 3s ease;
-}
-
-@keyframes fadeInOut {
-  0%, 100% { opacity: 0; }
-  20%, 80% { opacity: 1; }
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
 }

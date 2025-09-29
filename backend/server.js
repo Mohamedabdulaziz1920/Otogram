@@ -2,38 +2,54 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const path = require('path');
 
 dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// --- Middleware ---
+// ✨ 1. تقييد CORS للسماح للواجهة الأمامية فقط بالوصول
+//    (من الأفضل وضع هذا الرابط في متغيرات البيئة في Render)
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'https://tiktok-frontend-of56.onrender.com' 
+}));
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
-const authRoutes = require('./routes/auth');
-const videoRoutes = require('./routes/videos');
-const userRoutes = require('./routes/users');
+// ✨ 2. تم حذف express.static بالكامل لأنه غير مناسب لـ Render
+//    نحن نعتمد على GridFS لتخزين وبث الفيديوهات من قاعدة البيانات.
 
-app.use('/api/auth', authRoutes);
-app.use('/api/videos', videoRoutes);
-app.use('/api/users', userRoutes);
+// --- MongoDB Connection and Server Initialization ---
+// ✨ 3. تم تعديل هيكل الاتصال لحل مشكلة "السباق"
+mongoose.connect(process.env.MONGODB_URI)
+.then(() => {
+  console.log('MongoDB connected successfully. Initializing routes...');
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tiktok-clone', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
+  // ✨ 4. تحميل المسارات (Routes) فقط بعد نجاح الاتصال بقاعدة البيانات
+  //    هذا يضمن أن GridFS وكل شيء آخر يعتمد على قاعدة البيانات سيكون جاهزًا.
+  const authRoutes = require('./routes/auth');
+  const videoRoutes = require('./routes/videos');
+  const userRoutes = require('./routes/users');
+  const filesRoutes = require('./routes/files');
+
+  app.use('/api/auth', authRoutes);
+  app.use('/api/videos', videoRoutes);
+  app.use('/api/users', userRoutes);
+  app.use('/api/files', filesRoutes);
+
+  // Root endpoint للتأكد من أن السيرفر يعمل
+  app.get('/', (req, res) => {
+    res.json({ message: 'TikTok Clone API is running successfully!' });
+  });
+
+  // ✨ 5. تشغيل السيرفر فقط بعد أن يكون كل شيء جاهزًا
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+
 })
-.then(() => console.log('MongoDB connected successfully'))
-.catch(err => {
-  console.error('MongoDB connection error:', err.message);
-  console.error('Full error:', err);
-});
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+.catch((err) => {
+  console.error('FATAL: MongoDB connection error:', err.message);
+  // إنهاء العملية إذا فشل الاتصال، لأن التطبيق لا يمكنه العمل بدون قاعدة بيانات
+  process.exit(1);
 });

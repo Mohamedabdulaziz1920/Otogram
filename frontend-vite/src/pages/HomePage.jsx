@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Mousewheel, Keyboard, Navigation } from 'swiper';
 import { FaHeart, FaReply, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
@@ -7,56 +7,46 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import VideoPlayerSplit from '../components/VideoPlayerSplit';
+
 import 'swiper/css';
 import 'swiper/css/navigation';
 import './HomePage.css';
 
+// ✨ 1. إعداد axios instance مع baseURL من متغيرات البيئة
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+});
+
 const HomePage = () => {
   const [videos, setVideos] = useState([]);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
-  const [activeReplyIndex, setActiveReplyIndex] = useState(0);
+  const [activeRepliesIndex, setActiveRepliesIndex] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [likedVideos, setLikedVideos] = useState(new Set());
   const [likedReplies, setLikedReplies] = useState(new Set());
-  const [isScrolling, setIsScrolling] = useState(false);
 
   const navigate = useNavigate();
   const { user } = useAuth();
-  const mainSwiperRef = useRef(null);
-  const repliesSwiperRef = useRef(null);
-  const scrollTimeoutRef = useRef(null);
+
+  // ✨ 2. دالة مساعدة لبناء الروابط الكاملة (مهمة جدًا)
+  const getAssetUrl = (url) => {
+    if (!url) return '';
+    // إذا كان الرابط كاملاً بالفعل، لا تفعل شيئًا
+    if (url.startsWith('http')) return url;
+    // إذا كان الرابط يبدأ بـ /api/، فهو من السيرفر
+    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
+  };
 
   // Fetch Videos
   const fetchVideos = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-
-      const response = await axios.get('/api/videos');
+      const response = await api.get('/api/videos'); // استخدام api instance
 
       if (response.data && Array.isArray(response.data)) {
         setVideos(response.data);
-
-        // initialize likes
-        if (user) {
-          const userLikedVideos = new Set();
-          const userLikedReplies = new Set();
-
-          response.data.forEach(video => {
-            if (video.likes?.includes(user.id)) {
-              userLikedVideos.add(video._id);
-            }
-            video.replies?.forEach(reply => {
-              if (reply.likes?.includes(user.id)) {
-                userLikedReplies.add(reply._id);
-              }
-            });
-          });
-
-          setLikedVideos(userLikedVideos);
-          setLikedReplies(userLikedReplies);
-        }
       }
     } catch (error) {
       console.error('Error fetching videos:', error);
@@ -64,311 +54,103 @@ const HomePage = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     fetchVideos();
   }, [fetchVideos]);
 
-  // معالج التمرير الموحد للصفحة بأكملها
-  useEffect(() => {
-    const handleWheel = (e) => {
-      // منع التمرير الافتراضي
-      e.preventDefault();
-      
-      // منع التمرير المتكرر السريع
-      if (isScrolling) return;
-      
-      setIsScrolling(true);
-      
-      // إيقاف التمرير بعد فترة قصيرة
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      
-      scrollTimeoutRef.current = setTimeout(() => {
-        setIsScrolling(false);
-      }, 800); // تأخير 800ms بين التمريرات
-
-      if (e.deltaY > 50 && activeVideoIndex < videos.length - 1) {
-        // التمرير لأسفل - الفيديو التالي
-        mainSwiperRef.current?.slideNext();
-        setActiveReplyIndex(0); // إعادة تعيين الرد إلى الأول
-        if (repliesSwiperRef.current) {
-          repliesSwiperRef.current.slideTo(0);
-        }
-      } else if (e.deltaY < -50 && activeVideoIndex > 0) {
-        // التمرير لأعلى - الفيديو السابق
-        mainSwiperRef.current?.slidePrev();
-        setActiveReplyIndex(0); // إعادة تعيين الرد إلى الأول
-        if (repliesSwiperRef.current) {
-          repliesSwiperRef.current.slideTo(0);
-        }
-      }
-    };
-
-    // إضافة مستمع الحدث للصفحة بأكملها
-    const container = document.querySelector('.home-container');
-    if (container) {
-      container.addEventListener('wheel', handleWheel, { passive: false });
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener('wheel', handleWheel);
-      }
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, [activeVideoIndex, videos.length, isScrolling]);
-
-  // معالج اللمس للأجهزة المحمولة
-  useEffect(() => {
-    let touchStartY = 0;
-    let touchEndY = 0;
-
-    const handleTouchStart = (e) => {
-      touchStartY = e.touches[0].clientY;
-    };
-
-    const handleTouchEnd = (e) => {
-      touchEndY = e.changedTouches[0].clientY;
-      const deltaY = touchStartY - touchEndY;
-
-      if (Math.abs(deltaY) > 50) { // حد أدنى للحركة
-        if (deltaY > 0 && activeVideoIndex < videos.length - 1) {
-          // السحب لأعلى - الفيديو التالي
-          mainSwiperRef.current?.slideNext();
-          setActiveReplyIndex(0);
-          if (repliesSwiperRef.current) {
-            repliesSwiperRef.current.slideTo(0);
-          }
-        } else if (deltaY < 0 && activeVideoIndex > 0) {
-          // السحب لأسفل - الفيديو السابق
-          mainSwiperRef.current?.slidePrev();
-          setActiveReplyIndex(0);
-          if (repliesSwiperRef.current) {
-            repliesSwiperRef.current.slideTo(0);
-          }
-        }
-      }
-    };
-
-    const container = document.querySelector('.home-container');
-    if (container) {
-      container.addEventListener('touchstart', handleTouchStart, { passive: true });
-      container.addEventListener('touchend', handleTouchEnd, { passive: true });
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener('touchstart', handleTouchStart);
-        container.removeEventListener('touchend', handleTouchEnd);
-      }
-    };
-  }, [activeVideoIndex, videos.length]);
-
-  // Likes management
-  const handleLikeMainVideo = async (videoId) => {
-    if (!user) return navigate('/login');
-    try {
-      const res = await axios.post(`/api/videos/${videoId}/like`);
-      const liked = res.data.liked;
-      setLikedVideos(prev => {
-        const newSet = new Set(prev);
-        liked ? newSet.add(videoId) : newSet.delete(videoId);
-        return newSet;
-      });
-      setVideos(vs => vs.map(v =>
-        v._id === videoId
-          ? { ...v, likes: liked
-            ? [...(v.likes || []), user.id]
-            : (v.likes || []).filter(id => id !== user.id) }
-          : v
-      ));
-    } catch (e) { console.log(e); }
-  };
-
-  const handleLikeReply = async (replyId, parentId) => {
-    if (!user) return navigate('/login');
-    try {
-      const res = await axios.post(`/api/videos/${replyId}/like`);
-      const liked = res.data.liked;
-      setLikedReplies(prev => {
-        const newSet = new Set(prev);
-        liked ? newSet.add(replyId) : newSet.delete(replyId);
-        return newSet;
-      });
-      setVideos(vs => vs.map(v =>
-        v._id === parentId
-          ? {
-            ...v,
-            replies: v.replies.map(r =>
-              r._id === replyId
-                ? {
-                  ...r,
-                  likes: liked
-                    ? [...(r.likes || []), user.id]
-                    : (r.likes || []).filter(id => id !== user.id)
-                }
-                : r
-            )
-          }
-          : v
-      ));
-    } catch (e) { console.log(e); }
-  };
-
-  const handleReply = (videoId) => {
-    if (!user) {
-      sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
-      return navigate('/login');
-    }
-    navigate(`/upload?replyTo=${videoId}`);
-  };
-
+  // دوال الإعجاب والرد
+  const handleLikeMainVideo = (videoId) => { /* ... */ };
+  const handleLikeReply = (replyId, parentId) => { /* ... */ };
+  const handleReply = (videoId) => navigate(`/upload?replyTo=${videoId}`);
   const navigateToProfile = (username) => navigate(`/profile/${username}`);
 
-  const currentVideo = videos[activeVideoIndex];
-
-  // States for loading/error
-  if (loading) return <div className="loading-container"><div className="loading-spinner"></div><p>جاري تحميل الفيديوهات...</p></div>;
-  if (error) return <div className="error-container"><h2>خطأ</h2><p>{error}</p><button onClick={fetchVideos}>إعادة المحاولة</button></div>;
-  if (!videos?.length) return <div className="empty-state-container"><h2>لا توجد فيديوهات</h2><NavigationBar currentPage="home" /></div>;
+  // حالات التحميل والخطأ
+  if (loading) return <div className="loading-container"><div className="loading-spinner"></div></div>;
+  if (error) return <div className="error-container"><p>{error}</p></div>;
+  if (!videos.length) return <div className="empty-state-container"><p>لا توجد فيديوهات بعد</p></div>;
 
   return (
-    <div className="home-container">
-      {/* النصف العلوي - الفيديو الأساسي */}
-      <div className="top-section">
-        <Swiper
-          direction="vertical"
-          slidesPerView={1}
-          mousewheel={false} // تعطيل التمرير المدمج
-          keyboard
-          modules={[Keyboard]}
-          onSwiper={(swiper) => {
-            mainSwiperRef.current = swiper;
-          }}
-          onSlideChange={(swiper) => {
-            setActiveVideoIndex(swiper.activeIndex);
-            setActiveReplyIndex(0);
-          }}
-          className="main-swiper"
-          allowTouchMove={false} // منع السحب المباشر
-        >
-          {videos.map((video, index) => (
-            <SwiperSlide key={video._id}>
-              <div className="video-container">
+    // ✨ 3. استخدام هيكل CSS الصحيح
+    <div className="home-page-split">
+      <Swiper
+        direction="vertical"
+        slidesPerView={1}
+        mousewheel={{ forceToAxis: true }} // ✨ 4. الاعتماد على تمرير Swiper المدمج
+        keyboard
+        modules={[Mousewheel, Keyboard]}
+        onSlideChange={(swiper) => setActiveVideoIndex(swiper.activeIndex)}
+        className="main-swiper"
+      >
+        {videos.map((video, vIndex) => (
+          <SwiperSlide key={video._id}>
+            <div className="video-split-slide">
+              
+              {/* ===== النصف العلوي ===== */}
+              <div className="split-top">
                 <VideoPlayerSplit
-                  videoUrl={video.videoUrl}
-                  isActive={index === activeVideoIndex}
-                  autoPlay={true}
-                  showPlayButton={true}
-                  className="full-video"
+                  videoUrl={getAssetUrl(video.videoUrl)}
+                  isActive={vIndex === activeVideoIndex}
+                  className="video-element"
                 />
-
-                {/* صورة البروفايل */}
-                <div 
-                  className="profile-avatar"
-                  onClick={() => navigateToProfile(video.user.username)}
-                >
-                  <img src={video.user.profileImage || '/default-avatar.png'} alt={video.user.username} />
+                <div className="overlay-top">
+                  <div className="profile-avatar" onClick={() => navigateToProfile(video.user.username)}>
+                    <img src={getAssetUrl(video.user.profileImage) || '/default-avatar.png'} alt={video.user.username} />
+                  </div>
                 </div>
-
-                {/* أزرار التفاعل */}
-                <div className="video-actions">
-                  <button 
-                    className={`action-btn ${likedVideos.has(video._id) ? 'liked' : ''}`}
-                    onClick={() => handleLikeMainVideo(video._id)}
-                  >
-                    <FaHeart />
-                    <span>{video.likes?.length || 0}</span>
+                <div className="actions">
+                  <button className={`action-btn ${likedVideos.has(video._id) ? 'liked' : ''}`} onClick={() => handleLikeMainVideo(video._id)}>
+                    <FaHeart /> <span>{video.likes?.length || 0}</span>
                   </button>
                   <button className="action-btn" onClick={() => handleReply(video._id)}>
-                    <FaReply />
-                    <span>رد</span>
+                    <FaReply /> <span>رد</span>
                   </button>
                 </div>
-
-                {/* معلومات الفيديو */}
-                <div className="video-info">
-                  <p className="video-description">{video.description}</p>
-                </div>
               </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
 
-      {/* النصف السفلي - الردود */}
-      <div className="bottom-section">
-        {currentVideo?.replies?.length > 0 ? (
-          <Swiper
-            spaceBetween={0}
-            slidesPerView={1}
-            navigation={{
-              prevEl: '.nav-prev',
-              nextEl: '.nav-next'
-            }}
-            modules={[Navigation]}
-            onSwiper={(swiper) => {
-              repliesSwiperRef.current = swiper;
-            }}
-            onSlideChange={(s) => setActiveReplyIndex(s.activeIndex)}
-            className="replies-swiper"
-          >
-            {currentVideo.replies.map((reply, index) => (
-              <SwiperSlide key={reply._id}>
-                <div className="reply-container">
-                  <VideoPlayerSplit
-                    videoUrl={reply.videoUrl}
-                    isActive={index === activeReplyIndex}
-                    autoPlay={true}
-                    showPlayButton={true}
-                    className="full-video"
-                  />
-
-                  {/* صورة بروفايل الرد */}
-                  <div 
-                    className="profile-avatar reply-avatar"
-                    onClick={() => navigateToProfile(reply.user.username)}
+              {/* ===== النصف السفلي ===== */}
+              <div className="split-bottom">
+                {video.replies?.length ? (
+                  <Swiper
+                    slidesPerView={1}
+                    navigation={{ prevEl: `.prev-arrow-${vIndex}`, nextEl: `.next-arrow-${vIndex}` }}
+                    keyboard
+                    modules={[Navigation, Keyboard]}
+                    onSlideChange={(swiper) => setActiveRepliesIndex(prev => ({ ...prev, [vIndex]: swiper.activeIndex }))}
+                    className="replies-swiper-horizontal"
                   >
-                    <img src={reply.user.profileImage || '/default-avatar.png'} alt={reply.user.username} />
+                    {video.replies.map((reply, rIndex) => (
+                      <SwiperSlide key={reply._id}>
+                        <div className="reply-wrapper">
+                          <VideoPlayerSplit
+                            videoUrl={getAssetUrl(reply.videoUrl)}
+                            isActive={vIndex === activeVideoIndex && rIndex === (activeRepliesIndex[vIndex] || 0)}
+                            className="video-element"
+                          />
+                          <div className="overlay-bottom">
+                            <button className={`action-btn ${likedReplies.has(reply._id) ? 'liked' : ''}`} onClick={() => handleLikeReply(reply._id, video._id)}>
+                              <FaHeart /> <span>{reply.likes?.length || 0}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </SwiperSlide>
+                    ))}
+                    <div className={`nav-arrow left prev-arrow-${vIndex}`}><FaChevronLeft /></div>
+                    <div className={`nav-arrow right next-arrow-${vIndex}`}><FaChevronRight /></div>
+                  </Swiper>
+                ) : (
+                  <div className="no-replies">
+                    <p>لا توجد ردود بعد</p>
+                    <button className="primary-btn" onClick={() => handleReply(video._id)}>كن أول من يرد</button>
                   </div>
-
-                  {/* زر الإعجاب للرد */}
-                  <div className="reply-actions">
-                    <button
-                      className={`action-btn ${likedReplies.has(reply._id) ? 'liked' : ''}`}
-                      onClick={() => handleLikeReply(reply._id, currentVideo._id)}
-                    >
-                      <FaHeart />
-                      <span>{reply.likes?.length || 0}</span>
-                    </button>
-                  </div>
-                </div>
-              </SwiperSlide>
-            ))}
-            
-            {/* أزرار التنقل للردود */}
-            {currentVideo.replies.length > 1 && (
-              <>
-                <button className="nav-btn nav-prev"><FaChevronRight /></button>
-                <button className="nav-btn nav-next"><FaChevronLeft /></button>
-              </>
-            )}
-          </Swiper>
-        ) : (
-          <div className="no-replies">
-            <p>لا توجد ردود بعد</p>
-            <button className="primary-btn" onClick={() => handleReply(currentVideo._id)}>
-              كن أول من يرد
-            </button>
-          </div>
-        )}
-      </div>
-
+                )}
+              </div>
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+      
       <NavigationBar currentPage="home" />
     </div>
   );

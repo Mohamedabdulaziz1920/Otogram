@@ -11,7 +11,7 @@ const app = express();
 // ✨ 1. تقييد CORS للسماح للواجهة الأمامية فقط بالوصول
 //    (من الأفضل وضع هذا الرابط في متغيرات البيئة في Render)
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://tiktok-frontend-of56.onrender.com' 
+  origin: process.env.FRONTEND_URL || 'https://otogram-frontend-of56.onrender.com' 
 }));
 app.use(express.json());
 
@@ -38,7 +38,7 @@ mongoose.connect(process.env.MONGODB_URI)
 
   // Root endpoint للتأكد من أن السيرفر يعمل
   app.get('/', (req, res) => {
-    res.json({ message: 'TikTok Clone API is running successfully!' });
+    res.json({ message: 'otogram Clone API is running successfully!' });
   });
 
   // ✨ 5. تشغيل السيرفر فقط بعد أن يكون كل شيء جاهزًا

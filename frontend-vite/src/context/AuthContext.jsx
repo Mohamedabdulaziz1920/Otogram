@@ -5,94 +5,68 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+// إعداد axios instance مع baseURL من متغيرات البيئة
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+});
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('token'));
-// إعداد base URL
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-axios.defaults.baseURL = API_URL;
-  useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      // Verify token and get user data
-      fetchUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+  const [loading, setLoading] = useState(true); // للتحقق من المستخدم عند تحميل التطبيق
 
-  const fetchUser = async () => {
-    try {
-      const response = await axios.get('/api/users/me');
-      setUser(response.data);
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      logout();
-    } finally {
-      setLoading(false);
-    }
+  // ✨ 1. تبسيط دالة login
+  // وظيفتها الآن هي فقط تحديث الحالة وحفظ التوكن
+  const login = (token, userData) => {
+    localStorage.setItem('token', token);
+    setUser(userData);
   };
 
-  const login = async (username, password) => {
-    try {
-      const response = await axios.post('/api/auth/login', { username, password });
-      const { token, user } = response.data;
-      
-      localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      setToken(token);
-      setUser(user);
-      
-      return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.error || 'Login failed' 
-      };
-    }
+  // ✨ 2. تبسيط دالة register (التي أصبحت غير ضرورية هنا، لكن يمكن تركها)
+  // بعد التسجيل الناجح، ستقوم صفحة التسجيل باستدعاء دالة login
+  const register = (token, userData) => {
+    login(token, userData); // ببساطة تستدعي login
   };
-
-  const register = async (userData) => {
-    try {
-      const response = await axios.post('/api/auth/register', userData);
-      const { token, user } = response.data;
-      
-      localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      setToken(token);
-      setUser(user);
-      
-      return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.error || 'Registration failed' 
-      };
-    }
-  };
-
+  
+  // ✨ 3. تبسيط دالة logout
   const logout = () => {
     localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
-    setToken(null);
     setUser(null);
   };
 
+  // ✨ 4. useEffect للتحقق من وجود توكن عند أول تحميل للتطبيق
+  useEffect(() => {
+    const verifyUser = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          // إعداد الهيدر للطلبات المستقبلية
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          
+          // مسار جديد في السيرفر للتحقق من التوكن وإعادة بيانات المستخدم
+          const response = await api.get('/api/auth/me'); 
+          setUser(response.data.user);
+        } catch (error) {
+          console.error('Token verification failed:', error);
+          logout(); // حذف التوكن غير الصالح
+        }
+      }
+      setLoading(false);
+    };
+
+    verifyUser();
+  }, []);
+
   const value = {
     user,
-    login,
-    register,
-    logout,
     loading,
-    isAuthenticated: !!user
+    login,
+    logout,
+    // لم نعد بحاجة لتصدير register لأن مكون التسجيل سيستخدم login
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

@@ -1,159 +1,130 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { GridFsStorage } = require('multer-gridfs-storage');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Video = require('../models/Video');
 const auth = require('../middleware/auth');
+const isAdmin = require('../middleware/isAdmin');
+const { getImageBucket } = require('../config/gridfs'); // سنحتاج هذا لحذف الصور
 const router = express.Router();
 
-// إنشاء مجلدات uploads إذا لم تكن موجودة
-const profilesDir = path.join(__dirname, '../uploads/profiles');
-const videosDir = path.join(__dirname, '../uploads/videos');
-
-if (!fs.existsSync(profilesDir)){
-    fs.mkdirSync(profilesDir, { recursive: true });
-}
-if (!fs.existsSync(videosDir)){
-    fs.mkdirSync(videosDir, { recursive: true });
-}
-
-// Multer configuration for profile images
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, profilesDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+// --- إعداد GridFS Storage لرفع صور الملف الشخصي ---
+const imageStorage = new GridFsStorage({
+  db: mongoose.connection,
+  file: (req, file) => {
+    return new Promise((resolve, reject) => {
+      const filename = 'profile-' + req.userId + '-' + Date.now();
+      const fileInfo = {
+        filename: filename,
+        bucketName: 'images', // ✨ استخدام bucket مختلف للصور
+      };
+      resolve(fileInfo);
+    });
   }
 });
 
-const upload = multer({ 
-  storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB max
-  },
+const uploadProfileImage = multer({
+  storage: imageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    
-    if (mimetype && extname) {
-      return cb(null, true);
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'));
+      cb(new Error('Only image files are allowed!'), false);
     }
   }
 });
 
-// Get current user
-router.get('/me', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.userId).select('-password -creatorPassword');
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// --- المسارات العامة ---
 
-// Get user profile by username
+// Get public user profile and their videos
 router.get('/profile/:username', async (req, res) => {
   try {
-    const user = await User.findOne({ username: req.params.username })
-      .select('-password -creatorPassword -email');
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    const user = await User.findOne({ username: req.params.username });
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Calculate total likes
-    const videos = await Video.find({ user: user._id });
-    const totalLikes = videos.reduce((sum, video) => sum + video.likes.length, 0);
+    const videos = await Video.find({ user: user._id, isReply: false }).sort({ createdAt: -1 });
+    const totalLikes = videos.reduce((sum, video) => sum + (video.likes?.length || 0), 0);
 
     res.json({
-      ...user.toObject(),
-      totalLikes
+      user,
+      videos,
+      stats: { videosCount: videos.length, totalLikes }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Get user's videos
-router.get('/:username/videos', async (req, res) => {
+// --- المسارات المحمية للمستخدم المسجل ---
+
+// Update profile image for the logged-in user
+router.post('/me/update-profile-image', auth, uploadProfileImage.single('profileImage'), async (req, res) => {
   try {
-    const user = await User.findOne({ username: req.params.username });
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file uploaded' });
+    }
+
+    const user = await User.findById(req.userId);
     if (!user) {
+      // حذف الصورة المرفوعة إذا لم يتم العثور على المستخدم
+      const imageBucket = getImageBucket();
+      await imageBucket.delete(req.file.id);
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const videos = await Video.find({ user: user._id, isReply: false })
-      .populate('user', 'username profileImage')
-      .sort('-createdAt');
-
-    res.json(videos);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get liked videos
-router.get('/liked-videos', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.userId).populate({
-      path: 'likedVideos',
-      populate: {
-        path: 'user',
-        select: 'username profileImage'
+    // ✨ حذف الصورة القديمة من GridFS إذا كانت موجودة
+    if (user.profileImageFileId) {
+      try {
+        const imageBucket = getImageBucket();
+        await imageBucket.delete(new mongoose.Types.ObjectId(user.profileImageFileId));
+      } catch (err) {
+        console.error('Failed to delete old profile image from GridFS:', err);
       }
-    });
-
-    res.json(user.likedVideos || []);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Update profile image
-router.post('/update-profile-image', auth, upload.single('profileImage'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const profileImageUrl = `/uploads/profiles/${req.file.filename}`;
-    
-    const user = await User.findByIdAndUpdate(
-      req.userId,
-      { profileImage: profileImageUrl },
-      { new: true }
-    ).select('-password -creatorPassword');
+    // تحديث المستخدم بالمعلومات الجديدة من GridFS
+    user.profileImage = `/api/files/images/${req.file.id}`; // رابط بث الصورة
+    user.profileImageFileId = req.file.id; // ID لحذفها لاحقًا
+    await user.save();
 
-    res.json({ 
-      profileImage: profileImageUrl,
-      message: 'Profile image updated successfully' 
-    });
+    res.json({ message: 'Profile image updated successfully', user });
   } catch (error) {
     console.error('Error updating profile image:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to update profile image' });
   }
 });
 
-// Set creator password
-router.post('/set-creator-password', auth, async (req, res) => {
+
+// --- المسارات المحمية للأدمن فقط ---
+
+// Get all users (admin only)
+router.get('/', auth, isAdmin, async (req, res) => {
   try {
-    const { creatorPassword } = req.body;
-    
-    await User.findByIdAndUpdate(req.userId, {
-      isCreator: true,
-      creatorPassword
-    });
-
-    res.json({ message: 'Creator password set successfully' });
+    const users = await User.find().sort({ createdAt: -1 });
+    res.json(users);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
+
+// Update a user's role (admin only)
+router.patch('/role/:userId', auth, isAdmin, async (req, res) => {
+  try {
+    const { role } = req.body;
+    if (!['user', 'creator', 'admin'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role specified.' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.params.userId, { role }, { new: true });
+    if (!updatedUser) return res.status(404).json({ error: 'User not found.' });
+
+    res.json({ message: `User role updated to ${role}`, user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update user role.' });
+  }
+});
+
 
 module.exports = router;

@@ -13,7 +13,7 @@ import 'swiper/css/navigation';
 import './HomePage.css';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://otogram.onrender.com',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
 });
 
 const HomePage = () => {
@@ -28,11 +28,11 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const getAssetUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    return `${import.meta.env.VITE_API_URL || 'https://otogram.onrender.com'}${url}`;
-  };
+const getAssetUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
+};
 
   const fetchVideos = useCallback(async () => {
     try {

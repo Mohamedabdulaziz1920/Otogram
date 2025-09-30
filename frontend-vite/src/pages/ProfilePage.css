@@ -45,6 +45,40 @@
   position: relative;
   width: 120px;
   height: 120px;
+  cursor: pointer; /* ✨ 1. تغيير: جعل الحاوية نفسها قابلة للنقر */
+}
+/* ✨ 2. تغيير: هذا أصبح الآن طبقة شفافة بدلاً من زر */
+.edit-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 50%; /* لجعلها دائرية مثل الصورة */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0; /* إخفاء الطبقة بشكل افتراضي */
+  transition: opacity 0.3s ease;
+  font-size: 12px;
+}
+
+.edit-image-overlay svg {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+/* ✨ 3. إظهار الطبقة عند تمرير الفأرة فقط إذا كانت قابلة للتعديل */
+.profile-image-wrapper.editable:hover .edit-image-overlay {
+  opacity: 1;
+}
+
+/* ✨ 4. إخفاء الزر القديم (لم نعد بحاجة إليه) */
+.edit-image-btn {
+  display: none;
 }
 
 .profile-image {

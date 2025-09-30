@@ -29,12 +29,12 @@ mongoose.connect(process.env.MONGODB_URI)
   const authRoutes = require('./routes/auth');
   const videoRoutes = require('./routes/videos');
   const userRoutes = require('./routes/users');
-  const filesRoutes = require('./routes/files');
+
 
   app.use('/api/auth', authRoutes);
   app.use('/api/videos', videoRoutes);
   app.use('/api/users', userRoutes);
-  app.use('/api/files', filesRoutes);
+
 
   // Root endpoint للتأكد من أن السيرفر يعمل
   app.get('/', (req, res) => {

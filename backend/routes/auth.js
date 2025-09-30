@@ -4,87 +4,103 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const router = express.Router();
 
-// Register
+// --- Register a new user ---
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // Check if user exists
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
+    // 1. Validation
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'Please provide all required fields: username, email, password.' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // 2. Check if user already exists
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      return res.status(409).json({ error: 'A user with this email or username already exists.' }); // 409 Conflict
+    }
 
-    // Create user
+    // 3. Hash password
+    const hashedPassword = await bcrypt.hash(password, 12); // Using 12 salt rounds is more secure
+
+    // 4. Create new user
     const user = new User({
       username,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      // 'role' will default to 'user' as defined in the model
     });
 
     await user.save();
 
-    // Create token
+    // 5. Create JWT token (including user role)
     const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET || 'your-secret-key',
+      { userId: user._id, role: user.role }, // ✨ Include role in the token payload
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
+    // 6. Send response
+    // The user object is automatically cleaned by the toJSON method in the model
     res.status(201).json({
+      message: 'User registered successfully!',
       token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        profileImage: user.profileImage,
-        isCreator: user.isCreator
-      }
+      user: user // ✨ Send the full user object
     });
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // Handle validation errors from Mongoose
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error('Register Error:', error);
+    res.status(500).json({ error: 'An internal server error occurred.' });
   }
 });
 
-// Login
+
+// --- Login a user ---
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body; // Recommend logging in with email for uniqueness
 
-    // Find user
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    // 1. Validation
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Please provide both email and password.' });
     }
 
-    // Check password
+    // 2. Find user by email
+    const user = await User.findOne({ email }).select('+password'); // Explicitly include password
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials. Please check your email and password.' });
+    }
+
+    // 3. Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid credentials. Please check your email and password.' });
     }
 
-    // Create token
+    // 4. Create JWT token
     const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET || 'your-secret-key',
+      { userId: user._id, role: user.role }, // ✨ Include role
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    res.json({
+    // 5. Send response
+    res.status(200).json({
+      message: 'Logged in successfully!',
       token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        profileImage: user.profileImage,
-        isCreator: user.isCreator
-      }
+      user: user // ✨ Send the full user object
     });
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Login Error:', error);
+    res.status(500).json({ error: 'An internal server error occurred.' });
   }
 });
 

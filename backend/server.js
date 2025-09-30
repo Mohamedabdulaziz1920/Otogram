@@ -11,8 +11,9 @@ const app = express();
 // ✨ 1. تقييد CORS للسماح للواجهة الأمامية فقط بالوصول
 //    (من الأفضل وضع هذا الرابط في متغيرات البيئة في Render)
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://otogram-frontend-of56.onrender.com' 
+  origin: process.env.FRONTEND_URL || 'https://otogram.vercel.app'
 }));
+
 app.use(express.json());
 
 // ✨ 2. تم حذف express.static بالكامل لأنه غير مناسب لـ Render

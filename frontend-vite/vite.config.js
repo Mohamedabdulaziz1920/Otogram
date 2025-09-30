@@ -14,6 +14,33 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false
-  }
+    sourcemap: false,
+    minify: 'terser',
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // تقسيم الحزم لتحسين الأداء
+          if (id.includes('node_modules')) {
+            if (id.includes('swiper')) {
+              return 'swiper';
+            }
+            if (id.includes('react')) {
+              return 'react-vendor';
+            }
+            if (id.includes('axios')) {
+              return 'axios';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
+  },
+  // إضافة هذا لحل مشاكل البناء
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', 'axios', 'swiper']
+  },
+  // تحديد base URL للإنتاج
+  base: '/'
 })

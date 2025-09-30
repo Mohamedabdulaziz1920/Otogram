@@ -1,34 +1,35 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaHome, FaUser, FaPlus, FaShieldAlt } from 'react-icons/fa'; // FaShieldAlt للأدمن
+import { FaHome, FaUser, FaPlus, FaShieldAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import './NavigationBar.css';
 
 const NavigationBar = ({ currentPage }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth(); // استخدام isAuthenticated للتحقق السريع
 
-  // التحقق مما إذا كان المستخدم لديه صلاحية النشر
   const canUpload = user && (user.role === 'creator' || user.role === 'admin');
   const isAdmin = user && user.role === 'admin';
 
+  // ✨✨ هذا هو التعديل الحاسم ✨✨
   const handleProfileClick = () => {
-    if (user) {
+    // تحقق مما إذا كان المستخدم مسجلاً ولديه اسم مستخدم صالح
+    if (isAuthenticated && user?.username) {
       navigate(`/profile/${user.username}`);
     } else {
+      // إذا لم يكن مسجلاً أو لا يوجد اسم مستخدم، اذهب لصفحة الدخول
       navigate('/login');
     }
   };
 
   const handleUploadClick = () => {
-    if (!user) {
-      navigate('/login'); // إذا لم يكن مسجلاً، اذهب لصفحة الدخول
+    if (!isAuthenticated) {
+      navigate('/login');
       return;
     }
     if (canUpload) {
-      navigate('/upload'); // إذا كان لديه الصلاحية، اذهب لصفحة الرفع
+      navigate('/upload');
     } else {
-      // (اختياري) يمكنك عرض رسالة للمستخدم العادي
       alert('ليس لديك صلاحية النشر. تواصل مع الإدارة.');
     }
   };
@@ -41,7 +42,7 @@ const NavigationBar = ({ currentPage }) => {
         <span className="nav-label">الرئيسية</span>
       </Link>
 
-      {/* --- زر رفع الفيديو (يظهر للجميع، ولكن وظيفته تختلف) --- */}
+      {/* --- زر رفع الفيديو --- */}
       <button 
         className="nav-item upload-button"
         onClick={handleUploadClick}
@@ -58,10 +59,10 @@ const NavigationBar = ({ currentPage }) => {
         className={`nav-item ${currentPage === 'profile' ? 'active' : ''}`}
       >
         <FaUser className="nav-icon" />
-        <span className="nav-label">{user ? 'حسابي' : 'الدخول'}</span>
+        <span className="nav-label">{isAuthenticated ? 'حسابي' : 'الدخول'}</span>
       </button>
 
-      {/* --- ✨ زر لوحة التحكم (يظهر للأدمن فقط) --- */}
+      {/* --- زر لوحة التحكم (للأدمن فقط) --- */}
       {isAdmin && (
         <Link to="/admin" className={`nav-item ${currentPage === 'admin' ? 'active' : ''}`}>
           <FaShieldAlt className="nav-icon" />

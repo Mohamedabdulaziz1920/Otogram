@@ -25,10 +25,12 @@ const userSchema = new mongoose.Schema({
   },
   profileImage: {
     type: String,
-    default: '' // يفضل أن يكون فارغًا، والواجهة الأمامية تعرض الصورة الافتراضية
+    default: ''
   },
-  
-  // ✨ 1. تم استبدال isCreator و creatorPassword بنظام الأدوار
+  // ✨ أضف هذا الحقل
+  profileImageFileId: {
+    type: mongoose.Schema.Types.ObjectId,
+  },
   role: {
     type: String,
     enum: {

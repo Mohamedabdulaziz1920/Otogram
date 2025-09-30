@@ -7,6 +7,8 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import UploadPage from './pages/UploadPage';
 import PrivateRoute from './components/PrivateRoute';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminRoute from './components/AdminRoute';
 import './App.css';
 
 function App() {
@@ -24,6 +26,15 @@ function App() {
                 <UploadPage />
               </PrivateRoute>
             } />
+             {/* ✨ إضافة المسار المحمي للوحة التحكم */}
+  <Route 
+    path="/admin" 
+    element={
+      <AdminRoute>
+        <AdminDashboard />
+      </AdminRoute>
+    } 
+  />
           </Routes>
         </div>
       </Router>

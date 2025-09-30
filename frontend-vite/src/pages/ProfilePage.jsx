@@ -119,15 +119,15 @@ const ProfilePage = () => {
       <div className="profile-header">
         <div className="profile-main-info">
           <div className="profile-image-section">
-            <label htmlFor="profile-image-input" className={`profile-image-wrapper ${isOwnProfile ? 'editable' : ''}`}>
-              <img src={getAssetUrl(profileUser.profileImage)} alt={profileUser.username} className="profile-image"/>
-              {isOwnProfile && (
-                <div className="edit-image-overlay">
-                  <FaCamera />
-                  <span>{uploadingImage ? 'جاري...' : 'تغيير'}</span>
-                </div>
-              )}
-            </label>
+           <label htmlFor="profile-image-input" className={`profile-image-wrapper ${isOwnProfile ? 'editable' : ''}`}>
+  <img src={...} />
+  {isOwnProfile && (
+    <div className="edit-image-overlay">
+      <FaCamera />
+      <span>{uploadingImage ? 'جاري...' : 'تغيير'}</span>
+    </div>
+  )}
+</label>
             {isOwnProfile && <input type="file" id="profile-image-input" accept="image/*" onChange={handleImageUpload} hidden disabled={uploadingImage} />}
           </div>
           <div className="profile-details">

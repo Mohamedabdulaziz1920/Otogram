@@ -1,71 +1,71 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
+// --- إعدادات أولية ---
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
-// إعداد axios instance مع baseURL من متغيرات البيئة
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
 });
 
+// --- المكون الرئيسي للمزود (Provider) ---
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // للتحقق من المستخدم عند تحميل التطبيق
+  const [loading, setLoading] = useState(true);
 
-  // ✨ 1. تبسيط دالة login
-  // وظيفتها الآن هي فقط تحديث الحالة وحفظ التوكن
+  // --- دوال التحكم في المصادقة ---
+
+  // دالة لتسجيل الدخول وتحديث الحالة
   const login = (token, userData) => {
     localStorage.setItem('token', token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
   };
 
-  // ✨ 2. تبسيط دالة register (التي أصبحت غير ضرورية هنا، لكن يمكن تركها)
-  // بعد التسجيل الناجح، ستقوم صفحة التسجيل باستدعاء دالة login
-  const register = (token, userData) => {
-    login(token, userData); // ببساطة تستدعي login
-  };
-  
-  // ✨ 3. تبسيط دالة logout
+  // دالة لتسجيل الخروج وتنظيف الحالة
   const logout = () => {
     localStorage.removeItem('token');
+    delete api.defaults.headers.common['Authorization']; // ✨ تحسين: حذف الهيدر
     setUser(null);
   };
 
-  // ✨ 4. useEffect للتحقق من وجود توكن عند أول تحميل للتطبيق
+  // --- التأثير الجانبي (Effect) لاستعادة الجلسة ---
+
+  // هذا التأثير يعمل مرة واحدة فقط عند تحميل التطبيق
+  // للتحقق مما إذا كان هناك جلسة تسجيل دخول صالحة
   useEffect(() => {
-    const verifyUser = async () => {
+    const verifyUserSession = async () => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          // إعداد الهيدر للطلبات المستقبلية
           api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          
-          // مسار جديد في السيرفر للتحقق من التوكن وإعادة بيانات المستخدم
-          const response = await api.get('/api/auth/me'); 
-          setUser(response.data.user);
+          const response = await api.get('/api/auth/me');
+          setUser(response.data.user); // استعادة بيانات المستخدم
         } catch (error) {
-          console.error('Token verification failed:', error);
+          console.error('Session token is invalid or expired. Logging out.');
           logout(); // حذف التوكن غير الصالح
         }
       }
-      setLoading(false);
+      setLoading(false); // تم الانتهاء من التحقق
     };
 
-    verifyUser();
-  }, []);
+    verifyUserSession();
+  }, []); // مصفوفة فارغة تعني أنه يعمل مرة واحدة فقط
 
+  // --- القيمة التي سيتم توفيرها لبقية التطبيق ---
   const value = {
     user,
     loading,
     login,
     logout,
-    // لم نعد بحاجة لتصدير register لأن مكون التسجيل سيستخدم login
+    isAuthenticated: !!user, // خاصية مساعدة لمعرفة ما إذا كان المستخدم مسجلاً
   };
 
   return (
     <AuthContext.Provider value={value}>
+      {/* عرض التطبيق فقط بعد التأكد من حالة المستخدم */}
       {!loading && children}
     </AuthContext.Provider>
   );

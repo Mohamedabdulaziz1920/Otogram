@@ -3,40 +3,55 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
-    required: true,
+    required: [true, 'Username is required'],
     unique: true,
-    trim: true
+    trim: true,
+    minlength: 3,
+    maxlength: 20
   },
   email: {
     type: String,
-    required: true,
+    required: [true, 'Email is required'],
     unique: true,
-    lowercase: true
+    lowercase: true,
+    trim: true,
+    // Regex بسيط للتحقق من صيغة الإيميل
+    match: [/\S+@\S+\.\S+/, 'Please use a valid email address.']
   },
   password: {
     type: String,
-    required: true
+    required: [true, 'Password is required'],
+    minlength: 6
   },
   profileImage: {
     type: String,
-    default: '/default-avatar.png'
+    default: '' // يفضل أن يكون فارغًا، والواجهة الأمامية تعرض الصورة الافتراضية
   },
-  isCreator: {
-    type: Boolean,
-    default: false
-  },
-  creatorPassword: {
+  
+  // ✨ 1. تم استبدال isCreator و creatorPassword بنظام الأدوار
+  role: {
     type: String,
-    default: null
+    enum: {
+      values: ['user', 'creator', 'admin'],
+      message: '{VALUE} is not a supported role.'
+    },
+    default: 'user' // الدور الافتراضي لأي مستخدم جديد
   },
+
   likedVideos: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Video'
   }],
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+}, {
+  // ✨ 2. إضافة timestamps تلقائيًا (createdAt, updatedAt)
+  timestamps: true 
 });
+
+// ✨ 3. (اختياري ولكن موصى به) إخفاء كلمة المرور عند تحويل المستند إلى JSON
+userSchema.methods.toJSON = function() {
+  const userObject = this.toObject();
+  delete userObject.password;
+  return userObject;
+};
 
 module.exports = mongoose.model('User', userSchema);

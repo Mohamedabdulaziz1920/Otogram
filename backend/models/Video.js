@@ -6,8 +6,14 @@ const videoSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  // ✅ رابط تشغيل الفيديو (Stream endpoint)
   videoUrl: {
     type: String,
+    required: true
+  },
+  // ✅ حفظ الـ GridFS File ID (مهم لإدارة الفيديوهات داخل MongoDB)
+  fileId: {
+    type: mongoose.Schema.Types.ObjectId,
     required: true
   },
   thumbnail: {

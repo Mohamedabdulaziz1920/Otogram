@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios'; // سنستخدم axios مباشرة هنا
 import './AuthPages.css';
+
+// إعداد axios instance مع baseURL من متغيرات البيئة
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+});
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -9,20 +15,17 @@ const RegisterPage = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    isCreator: false,
-    creatorPassword: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { login } = useAuth(); // سنستخدم دالة login لتحديث الـ context بعد التسجيل
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value
+      [e.target.name]: e.target.value
     });
   };
 
@@ -30,57 +33,62 @@ const RegisterPage = () => {
     e.preventDefault();
     setError('');
 
+    // التحقق من تطابق كلمات المرور
     if (formData.password !== formData.confirmPassword) {
       setError('كلمات المرور غير متطابقة');
       return;
     }
 
-    if (formData.isCreator && !formData.creatorPassword) {
-      setError('يجب إدخال كلمة مرور المنشئ');
-      return;
-    }
-
     setLoading(true);
 
-    const result = await register({
-      username: formData.username,
-      email: formData.email,
-      password: formData.password,
-      isCreator: formData.isCreator,
-      creatorPassword: formData.isCreator ? formData.creatorPassword : undefined
-    });
-    
-    if (result.success) {
+    try {
+      // إرسال طلب التسجيل إلى السيرفر
+      const response = await api.post('/api/auth/register', {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      // بعد النجاح، قم بتسجيل دخول المستخدم تلقائيًا
+      const { token, user } = response.data;
+      login(token, user); // تحديث الـ context وحفظ التوكن
+
+      // الانتقال إلى الصفحة الرئيسية
       navigate('/');
-    } else {
-      setError(result.error);
+
+    } catch (err) {
+      // عرض رسالة الخطأ الحقيقية من السيرفر
+      const errorMessage = err.response?.data?.error || 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
     <div className="auth-page">
       <div className="auth-container">
-        <h1>إنشاء حساب جديد</h1>
+        <h1>إنشاء حساب جديد في Otogram</h1>
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>اسم المستخدم</label>
+            <label htmlFor="username">اسم المستخدم</label>
             <input
               type="text"
+              id="username"
               name="username"
               value={formData.username}
               onChange={handleChange}
               required
-              placeholder="اختر اسم مستخدم"
+              placeholder="اختر اسم مستخدم فريد"
             />
           </div>
 
           <div className="form-group">
-            <label>البريد الإلكتروني</label>
+            <label htmlFor="email">البريد الإلكتروني</label>
             <input
               type="email"
+              id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
@@ -90,21 +98,24 @@ const RegisterPage = () => {
           </div>
 
           <div className="form-group">
-            <label>كلمة المرور</label>
+            <label htmlFor="password">كلمة المرور</label>
             <input
               type="password"
+              id="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               required
-              placeholder="أدخل كلمة مرور قوية"
+              minLength="6"
+              placeholder="6 أحرف على الأقل"
             />
           </div>
 
           <div className="form-group">
-            <label>تأكيد كلمة المرور</label>
+            <label htmlFor="confirmPassword">تأكيد كلمة المرور</label>
             <input
               type="password"
+              id="confirmPassword"
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
@@ -113,41 +124,17 @@ const RegisterPage = () => {
             />
           </div>
 
-          <div className="form-group checkbox-group">
-            <label>
-              <input
-                type="checkbox"
-                name="isCreator"
-                checked={formData.isCreator}
-                onChange={handleChange}
-              />
-              <span> أنا منشئ محتوى</span>
-            </label>
-          </div>
-
-          {formData.isCreator && (
-            <div className="form-group">
-              <label>كلمة مرور المنشئ</label>
-              <input
-                type="password"
-                name="creatorPassword"
-                value={formData.creatorPassword}
-                onChange={handleChange}
-                placeholder="كلمة مرور خاصة لنشر الفيديوهات"
-              />
-              <small>ستحتاج هذه الكلمة عند نشر فيديو أساسي</small>
-            </div>
-          )}
+          {/* ✨ تم حذف كل ما يتعلق بـ isCreator و creatorPassword من هنا */}
 
           {error && <div className="error-message">{error}</div>}
 
-                   <button type="submit" className="btn btn-primary" disabled={loading}>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
             {loading ? 'جاري التسجيل...' : 'إنشاء حساب'}
           </button>
         </form>
 
         <p className="auth-link">
-          لديك حساب بالفعل؟ <Link to="/login">سجل دخول</Link>
+          لديك حساب بالفعل؟ <Link to="/login">سجل الدخول</Link>
         </p>
       </div>
     </div>

@@ -13,7 +13,7 @@ const api = axios.create({
 
 const ProfilePage = () => {
   const { username } = useParams();
-  const { user, logout, login } = useAuth(); // نحتاج login لتحديث المستخدم
+  const { user, logout, login } = useAuth(); // نحتاج login لتحديث المستخدم بعد تغيير الصورة
   const navigate = useNavigate();
   
   const [profileUser, setProfileUser] = useState(null);
@@ -28,22 +28,21 @@ const ProfilePage = () => {
 
   // دالة مساعدة لبناء الروابط
   const getAssetUrl = (url) => {
-    if (!url) return '/default-avatar.png';
+    if (!url || url === '/default-avatar.png') return '/default-avatar.png';
     if (url.startsWith('http')) return url;
     return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
   };
 
-  // جلب بيانات الملف الشخصي
+  // جلب بيانات الملف الشخصي (أكثر كفاءة)
   const fetchProfileData = useCallback(async () => {
     setLoading(true);
     try {
-      // ✨ 1. جلب كل البيانات في طلب واحد
+      // ✨ 1. جلب كل البيانات في طلب واحد فقط
       const response = await api.get(`/api/users/profile/${username}`);
       setProfileUser(response.data.user);
       setVideos(response.data.videos);
       setStats(response.data.stats);
       
-      // جلب الفيديوهات المعجب بها فقط إذا كان الملف الشخصي للمستخدم الحالي
       if (isOwnProfile) {
         const likedRes = await api.get('/api/users/me/liked-videos', {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -52,7 +51,7 @@ const ProfilePage = () => {
       }
     } catch (error) {
       console.error('Error fetching profile data:', error);
-      setProfileUser(null); // تعيين المستخدم إلى null في حالة الخطأ
+      setProfileUser(null);
     } finally {
       setLoading(false);
     }
@@ -80,15 +79,28 @@ const ProfilePage = () => {
         }
       });
       
-      // تحديث حالة المستخدم في AuthContext وفي الصفحة الحالية
       const updatedUser = response.data.user;
       setProfileUser(updatedUser);
-      login(localStorage.getItem('token'), updatedUser); // تحديث الـ context
+      login(localStorage.getItem('token'), updatedUser); // تحديث الحالة العامة
       
     } catch (error) {
       alert('فشل تحديث الصورة: ' + (error.response?.data?.error || error.message));
     } finally {
       setUploadingImage(false);
+    }
+  };
+  
+  // حذف الفيديو
+  const handleDeleteVideo = async (videoId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الفيديو؟')) return;
+    try {
+        // ✨ 3. إرسال توكن المصادقة مع الطلب
+        await api.delete(`/api/videos/${videoId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        setVideos(prevVideos => prevVideos.filter(v => v._id !== videoId));
+    } catch (error) {
+        alert('فشل حذف الفيديو: ' + (error.response?.data?.error || error.message));
     }
   };
 
@@ -104,35 +116,20 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-page">
-      {/* ... Header Section (لا تغيير كبير هنا) ... */}
       <div className="profile-header">
         <div className="profile-main-info">
           <div className="profile-image-section">
             <label htmlFor="profile-image-input" className={`profile-image-wrapper ${isOwnProfile ? 'editable' : ''}`}>
-              <img 
-                src={getAssetUrl(profileUser.profileImage)} 
-                alt={profileUser.username}
-                className="profile-image"
-              />
+              <img src={getAssetUrl(profileUser.profileImage)} alt={profileUser.username} className="profile-image"/>
               {isOwnProfile && (
                 <div className="edit-image-overlay">
                   <FaCamera />
-                  <span>{uploadingImage ? 'جاري الرفع...' : 'تغيير'}</span>
+                  <span>{uploadingImage ? 'جاري...' : 'تغيير'}</span>
                 </div>
               )}
             </label>
-            {isOwnProfile && (
-              <input 
-                type="file" 
-                id="profile-image-input"
-                accept="image/*"
-                onChange={handleImageUpload}
-                hidden
-                disabled={uploadingImage}
-              />
-            )}
+            {isOwnProfile && <input type="file" id="profile-image-input" accept="image/*" onChange={handleImageUpload} hidden disabled={uploadingImage} />}
           </div>
-
           <div className="profile-details">
             <h1 className="profile-username">@{profileUser.username}</h1>
             <div className="profile-stats">
@@ -145,54 +142,41 @@ const ProfilePage = () => {
                 <span className="stat-label">إعجاب</span>
               </div>
             </div>
-            {isOwnProfile && (
-              <button className="logout-btn" onClick={handleLogout}>
-                <FaSignOutAlt /> تسجيل الخروج
-              </button>
-            )}
+            {isOwnProfile && <button className="logout-btn" onClick={handleLogout}><FaSignOutAlt /> تسجيل الخروج</button>}
           </div>
         </div>
       </div>
 
-      {/* ... Tabs Section (لا تغيير هنا) ... */}
       {isOwnProfile && (
         <div className="profile-tabs">
-          <button className={`tab ${activeTab === 'posts' ? 'active' : ''}`} onClick={() => setActiveTab('posts')}>
-            منشوراتي
-          </button>
-          <button className={`tab ${activeTab === 'liked' ? 'active' : ''}`} onClick={() => setActiveTab('liked')}>
-            أعجبني
-          </button>
+          <button className={`tab ${activeTab === 'posts' ? 'active' : ''}`} onClick={() => setActiveTab('posts')}>منشوراتي</button>
+          <button className={`tab ${activeTab === 'liked' ? 'active' : ''}`} onClick={() => setActiveTab('liked')}>أعجبني</button>
         </div>
       )}
 
-      {/* ... Videos Grid ... */}
       <div className="profile-content">
         <div className="videos-grid">
           {displayedVideos.map((video) => (
             <div key={video._id} className="video-item">
               <Link to={`/video/${video._id}`} className="video-thumbnail">
-                <video 
-                  src={getAssetUrl(video.videoUrl)}
-                  muted
-                  onMouseEnter={(e) => e.target.play()}
-                  onMouseLeave={(e) => e.target.pause()}
-                />
+                <video src={getAssetUrl(video.videoUrl)} muted onMouseEnter={(e) => e.target.play()} onMouseLeave={(e) => e.target.pause()} />
                 <div className="video-stats-overlay">
                   <span><FaHeart /> {video.likes?.length || 0}</span>
                   <span><FaPlay /> {video.views || 0}</span>
                 </div>
               </Link>
+              {isOwnProfile && activeTab === 'posts' && (
+                <button className="delete-video-btn" onClick={() => handleDeleteVideo(video._id)}>
+                  <FaTrash />
+                </button>
+              )}
             </div>
           ))}
         </div>
         {displayedVideos.length === 0 && (
-          <div className="empty-state">
-            <p>{activeTab === 'posts' ? 'لم يتم نشر أي فيديوهات بعد' : 'لم يتم الإعجاب بأي فيديوهات بعد'}</p>
-          </div>
+          <div className="empty-state"><p>{activeTab === 'posts' ? 'لم يتم نشر أي فيديوهات بعد' : 'لم يتم الإعجاب بأي فيديوهات بعد'}</p></div>
         )}
       </div>
-
       <NavigationBar currentPage="profile" />
     </div>
   );

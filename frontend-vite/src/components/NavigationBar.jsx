@@ -62,13 +62,13 @@ const NavigationBar = ({ currentPage }) => {
         <span className="nav-label">{isAuthenticated ? 'حسابي' : 'الدخول'}</span>
       </button>
 
-      {/* --- زر لوحة التحكم (للأدمن فقط) --- */}
-      {isAdmin && (
-        <Link to="/admin" className={`nav-item ${currentPage === 'admin' ? 'active' : ''}`}>
-          <FaShieldAlt className="nav-icon" />
-          <span className="nav-label">الأدمن</span>
-        </Link>
-      )}
+      {/* ✨ عرض رابط لوحة التحكم فقط إذا كان المستخدم أدمن */}
+    {isAdmin && (
+      <Link to="/admin" className={`nav-item ${currentPage === 'admin' ? 'active' : ''}`}>
+        <FaShieldAlt className="nav-icon" />
+        <span className="nav-label">الأدمن</span>
+      </Link>
+    )}
     </nav>
   );
 };

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './AdminDashboard.css'; // سنقوم بإنشاء هذا الملف للتنسيق
+import './AdminDashboard.css'; // سننشئ هذا الملف للتنسيق
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
@@ -12,8 +12,8 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [filter, setFilter] = useState('');
 
-  // جلب قائمة المستخدمين عند تحميل الصفحة
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -23,42 +23,51 @@ const AdminDashboard = () => {
         });
         setUsers(response.data);
       } catch (err) {
-        setError('فشل في جلب المستخدمين. قد لا تكون لديك الصلاحية.');
+        setError('فشل في جلب المستخدمين. قد لا تكون لديك الصلاحية الكافية.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchUsers();
   }, []);
 
-  // دالة لتغيير دور المستخدم
   const handleRoleChange = async (userId, newRole) => {
     try {
       const token = localStorage.getItem('token');
       await api.patch(`/api/users/role/${userId}`, { role: newRole }, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      // تحديث الحالة في الواجهة الأمامية فورًا
       setUsers(prevUsers =>
         prevUsers.map(user =>
           user._id === userId ? { ...user, role: newRole } : user
         )
       );
     } catch (err) {
-      alert('فشل في تحديث الدور.');
+      alert('فشل تحديث الدور.');
     }
   };
+
+  const filteredUsers = users.filter(user => 
+    user.username.toLowerCase().includes(filter.toLowerCase()) ||
+    user.email.toLowerCase().includes(filter.toLowerCase())
+  );
 
   if (loading) return <div className="loading-container">جاري تحميل لوحة التحكم...</div>;
   if (error) return <div className="error-container">{error}</div>;
 
   return (
     <div className="admin-dashboard">
-      <h1>لوحة تحكم المستخدمين</h1>
-      <p>هنا يمكنك إدارة أدوار المستخدمين ومنح صلاحيات "Creator".</p>
-
+      <div className="admin-header">
+        <h1>لوحة تحكم المستخدمين</h1>
+        <p>إدارة أدوار المستخدمين ومنح صلاحيات "Creator".</p>
+        <input 
+          type="text"
+          placeholder="ابحث عن مستخدم بالاسم أو الإيميل..."
+          className="search-bar"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
+      </div>
       <div className="user-table-container">
         <table className="user-table">
           <thead>
@@ -66,11 +75,11 @@ const AdminDashboard = () => {
               <th>اسم المستخدم</th>
               <th>البريد الإلكتروني</th>
               <th>الدور الحالي</th>
-              <th>تغيير الدور إلى</th>
+              <th>تغيير الدور</th>
             </tr>
           </thead>
           <tbody>
-            {users.map(user => (
+            {filteredUsers.map(user => (
               <tr key={user._id}>
                 <td>{user.username}</td>
                 <td>{user.email}</td>
@@ -79,6 +88,7 @@ const AdminDashboard = () => {
                   <select
                     value={user.role}
                     onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                    className="role-select"
                   >
                     <option value="user">User</option>
                     <option value="creator">Creator</option>

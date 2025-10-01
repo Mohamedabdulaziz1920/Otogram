@@ -1,11 +1,13 @@
 /* ملف: src/pages/AdminDashboard.css */
-.admin-dashboard { padding: 2rem; color: #333; }
+.admin-dashboard { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+.admin-header { text-align: center; margin-bottom: 2rem; }
+.search-bar { width: 100%; max-width: 400px; padding: 0.5rem; margin-top: 1rem; border-radius: 5px; border: 1px solid #ccc; }
 .user-table-container { overflow-x: auto; }
-.user-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-.user-table th, .user-table td { padding: 0.8rem; border: 1px solid #ddd; text-align: left; }
-.user-table th { background-color: #f4f4f4; }
-.role-badge { padding: 0.2rem 0.5rem; border-radius: 10px; color: white; font-size: 0.8rem; }
+.user-table { width: 100%; border-collapse: collapse; margin-top: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.user-table th, .user-table td { padding: 0.8rem 1rem; border: 1px solid #ddd; text-align: left; }
+.user-table th { background-color: #f8f9fa; font-weight: 600; }
+.role-badge { padding: 0.2rem 0.6rem; border-radius: 12px; color: white; font-size: 0.75rem; text-transform: uppercase; }
 .role-user { background-color: #6c757d; }
 .role-creator { background-color: #17a2b8; }
 .role-admin { background-color: #dc3545; }
-.user-table select { padding: 0.4rem; border-radius: 5px; }
+.role-select { padding: 0.5rem; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; }

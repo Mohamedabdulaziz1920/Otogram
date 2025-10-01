@@ -1,20 +1,22 @@
 // ملف: src/components/AdminRoute.jsx
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom'; // ✨ 1. استيراد Outlet
 import { useAuth } from '../context/AuthContext';
 
-const AdminRoute = ({ children }) => {
+const AdminRoute = () => { // ✨ 2. لم نعد بحاجة إلى props 'children'
   const { user, loading } = useAuth();
 
-  // انتظر حتى يتم التحقق من المستخدم
+  // انتظر حتى يتم التحقق من المستخدم لتجنب إعادة التوجيه الخاطئة
   if (loading) {
-    return <div>جاري التحميل...</div>; // أو عرض loading spinner
+    // يمكنك عرض مكون تحميل مخصص هنا
+    return <div>جاري التحقق من الصلاحيات...</div>;
   }
 
-  // تحقق مما إذا كان المستخدم موجودًا وهو أدمن
+  // إذا كان المستخدم مسجلاً وهو أدمن، اعرض المسار الفرعي (الابن)
+  // Outlet هو المكان الذي سيتم فيه عرض <AdminDashboard />
   if (user && user.role === 'admin') {
-    return children; // إذا كان أدمن، اعرض الصفحة المطلوبة
+    return <Outlet />; // ✨ 3. استخدام Outlet
   }
 
   // إذا لم يكن أدمن، قم بإعادة توجيهه إلى الصفحة الرئيسية

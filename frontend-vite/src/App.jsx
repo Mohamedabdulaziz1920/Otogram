@@ -26,16 +26,13 @@ function App() {
                 <UploadPage />
               </PrivateRoute>
             } />
-             {/* ✨ إضافة المسار المحمي للوحة التحكم */}
-  <Route 
-    path="/admin" 
-    element={
-      <AdminRoute>
-        <AdminDashboard />
-      </AdminRoute>
-    } 
-  />
-          </Routes>
+             {/* هذا هو النمط الصحيح لـ React Router v6 */}
+  <Route element={<AdminRoute />}>
+    <Route path="/admin" element={<AdminDashboard />} />
+    {/* يمكنك إضافة مسارات أخرى محمية للأدمن هنا في المستقبل */}
+    {/* <Route path="/admin/settings" element={<AdminSettingsPage />} /> */}
+  </Route>
+</Routes>
         </div>
       </Router>
     </AuthProvider>

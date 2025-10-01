@@ -170,7 +170,7 @@ const ProfilePage = () => {
     const profileUrl = `${window.location.origin}/profile/${profileUser.username}`;
     if (navigator.share) {
       navigator.share({
-        title: `@${profileUser.username} على Otogram`,
+        title: `${profileUser.username}@ على Otogram`,
         url: profileUrl
       });
     } else {
@@ -275,7 +275,7 @@ const ProfilePage = () => {
                 </div>
               ) : (
                 <div className="username-display">
-                  <h1 className="profile-username">@{profileUser.username}</h1>
+                  <h1 className="profile-username">{profileUser.username}@</h1>
                   {isOwnProfile && (
                     <button 
                       onClick={() => {

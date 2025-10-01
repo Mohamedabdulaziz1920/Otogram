@@ -1,9 +1,9 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const jwt = 'jsonwebtoken');
 const User = require('../models/User');
 const router = express.Router();
-const auth = require('../middleware/auth'); // ✨ 1. تأكد من استيراد auth middleware
+const auth = require('../middleware/auth'); // تأكد من أن مسار هذا الملف صحيح
 
 // --- Register a new user ---
 router.post('/register', async (req, res) => {
@@ -101,13 +101,11 @@ router.post('/login', async (req, res) => {
 });
 
 
-// ✨✨ 2. إضافة المسار الجديد هنا ✨✨
 // --- Get Logged-in User Data ---
-// هذا المسار محمي، ويتحقق من التوكن ويعيد بيانات المستخدم
+// هذا المسار يتحقق من التوكن ويعيد بيانات المستخدم
 router.get('/me', auth, async (req, res) => {
   try {
     // req.userId يتم إرفاقه بواسطة auth middleware
-    // لا نختار كلمة المرور
     const user = await User.findById(req.userId).select('-password'); 
     
     if (!user) {

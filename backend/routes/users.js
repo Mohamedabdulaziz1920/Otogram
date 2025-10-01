@@ -6,10 +6,10 @@ const User = require('../models/User');
 const Video = require('../models/Video');
 const auth = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
-const { getImageBucket } = require('../config/gridfs'); // سنحتاج هذا لحذف الصور
+const { getImageBucket } = require('../config/gridfs');
 const router = express.Router();
 
-// --- إعداد GridFS Storage لرفع صور الملف الشخصي ---
+// --- إعداد GridFS Storage لصور الملف الشخصي ---
 const imageStorage = new GridFsStorage({
   db: mongoose.connection,
   file: (req, file) => {
@@ -17,7 +17,7 @@ const imageStorage = new GridFsStorage({
       const filename = 'profile-' + req.userId + '-' + Date.now();
       const fileInfo = {
         filename: filename,
-        bucketName: 'images', // ✨ استخدام bucket مختلف للصور
+        bucketName: 'images',
       };
       resolve(fileInfo);
     });
@@ -26,7 +26,7 @@ const imageStorage = new GridFsStorage({
 
 const uploadProfileImage = multer({
   storage: imageStorage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -38,26 +38,49 @@ const uploadProfileImage = multer({
 
 // --- المسارات العامة ---
 
-// Get public user profile and their videos
+// Get public user profile, their videos, and their replies
 router.get('/profile/:username', async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const videos = await Video.find({ user: user._id, isReply: false }).sort({ createdAt: -1 });
+    const [videos, replies] = await Promise.all([
+      Video.find({ user: user._id, isReply: false }).sort({ createdAt: -1 }),
+      Video.find({ user: user._id, isReply: true }).sort({ createdAt: -1 })
+    ]);
+    
     const totalLikes = videos.reduce((sum, video) => sum + (video.likes?.length || 0), 0);
 
     res.json({
       user,
       videos,
-      stats: { videosCount: videos.length, totalLikes }
+      replies,
+      stats: {
+        videosCount: videos.length,
+        repliesCount: replies.length,
+        totalLikes
+      }
     });
-  } catch (error) {
+  } catch (error) { // ✨✨ تم تصحيح الخطأ هنا ✨✨
+    console.error('Error fetching profile:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
 // --- المسارات المحمية للمستخدم المسجل ---
+
+// Get current logged-in user's liked videos
+router.get('/me/liked-videos', auth, async (req, res) => {
+    try {
+      const likedVideos = await Video.find({ likes: req.userId })
+        .populate('user', 'username profileImage')
+        .sort({ createdAt: -1 });
+  
+      res.json(likedVideos);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch liked videos' });
+    }
+  });
 
 // Update profile image for the logged-in user
 router.post('/me/update-profile-image', auth, uploadProfileImage.single('profileImage'), async (req, res) => {
@@ -68,13 +91,11 @@ router.post('/me/update-profile-image', auth, uploadProfileImage.single('profile
 
     const user = await User.findById(req.userId);
     if (!user) {
-      // حذف الصورة المرفوعة إذا لم يتم العثور على المستخدم
       const imageBucket = getImageBucket();
       await imageBucket.delete(req.file.id);
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // ✨ حذف الصورة القديمة من GridFS إذا كانت موجودة
     if (user.profileImageFileId) {
       try {
         const imageBucket = getImageBucket();
@@ -84,9 +105,8 @@ router.post('/me/update-profile-image', auth, uploadProfileImage.single('profile
       }
     }
 
-    // تحديث المستخدم بالمعلومات الجديدة من GridFS
-    user.profileImage = `/api/files/images/${req.file.id}`; // رابط بث الصورة
-    user.profileImageFileId = req.file.id; // ID لحذفها لاحقًا
+    user.profileImage = `/api/files/images/${req.file.id}`;
+    user.profileImageFileId = req.file.id;
     await user.save();
 
     res.json({ message: 'Profile image updated successfully', user });
@@ -95,7 +115,6 @@ router.post('/me/update-profile-image', auth, uploadProfileImage.single('profile
     res.status(500).json({ error: 'Failed to update profile image' });
   }
 });
-
 
 // --- المسارات المحمية للأدمن فقط ---
 
@@ -125,6 +144,5 @@ router.patch('/role/:userId', auth, isAdmin, async (req, res) => {
     res.status(500).json({ error: 'Failed to update user role.' });
   }
 });
-
 
 module.exports = router;

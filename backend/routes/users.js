@@ -61,7 +61,7 @@ router.get('/profile/:username', async (req, res) => {
         totalLikes
       }
     });
-  } catch (error) { // ✨✨ تم تصحيح الخطأ هنا ✨✨
+  } catch (error) { // ✨ تم حذف "=>" من هنا
     console.error('Error fetching profile:', error);
     res.status(500).json({ error: 'Server error' });
   }
@@ -78,9 +78,10 @@ router.get('/me/liked-videos', auth, async (req, res) => {
   
       res.json(likedVideos);
     } catch (error) {
+      console.error('Error fetching liked videos:', error);
       res.status(500).json({ error: 'Failed to fetch liked videos' });
     }
-  });
+});
 
 // Update profile image for the logged-in user
 router.post('/me/update-profile-image', auth, uploadProfileImage.single('profileImage'), async (req, res) => {
@@ -114,6 +115,31 @@ router.post('/me/update-profile-image', auth, uploadProfileImage.single('profile
     console.error('Error updating profile image:', error);
     res.status(500).json({ error: 'Failed to update profile image' });
   }
+});
+
+// Update username for the logged-in user
+router.patch('/me/update-username', auth, async (req, res) => {
+    try {
+      const { username } = req.body;
+      if (!username || username.length < 3) {
+        return res.status(400).json({ error: 'Username must be at least 3 characters long.' });
+      }
+  
+      const existingUser = await User.findOne({ username });
+      if (existingUser && existingUser._id.toString() !== req.userId) {
+        return res.status(409).json({ error: 'Username is already taken.' });
+      }
+  
+      const updatedUser = await User.findByIdAndUpdate(
+        req.userId,
+        { username },
+        { new: true }
+      );
+  
+      res.json({ message: 'Username updated successfully', user: updatedUser });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update username.' });
+    }
 });
 
 // --- المسارات المحمية للأدمن فقط ---

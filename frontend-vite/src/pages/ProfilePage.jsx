@@ -13,7 +13,7 @@ const api = axios.create({
 
 const ProfilePage = () => {
   const { username } = useParams();
-  const { user, logout, login } = useAuth(); // نحتاج login لتحديث المستخدم بعد تغيير الصورة
+  const { user, logout, login } = useAuth();
   const navigate = useNavigate();
   
   const [profileUser, setProfileUser] = useState(null);
@@ -120,8 +120,6 @@ const ProfilePage = () => {
         <div className="profile-main-info">
           <div className="profile-image-section">
           <label htmlFor="profile-image-input" className={`profile-image-wrapper ${isOwnProfile ? 'editable' : ''}`}>
-            
-            {/* ✨✨ هذا هو السطر الذي يجب تصحيحه ✨✨ */}
             <img 
               src={getAssetUrl(profileUser.profileImage)} 
               alt={profileUser.username} 

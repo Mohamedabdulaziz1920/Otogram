@@ -1,59 +1,48 @@
+// routes/users.js
 const express = require('express');
+const mongoose = require('mongoose');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { GridFsStorage } = require('multer-gridfs-storage');
 const User = require('../models/User');
 const Video = require('../models/Video');
 const auth = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
 const router = express.Router();
 
-// إنشاء مجلد uploads إذا لم يكن موجوداً
-const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// إعداد multer للتخزين المحلي
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const uploadProfileImage = multer({
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'), false);
+// ✅ إعداد Multer + GridFS لتخزين صور البروفايل
+const storage = new GridFsStorage({
+  url: process.env.MONGODB_URI,
+  options: { useNewUrlParser: true, useUnifiedTopology: true },
+  file: (req, file) => {
+    const match = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
+    if (match.indexOf(file.mimetype) === -1) {
+      return null;
     }
+    return {
+      bucketName: "images",
+      filename: `${Date.now()}-${file.originalname}`
+    };
   }
 });
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB
 
 // --- المسارات العامة ---
 
-// Get public user profile, their videos, and their replies
+// Get public user profile, their videos, and replies
 router.get('/profile/:username', async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username }).select('-password');
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const [videos, replies] = await Promise.all([
-      Video.find({ user: user._id, replyTo: null })
+      Video.find({ user: user._id, isReply: false })
         .populate('user', 'username profileImage')
         .sort({ createdAt: -1 }),
-      Video.find({ user: user._id, replyTo: { $ne: null } })
+      Video.find({ user: user._id, isReply: true })
         .populate('user', 'username profileImage')
         .sort({ createdAt: -1 })
     ]);
-    
+
     const totalLikes = [...videos, ...replies].reduce((sum, video) => sum + (video.likes?.length || 0), 0);
 
     res.json({
@@ -74,92 +63,69 @@ router.get('/profile/:username', async (req, res) => {
 
 // --- المسارات المحمية للمستخدم المسجل ---
 
-// Get current logged-in user's liked videos
-router.get('/me/liked-videos', auth, async (req, res) => {
+// Update profile image (GridFS)
+router.post('/update-profile-image', auth, upload.single('profileImage'), async (req, res) => {
   try {
-    const likedVideos = await Video.find({ likes: req.userId })
-      .populate('user', 'username profileImage')
-      .sort({ createdAt: -1 });
-
-    res.json(likedVideos);
-  } catch (error) {
-    console.error('Error fetching liked videos:', error);
-    res.status(500).json({ error: 'Failed to fetch liked videos' });
-  }
-});
-
-// Update profile image for the logged-in user
-router.post('/update-profile-image', auth, uploadProfileImage.single('profileImage'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No image file uploaded' });
+    if (!req.file || !req.file.id) {
+      return res.status(400).json({ error: 'No image uploaded or invalid format' });
     }
 
     const user = await User.findById(req.userId);
     if (!user) {
-      // حذف الصورة المرفوعة إذا لم يتم العثور على المستخدم
-      fs.unlinkSync(path.join(uploadsDir, req.file.filename));
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // حذف الصورة القديمة إذا كانت موجودة
-    if (user.profileImage && user.profileImage !== '/default-avatar.png') {
-      const oldImagePath = path.join(uploadsDir, path.basename(user.profileImage));
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
-      }
-    }
+    // إذا كانت هناك صورة سابقة، يمكن حذفها من GridFS (اختياري)
+    // const gfs = req.gfs;
+    // if (user.profileImageId && gfs) {
+    //   gfs.delete(new mongoose.Types.ObjectId(user.profileImageId), (err) => {
+    //     if (err) console.error('Error deleting old profile image:', err);
+    //   });
+    // }
 
-    // تحديث مسار الصورة الجديدة
-    user.profileImage = `/uploads/${req.file.filename}`;
+    user.profileImage = `/api/files/images/${req.file.id}`; // رابط البث
+    user.profileImageId = req.file.id; // حفظ الـ fileId إذا أحببت تستخدمه لاحقًا
     await user.save();
 
-    res.json({ 
-      message: 'Profile image updated successfully', 
-      profileImage: user.profileImage 
+    res.json({
+      message: 'Profile image updated successfully',
+      profileImage: user.profileImage
     });
+
   } catch (error) {
     console.error('Error updating profile image:', error);
-    // حذف الصورة المرفوعة في حالة الخطأ
-    if (req.file) {
-      fs.unlinkSync(path.join(uploadsDir, req.file.filename));
-    }
     res.status(500).json({ error: 'Failed to update profile image' });
   }
 });
 
-// Update username for the logged-in user
+// Update username
 router.put('/update-username', auth, async (req, res) => {
   try {
     const { username } = req.body;
-    
     if (!username || username.length < 3) {
       return res.status(400).json({ message: 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل' });
     }
-    
-    // Check if username already exists
+
     const existingUser = await User.findOne({ username });
     if (existingUser && existingUser._id.toString() !== req.userId) {
       return res.status(400).json({ message: 'اسم المستخدم مستخدم بالفعل' });
     }
-    
-    // Update username
+
     const user = await User.findByIdAndUpdate(
       req.userId,
       { username },
       { new: true }
     ).select('-password');
-    
+
     res.json({ username: user.username });
+
   } catch (error) {
     console.error('Error updating username:', error);
     res.status(500).json({ message: 'خطأ في تحديث اسم المستخدم' });
   }
 });
 
-// --- المسارات المحمية للأدمن فقط ---
-
-// Get all users (admin only)
+// --- مسارات الأدمن ---
 router.get('/', auth, isAdmin, async (req, res) => {
   try {
     const users = await User.find().select('-password').sort({ createdAt: -1 });
@@ -169,7 +135,6 @@ router.get('/', auth, isAdmin, async (req, res) => {
   }
 });
 
-// Update a user's role (admin only)
 router.patch('/role/:userId', auth, isAdmin, async (req, res) => {
   try {
     const { role } = req.body;
@@ -178,14 +143,15 @@ router.patch('/role/:userId', auth, isAdmin, async (req, res) => {
     }
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.params.userId, 
-      { role }, 
+      req.params.userId,
+      { role },
       { new: true }
     ).select('-password');
-    
+
     if (!updatedUser) return res.status(404).json({ error: 'User not found.' });
 
     res.json({ message: `User role updated to ${role}`, user: updatedUser });
+
   } catch (error) {
     res.status(500).json({ error: 'Failed to update user role.' });
   }

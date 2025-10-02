@@ -11,36 +11,46 @@ const api = axios.create({
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // true حتى يتم التحقق من الجلسة
 
+  // تسجيل الدخول
   const login = (token, userData) => {
     localStorage.setItem('token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
   };
 
+  // تسجيل الخروج
   const logout = () => {
     localStorage.removeItem('token');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
   };
 
-  // التأكد من صلاحية الجلسة عند تحميل التطبيق
+  // التحقق من الجلسة عند تحميل التطبيق
   useEffect(() => {
     const verifyUserSession = async () => {
+      setLoading(true);
       const token = localStorage.getItem('token');
       if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         try {
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           const response = await api.get('/api/auth/me');
-          setUser(response.data.user);
+          if (response.data && response.data.user) {
+            setUser(response.data.user);
+          } else {
+            logout();
+          }
         } catch (error) {
           console.error('Session token invalid or expired. Logging out.');
           logout();
         }
+      } else {
+        logout();
       }
       setLoading(false);
     };
+
     verifyUserSession();
   }, []);
 

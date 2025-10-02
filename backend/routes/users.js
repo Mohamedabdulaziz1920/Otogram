@@ -63,7 +63,7 @@ router.get('/profile/:username', async (req, res) => {
 
 // --- المسارات المحمية للمستخدم المسجل ---
 
-// Update profile image (GridFS)
+// Update profile image (GridFS) مع حذف الصورة القديمة
 router.post('/update-profile-image', auth, upload.single('profileImage'), async (req, res) => {
   try {
     if (!req.file || !req.file.id) {
@@ -75,16 +75,17 @@ router.post('/update-profile-image', auth, upload.single('profileImage'), async 
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // إذا كانت هناك صورة سابقة، يمكن حذفها من GridFS (اختياري)
-    // const gfs = req.gfs;
-    // if (user.profileImageId && gfs) {
-    //   gfs.delete(new mongoose.Types.ObjectId(user.profileImageId), (err) => {
-    //     if (err) console.error('Error deleting old profile image:', err);
-    //   });
-    // }
+    const gfs = req.gfs; // تأكد أن gfs موجود في middleware
+
+    // حذف الصورة القديمة إذا كانت موجودة
+    if (user.profileImageFileId && gfs) {
+      gfs.delete(user.profileImageFileId, (err) => {
+        if (err) console.error('Error deleting old profile image:', err);
+      });
+    }
 
     user.profileImage = `/api/files/images/${req.file.id}`; // رابط البث
-    user.profileImageId = req.file.id; // حفظ الـ fileId إذا أحببت تستخدمه لاحقًا
+    user.profileImageFileId = req.file.id; // حفظ الـ fileId الجديد
     await user.save();
 
     res.json({

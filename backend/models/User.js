@@ -15,7 +15,6 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     trim: true,
-    // Regex بسيط للتحقق من صيغة الإيميل
     match: [/\S+@\S+\.\S+/, 'Please use a valid email address.']
   },
   password: {
@@ -27,29 +26,24 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  // ✨ أضف هذا الحقل
+  // ✅ لحفظ fileId الخاص بصورة البروفايل في GridFS
   profileImageFileId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId
   },
   role: {
     type: String,
-    enum: {
-      values: ['user', 'creator', 'admin'],
-      message: '{VALUE} is not a supported role.'
-    },
-    default: 'user' // الدور الافتراضي لأي مستخدم جديد
+    enum: ['user', 'creator', 'admin'],
+    default: 'user'
   },
-
   likedVideos: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Video'
   }],
 }, {
-  // ✨ 2. إضافة timestamps تلقائيًا (createdAt, updatedAt)
-  timestamps: true 
+  timestamps: true // إضافة createdAt و updatedAt تلقائيًا
 });
 
-// ✨ 3. (اختياري ولكن موصى به) إخفاء كلمة المرور عند تحويل المستند إلى JSON
+// حذف كلمة المرور عند تحويل المستند إلى JSON
 userSchema.methods.toJSON = function() {
   const userObject = this.toObject();
   delete userObject.password;

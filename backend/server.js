@@ -17,7 +17,7 @@ app.use(express.json());
 // --- MongoDB Connection ---
 mongoose.connect(process.env.MONGODB_URI)
 .then((conn) => {
-  console.log('✅ MongoDB connected successfully.');
+  console.log('MongoDB connected successfully.');
 
   const db = mongoose.connection.db;
 
@@ -50,11 +50,11 @@ mongoose.connect(process.env.MONGODB_URI)
 
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
   });
 
 })
 .catch((err) => {
-  console.error('❌ FATAL: MongoDB connection error:', err.message);
+  console.error('FATAL: MongoDB connection error:', err.message);
   process.exit(1);
 });

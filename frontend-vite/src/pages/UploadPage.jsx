@@ -12,14 +12,13 @@ const api = axios.create({
 const UploadPage = () => {
   const [searchParams] = useSearchParams();
   const replyToId = searchParams.get('replyTo');
-  
+
   const [videoFile, setVideoFile] = useState(null);
   const [description, setDescription] = useState('');
-  const [uploadPassword, setUploadPassword] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(null);
-  
+
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -31,7 +30,6 @@ const UploadPage = () => {
     }
   }, [user, navigate]);
 
-  // اختيار الفيديو
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file && file.type.startsWith('video/')) {
@@ -45,7 +43,6 @@ const UploadPage = () => {
     }
   };
 
-  // رفع الفيديو
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -55,20 +52,11 @@ const UploadPage = () => {
       return;
     }
 
-    if (!replyToId && !uploadPassword) {
-      setError('كلمة مرور الرفع مطلوبة');
-      return;
-    }
-
     setUploading(true);
 
     const formData = new FormData();
     formData.append('video', videoFile);
     formData.append('description', description);
-
-    if (!replyToId) {
-      formData.append('uploadPassword', uploadPassword);
-    }
 
     try {
       const config = {
@@ -142,21 +130,6 @@ const UploadPage = () => {
               rows="3"
             />
           </div>
-
-          {/* كلمة مرور الرفع للفيديو الأساسي فقط */}
-          {!replyToId && (
-            <div className="form-group">
-              <label htmlFor="uploadPassword">كلمة مرور الرفع</label>
-              <input
-                type="password"
-                id="uploadPassword"
-                value={uploadPassword}
-                onChange={(e) => setUploadPassword(e.target.value)}
-                placeholder="أدخل كلمة مرور الرفع"
-                required
-              />
-            </div>
-          )}
 
           {error && <div className="error-message">{error}</div>}
 

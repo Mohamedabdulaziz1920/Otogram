@@ -27,8 +27,9 @@ function App() {
               </PrivateRoute>
             } />
              {/* هذا هو النمط الصحيح لـ React Router v6 */}
-  <Route element={<AdminRoute />}>
-    <Route path="/admin" element={<AdminDashboard />} />
+ {user && user.role === 'admin' && (
+  <Route path="/admin" element={<AdminDashboard />} />
+)}
     {/* يمكنك إضافة مسارات أخرى محمية للأدمن هنا في المستقبل */}
     {/* <Route path="/admin/settings" element={<AdminSettingsPage />} /> */}
   </Route>

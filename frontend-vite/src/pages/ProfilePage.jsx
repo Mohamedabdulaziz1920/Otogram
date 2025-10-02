@@ -69,31 +69,33 @@ const ProfilePage = () => {
   }, [fetchProfileData]);
 
   // Handle Image Upload
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+const handleImageUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    const formData = new FormData();
-    formData.append('profileImage', file);
+  const formData = new FormData();
+  formData.append('profileImage', file);
 
-    setUploadingImage(true);
-    try {
-      const response = await api.post('/api/users/update-profile-image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      
-      setProfileUser(prev => ({ ...prev, profileImage: response.data.profileImage }));
-      updateUser({ profileImage: response.data.profileImage });
-      
-      // Show success message
-      showNotification('تم تحديث الصورة بنجاح', 'success');
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      showNotification('فشل تحديث الصورة', 'error');
-    } finally {
-      setUploadingImage(false);
-    }
-  };
+  setUploadingImage(true);
+  try {
+    const response = await api.post('/api/users/update-profile-image', formData, {
+      headers: { 
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    
+    setProfileUser(prev => ({ ...prev, profileImage: response.data.profileImage }));
+    updateUser({ profileImage: response.data.profileImage });
+    
+    showNotification('تم تحديث الصورة بنجاح', 'success');
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    showNotification('فشل تحديث الصورة', 'error');
+  } finally {
+    setUploadingImage(false);
+  }
+};
 
   // Handle Username Update
   const handleUsernameUpdate = async () => {

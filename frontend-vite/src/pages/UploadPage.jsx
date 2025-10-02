@@ -7,7 +7,6 @@ import './UploadPage.css';
 
 const UploadPage = () => {
   const [file, setFile] = useState(null);
-  const [description, setDescription] = useState('');
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState('');
@@ -23,10 +22,8 @@ const UploadPage = () => {
       navigate('/login');
       return;
     }
-
-    // التحقق من صلاحية النشر
     if (user.role !== 'creator' && user.role !== 'admin') {
-      setError('ليس لديك صلاحية لرفع الفيديوهات. يجب أن تكون منشئ محتوى.');
+      setError('ليس لديك صلاحية لرفع الفيديوهات.');
     }
   }, [user, navigate]);
 
@@ -37,13 +34,9 @@ const UploadPage = () => {
         setError('حجم الملف يجب أن يكون أقل من 100 ميجابايت');
         return;
       }
-      
       setFile(selectedFile);
       setError('');
-      
-      // إنشاء معاينة
-      const url = URL.createObjectURL(selectedFile);
-      setPreview(url);
+      setPreview(URL.createObjectURL(selectedFile));
     }
   };
 
@@ -52,8 +45,6 @@ const UploadPage = () => {
       setError('الرجاء اختيار فيديو');
       return;
     }
-
-    // التحقق مرة أخرى من الصلاحيات
     if (user.role !== 'creator' && user.role !== 'admin') {
       setError('ليس لديك صلاحية لرفع الفيديوهات');
       return;
@@ -64,51 +55,33 @@ const UploadPage = () => {
 
     const formData = new FormData();
     formData.append('video', file);
-    formData.append('description', description);
-    if (replyTo) {
-      formData.append('replyTo', replyTo);
-    }
+    // ✨ تم حذف إرسال الوصف من هنا
 
     try {
-      const response = await api.post('/api/videos/upload', formData, {
+      // تحديد المسار الصحيح بناءً على ما إذا كان ردًا أم لا
+      const url = replyTo ? `/api/videos/reply/${replyTo}` : '/api/videos/upload';
+      
+      await api.post(url, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          console.log(`Upload Progress: ${percentCompleted}%`);
-        }
       });
 
-      // نجح الرفع
       navigate('/');
     } catch (error) {
       console.error('Upload error:', error);
-      if (error.response?.status === 403) {
-        setError('ليس لديك صلاحية لرفع الفيديوهات');
-      } else {
-        setError(error.response?.data?.message || 'فشل رفع الفيديو');
-      }
+      setError(error.response?.data?.error || 'فشل رفع الفيديو');
     } finally {
       setUploading(false);
     }
   };
 
-  // إذا لم يكن لديه صلاحية
+  // عرض رسالة إذا لم يكن لديه صلاحية
   if (user && user.role === 'user') {
     return (
       <div className="upload-page">
         <div className="no-permission-container">
           <FaExclamationTriangle className="warning-icon" />
           <h2>ليس لديك صلاحية للنشر</h2>
-          <p>حسابك حالياً بصلاحية "مستخدم عادي"</p>
-          <p>لرفع الفيديوهات، تحتاج إلى صلاحية "منشئ محتوى"</p>
-          <div className="permission-info">
-            <h3>كيف تحصل على صلاحية النشر؟</h3>
-            <ul>
-              <li>تواصل مع أحد المديرين</li>
-              <li>اطلب ترقية حسابك إلى "منشئ محتوى"</li>
-              <li>انتظر الموافقة على طلبك</li>
-            </ul>
-          </div>
+          <p>لرفع الفيديوهات، تحتاج إلى صلاحية "منشئ محتوى" من الإدارة.</p>
           <button className="back-btn" onClick={() => navigate('/')}>
             العودة للرئيسية
           </button>
@@ -121,105 +94,46 @@ const UploadPage = () => {
   return (
     <div className="upload-page">
       <div className="upload-container">
-        <h1>{replyTo ? 'رفع رد على الفيديو' : 'رفع فيديو جديد'}</h1>
+        <h1>{replyTo ? 'رفع رد' : 'رفع فيديو جديد'}</h1>
         
-        {error && (
-          <div className="error-message">
-            <FaExclamationTriangle />
-            <span>{error}</span>
-          </div>
-        )}
+        {error && <div className="error-message">{error}</div>}
 
         <div className="upload-form">
           {!file ? (
             <label className="file-selector">
-              <input
-                type="file"
-                accept="video/*"
-                onChange={handleFileSelect}
-                hidden
-              />
+              <input type="file" accept="video/*" onChange={handleFileSelect} hidden />
               <FaVideo className="upload-icon" />
               <p>اضغط لاختيار فيديو</p>
-              <span>MP4, MOV, AVI (حتى 100MB)</span>
+              <span>(الحد الأقصى 100MB)</span>
             </label>
           ) : (
             <div className="preview-section">
-              <video 
-                src={preview} 
-                controls 
-                className="video-preview"
-              />
-              <button 
-                className="change-video-btn"
-                onClick={() => {
-                  setFile(null);
-                  setPreview(null);
-                }}
-              >
+              <video src={preview} controls className="video-preview" />
+              <button className="change-video-btn" onClick={() => { setFile(null); setPreview(null); }}>
                 تغيير الفيديو
               </button>
             </div>
           )}
 
-          <textarea
-            placeholder="اكتب وصفاً للفيديو..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="description-input"
-            rows={4}
-          />
+          {/* ✨ تم حذف حقل إدخال الوصف من هنا */}
 
           <div className="upload-actions">
-            <button
-              className="upload-btn"
-              onClick={handleUpload}
-              disabled={!file || uploading}
-            >
+            <button className="upload-btn" onClick={handleUpload} disabled={!file || uploading}>
               {uploading ? (
-                <>
-                  <FaSpinner className="spinner" />
-                  <span>جاري الرفع...</span>
-                </>
+                <><FaSpinner className="spinner" /><span>جاري الرفع...</span></>
               ) : (
-                <>
-                  <FaUpload />
-                  <span>رفع الفيديو</span>
-                </>
+                <><FaUpload /><span>رفع الفيديو</span></>
               )}
             </button>
-            
-            <button 
-              className="cancel-btn"
-              onClick={() => navigate('/')}
-              disabled={uploading}
-            >
+            <button className="cancel-btn" onClick={() => navigate('/')} disabled={uploading}>
               إلغاء
             </button>
           </div>
         </div>
-
-        {/* معلومات الصلاحيات */}
-        <div className="role-info">
-          <p>صلاحيتك الحالية: <strong>{getRoleLabel(user?.role)}</strong></p>
-        </div>
       </div>
-
       <NavigationBar currentPage="upload" />
     </div>
   );
-};
-
-// دالة مساعدة لعرض اسم الصلاحية
-const getRoleLabel = (role) => {
-  switch (role) {
-    case 'admin':
-      return 'مدير';
-    case 'creator':
-      return 'منشئ محتوى';
-    default:
-      return 'مستخدم عادي';
-  }
 };
 
 export default UploadPage;

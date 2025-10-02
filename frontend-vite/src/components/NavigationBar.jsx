@@ -63,12 +63,15 @@ const NavigationBar = ({ currentPage }) => {
       </button>
 
       {/* ✨ عرض رابط لوحة التحكم فقط إذا كان المستخدم أدمن */}
-    {isAdmin && (
-      <Link to="/admin" className={`nav-item ${currentPage === 'admin' ? 'active' : ''}`}>
-        <FaShieldAlt className="nav-icon" />
-        <span className="nav-label">الأدمن</span>
-      </Link>
-    )}
+    {user && user.role === 'admin' && (
+  <Link 
+    to="/admin" 
+    className={`nav-item ${currentPage === 'admin' ? 'active' : ''}`}
+  >
+    <FaUserShield />
+    <span>لوحة التحكم</span>
+  </Link>
+)}
     </nav>
   );
 };

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth, api } from '../context/AuthContext';
-import { 
-  FaSignOutAlt, FaCamera, FaHeart, FaPlay, FaTrash, 
-  FaFilm, FaReply, FaEdit, FaCheck, FaTimes, 
-  FaCog, FaShare, FaEllipsisV 
+import {
+  FaSignOutAlt, FaCamera, FaHeart, FaPlay, FaTrash,
+  FaFilm, FaReply, FaEdit, FaCheck, FaTimes,
+  FaCog, FaShare, FaEllipsisV
 } from 'react-icons/fa';
 import NavigationBar from '../components/NavigationBar';
 import './ProfilePage.css';
@@ -14,7 +14,7 @@ const ProfilePage = () => {
   const { user, logout, updateUser, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // States
+  // --- States ---
   const [profileUser, setProfileUser] = useState(null);
   const [videos, setVideos] = useState([]);
   const [replies, setReplies] = useState([]);
@@ -29,17 +29,15 @@ const ProfilePage = () => {
   const [videoToDelete, setVideoToDelete] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Only check profile after auth is loaded
   const isOwnProfile = user && username === user.username;
 
-  // Helper to get full asset URL
   const getAssetUrl = (url) => {
     if (!url || url === '/default-avatar.png') return '/default-avatar.png';
     if (url.startsWith('http')) return url;
     return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
   };
 
-  // Fetch profile data
+  // --- Fetch Profile Data ---
   const fetchProfileData = useCallback(async () => {
     if (!username) return;
     setLoading(true);
@@ -71,26 +69,21 @@ const ProfilePage = () => {
   }, [username, isOwnProfile]);
 
   useEffect(() => {
-    if (!authLoading) {
-      fetchProfileData();
-    }
+    if (!authLoading) fetchProfileData();
   }, [authLoading, fetchProfileData]);
 
-  // Upload profile image
+  // --- Handlers ---
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const formData = new FormData();
     formData.append('profileImage', file);
-
     setUploadingImage(true);
+
     try {
       const response = await api.post('/api/users/update-profile-image', formData, {
-        headers: { 
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        headers: { 'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       setProfileUser(prev => ({ ...prev, profileImage: response.data.profileImage }));
       updateUser({ profileImage: response.data.profileImage });
@@ -103,7 +96,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Update username
   const handleUsernameUpdate = async () => {
     if (!newUsername || newUsername === profileUser.username) {
       setEditingUsername(false);
@@ -123,7 +115,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Delete video or reply
   const handleDelete = async () => {
     if (!videoToDelete) return;
     try {
@@ -168,7 +159,7 @@ const ProfilePage = () => {
     }
   };
 
-  // Loading and error states
+  // --- Loading & Error Handling ---
   if (authLoading || loading) {
     return (
       <div className="loading-container">
@@ -187,6 +178,7 @@ const ProfilePage = () => {
     );
   }
 
+  // --- Content Based on Tab ---
   let displayedContent = [];
   switch (activeTab) {
     case 'posts': displayedContent = videos; break;
@@ -200,13 +192,9 @@ const ProfilePage = () => {
       <div className="profile-header">
         <div className="profile-cover">
           {isOwnProfile && (
-            <button className="settings-btn" onClick={() => setShowSettings(!showSettings)}>
-              <FaCog />
-            </button>
+            <button className="settings-btn" onClick={() => setShowSettings(!showSettings)}><FaCog /></button>
           )}
-          <button className="share-btn" onClick={shareProfile}>
-            <FaShare />
-          </button>
+          <button className="share-btn" onClick={shareProfile}><FaShare /></button>
         </div>
 
         <div className="profile-main-info">
@@ -226,29 +214,42 @@ const ProfilePage = () => {
           </div>
 
           <div className="profile-details">
+            {/* Username */}
             <div className="username-section">
               {editingUsername ? (
                 <div className="username-edit">
-                  <input type="text" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="اسم المستخدم الجديد" className="username-input" autoFocus />
+                  <input
+                    type="text"
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
+                    placeholder="اسم المستخدم الجديد"
+                    className="username-input"
+                    autoFocus
+                  />
                   <button onClick={handleUsernameUpdate} className="save-btn"><FaCheck /></button>
                   <button onClick={() => setEditingUsername(false)} className="cancel-btn"><FaTimes /></button>
                 </div>
               ) : (
                 <div className="username-display">
                   <h1 className="profile-username">{profileUser.username}@</h1>
-                  {isOwnProfile && <button onClick={() => { setEditingUsername(true); setNewUsername(profileUser.username); }} className="edit-username-btn"><FaEdit /></button>}
+                  {isOwnProfile && (
+                    <button onClick={() => { setEditingUsername(true); setNewUsername(profileUser.username); }} className="edit-username-btn"><FaEdit /></button>
+                  )}
                 </div>
               )}
             </div>
 
+            {/* Stats */}
             <div className="profile-stats">
               <div className="stat-item"><span className="stat-value">{stats.videosCount}</span><span className="stat-label">منشور</span></div>
               <div className="stat-item"><span className="stat-value">{stats.repliesCount}</span><span className="stat-label">رد</span></div>
               <div className="stat-item"><span className="stat-value">{stats.totalLikes}</span><span className="stat-label">إعجاب</span></div>
             </div>
 
+            {/* Bio */}
             {profileUser.bio && <p className="profile-bio">{profileUser.bio}</p>}
 
+            {/* Logout */}
             {isOwnProfile && (
               <div className="profile-actions">
                 <button className="logout-btn" onClick={handleLogout}><FaSignOutAlt /> تسجيل الخروج</button>
@@ -260,62 +261,58 @@ const ProfilePage = () => {
 
       {/* Tabs */}
       <div className="profile-tabs">
-        <button className={`tab ${activeTab === 'posts' ? 'active' : ''}`} onClick={() => setActiveTab('posts')}><FaFilm /><span>المنشورات</span></button>
-        <button className={`tab ${activeTab === 'replies' ? 'active' : ''}`} onClick={() => setActiveTab('replies')}><FaReply /><span>الردود</span></button>
-        {isOwnProfile && <button className={`tab ${activeTab === 'liked' ? 'active' : ''}`} onClick={() => setActiveTab('liked')}><FaHeart /><span>الإعجابات</span></button>}
+        <button className={`tab ${activeTab==='posts'?'active':''}`} onClick={()=>setActiveTab('posts')}><FaFilm /><span>المنشورات</span></button>
+        <button className={`tab ${activeTab==='replies'?'active':''}`} onClick={()=>setActiveTab('replies')}><FaReply /><span>الردود</span></button>
+        {isOwnProfile && <button className={`tab ${activeTab==='liked'?'active':''}`} onClick={()=>setActiveTab('liked')}><FaHeart /><span>الإعجابات</span></button>}
       </div>
 
-      {/* Content */}
+      {/* Content Grid */}
       <div className="profile-content">
         <div className="videos-grid">
-          {displayedContent.map((item) => (
+          {displayedContent.map(item => (
             <div key={item._id} className="video-item">
               <div className="video-thumbnail" onClick={() => navigate(`/video/${item._id}`)}>
-                <video src={getAssetUrl(item.videoUrl)} muted onMouseEnter={e => e.target.play()} onMouseLeave={e => { e.target.pause(); e.target.currentTime = 0; }} />
+                <video src={getAssetUrl(item.videoUrl)} muted onMouseEnter={e=>e.target.play()} onMouseLeave={e=>{e.target.pause(); e.target.currentTime=0;}} />
                 <div className="video-overlay">
                   <div className="video-stats">
-                    <span><FaHeart /> {item.likes?.length || 0}</span>
-                    <span><FaPlay /> {item.views || 0}</span>
+                    <span><FaHeart /> {item.likes?.length||0}</span>
+                    <span><FaPlay /> {item.views||0}</span>
                   </div>
                 </div>
               </div>
-
-              {isOwnProfile && (activeTab === 'posts' || activeTab === 'replies') && (
-                <button className="video-menu-btn" onClick={e => { e.stopPropagation(); confirmDelete(item._id, activeTab === 'posts' ? 'video' : 'reply'); }}>
-                  <FaEllipsisV />
-                </button>
-              )}
+              {isOwnProfile && (activeTab==='posts'||activeTab==='replies') &&
+                <button className="video-menu-btn" onClick={e=>{e.stopPropagation(); confirmDelete(item._id, activeTab==='posts'?'video':'reply');}}><FaEllipsisV /></button>
+              }
             </div>
           ))}
         </div>
-
-        {displayedContent.length === 0 && (
+        {displayedContent.length===0 &&
           <div className="empty-state">
             <p>لا يوجد محتوى لعرضه</p>
-            {isOwnProfile && activeTab === 'posts' && <button className="upload-btn" onClick={() => navigate('/upload')}>رفع فيديو جديد</button>}
+            {isOwnProfile && activeTab==='posts' && <button className="upload-btn" onClick={()=>navigate('/upload')}>رفع فيديو جديد</button>}
           </div>
-        )}
+        }
       </div>
 
       {/* Delete Modal */}
-      {showDeleteModal && (
-        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+      {showDeleteModal &&
+        <div className="modal-overlay" onClick={()=>setShowDeleteModal(false)}>
+          <div className="modal-content" onClick={e=>e.stopPropagation()}>
             <h3>تأكيد الحذف</h3>
-            <p>{videoToDelete?.type === 'video' ? 'سيتم حذف هذا الفيديو وجميع الردود المرتبطة به. هل أنت متأكد؟' : 'هل أنت متأكد من حذف هذا الرد؟'}</p>
+            <p>{videoToDelete?.type==='video'?'سيتم حذف هذا الفيديو وجميع الردود المرتبطة به. هل أنت متأكد؟':'هل أنت متأكد من حذف هذا الرد؟'}</p>
             <div className="modal-actions">
               <button className="confirm-btn" onClick={handleDelete}><FaTrash /> حذف</button>
             </div>
           </div>
         </div>
-      )}
+      }
 
       {/* Settings Menu */}
-      {showSettings && isOwnProfile && (
+      {showSettings && isOwnProfile &&
         <div className="settings-menu">
           <div className="settings-header">
             <h3>الإعدادات</h3>
-            <button onClick={() => setShowSettings(false)}><FaTimes /></button>
+            <button onClick={()=>setShowSettings(false)}><FaTimes /></button>
           </div>
           <div className="settings-options">
             <button className="setting-option"><FaCog /> إعدادات الحساب</button>
@@ -323,7 +320,7 @@ const ProfilePage = () => {
             <button className="setting-option danger" onClick={handleLogout}><FaSignOutAlt /> تسجيل الخروج</button>
           </div>
         </div>
-      )}
+      }
 
       <NavigationBar currentPage="profile" />
     </div>

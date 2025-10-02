@@ -1,105 +1,202 @@
-// ملف: src/pages/AdminDashboard.jsx
-
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import './AdminDashboard.css'; // سننشئ هذا الملف للتنسيق
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
-});
+import { useNavigate } from 'react-router-dom';
+import { useAuth, api } from '../context/AuthContext';
+import { FaUser, FaUserShield, FaUserTie, FaSearch, FaCheck, FaTimes } from 'react-icons/fa';
+import NavigationBar from '../components/NavigationBar';
+import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [filter, setFilter] = useState('');
+  const [updating, setUpdating] = useState(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
+  // التحقق من صلاحيات الأدمن
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await api.get('/api/users', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        setUsers(response.data);
-      } catch (err) {
-        setError('فشل في جلب المستخدمين. قد لا تكون لديك الصلاحية الكافية.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!user || user.role !== 'admin') {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  // جلب المستخدمين
+  useEffect(() => {
     fetchUsers();
   }, []);
 
-  const handleRoleChange = async (userId, newRole) => {
+  const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await api.patch(`/api/users/role/${userId}`, { role: newRole }, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      setUsers(prevUsers =>
-        prevUsers.map(user =>
-          user._id === userId ? { ...user, role: newRole } : user
-        )
-      );
-    } catch (err) {
-      alert('فشل تحديث الدور.');
+      setLoading(true);
+      const response = await api.get('/api/users');
+      setUsers(response.data);
+      setFilteredUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const filteredUsers = users.filter(user => 
-    user.username.toLowerCase().includes(filter.toLowerCase()) ||
-    user.email.toLowerCase().includes(filter.toLowerCase())
-  );
+  // البحث عن المستخدمين
+  useEffect(() => {
+    const filtered = users.filter(u => 
+      u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredUsers(filtered);
+  }, [searchTerm, users]);
 
-  if (loading) return <div className="loading-container">جاري تحميل لوحة التحكم...</div>;
-  if (error) return <div className="error-container">{error}</div>;
+  // تحديث صلاحيات المستخدم
+  const updateUserRole = async (userId, newRole) => {
+    setUpdating(userId);
+    try {
+      await api.patch(`/api/users/role/${userId}`, { role: newRole });
+      
+      // تحديث القائمة محلياً
+      setUsers(users.map(u => 
+        u._id === userId ? { ...u, role: newRole } : u
+      ));
+      
+      showNotification('تم تحديث الصلاحيات بنجاح', 'success');
+    } catch (error) {
+      console.error('Error updating role:', error);
+      showNotification('فشل تحديث الصلاحيات', 'error');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const showNotification = (message, type) => {
+    // يمكنك استخدام مكتبة toast هنا
+    console.log(`${type}: ${message}`);
+  };
+
+  const getRoleIcon = (role) => {
+    switch (role) {
+      case 'admin':
+        return <FaUserShield className="role-icon admin" />;
+      case 'creator':
+        return <FaUserTie className="role-icon creator" />;
+      default:
+        return <FaUser className="role-icon user" />;
+    }
+  };
+
+  const getRoleLabel = (role) => {
+    switch (role) {
+      case 'admin':
+        return 'مدير';
+      case 'creator':
+        return 'منشئ محتوى';
+      default:
+        return 'مستخدم عادي';
+    }
+  };
+
+  if (loading) return (
+    <div className="loading-container">
+      <div className="loading-spinner"></div>
+      <p>جاري تحميل البيانات...</p>
+    </div>
+  );
 
   return (
     <div className="admin-dashboard">
-      <div className="admin-header">
-        <h1>لوحة تحكم المستخدمين</h1>
-        <p>إدارة أدوار المستخدمين ومنح صلاحيات "Creator".</p>
-        <input 
-          type="text"
-          placeholder="ابحث عن مستخدم بالاسم أو الإيميل..."
-          className="search-bar"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        />
+      <div className="dashboard-header">
+        <h1>لوحة تحكم المدير</h1>
+        <div className="stats-summary">
+          <div className="stat-card">
+            <h3>إجمالي المستخدمين</h3>
+            <p>{users.length}</p>
+          </div>
+          <div className="stat-card">
+            <h3>منشئي المحتوى</h3>
+            <p>{users.filter(u => u.role === 'creator').length}</p>
+          </div>
+          <div className="stat-card">
+            <h3>المديرين</h3>
+            <p>{users.filter(u => u.role === 'admin').length}</p>
+          </div>
+        </div>
       </div>
-      <div className="user-table-container">
-        <table className="user-table">
+
+      <div className="search-section">
+        <div className="search-box">
+          <FaSearch />
+          <input
+            type="text"
+            placeholder="البحث عن مستخدم..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="users-table">
+        <table>
           <thead>
             <tr>
+              <th>الصورة</th>
               <th>اسم المستخدم</th>
               <th>البريد الإلكتروني</th>
-              <th>الدور الحالي</th>
-              <th>تغيير الدور</th>
+              <th>الصلاحية الحالية</th>
+              <th>تغيير الصلاحية</th>
+              <th>تاريخ التسجيل</th>
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map(user => (
-              <tr key={user._id}>
-                <td>{user.username}</td>
-                <td>{user.email}</td>
-                <td><span className={`role-badge role-${user.role}`}>{user.role}</span></td>
+            {filteredUsers.map((u) => (
+              <tr key={u._id}>
                 <td>
-                  <select
-                    value={user.role}
-                    onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                    className="role-select"
-                  >
-                    <option value="user">User</option>
-                    <option value="creator">Creator</option>
-                    <option value="admin">Admin</option>
-                  </select>
+                  <img 
+                    src={u.profileImage || '/default-avatar.png'} 
+                    alt={u.username}
+                    className="user-avatar"
+                  />
                 </td>
+                <td>@{u.username}</td>
+                <td>{u.email}</td>
+                <td>
+                  <div className="role-badge">
+                    {getRoleIcon(u.role)}
+                    <span>{getRoleLabel(u.role)}</span>
+                  </div>
+                </td>
+                <td>
+                  <div className="role-selector">
+                    <button
+                      className={`role-btn ${u.role === 'user' ? 'active' : ''}`}
+                      onClick={() => updateUserRole(u._id, 'user')}
+                      disabled={updating === u._id || u._id === user._id}
+                    >
+                      <FaUser /> عادي
+                    </button>
+                    <button
+                      className={`role-btn ${u.role === 'creator' ? 'active' : ''}`}
+                      onClick={() => updateUserRole(u._id, 'creator')}
+                      disabled={updating === u._id || u._id === user._id}
+                    >
+                      <FaUserTie /> منشئ
+                    </button>
+                    <button
+                      className={`role-btn ${u.role === 'admin' ? 'active' : ''}`}
+                      onClick={() => updateUserRole(u._id, 'admin')}
+                      disabled={updating === u._id || u._id === user._id}
+                    >
+                      <FaUserShield /> مدير
+                    </button>
+                  </div>
+                </td>
+                <td>{new Date(u.createdAt).toLocaleDateString('ar-SA')}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <NavigationBar currentPage="admin" />
     </div>
   );
 };

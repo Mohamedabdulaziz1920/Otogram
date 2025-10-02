@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -21,18 +20,18 @@ mongoose.connect(process.env.MONGODB_URI)
 
     const db = mongoose.connection.db;
 
-    // --- GridFS Buckets ---
+    // GridFS Buckets
     const videoBucket = new GridFSBucket(db, { bucketName: 'videos' });
     const imageBucket = new GridFSBucket(db, { bucketName: 'images' });
 
-    // Middleware لإضافة الـ Buckets لكل request
+    // Middleware لإرفاق الـ Buckets
     app.use((req, res, next) => {
-      req.gfs = videoBucket;       // لرفع/بث الفيديوهات
-      req.imageBucket = imageBucket; // لرفع/بث الصور (البروفايل)
+      req.gfs = videoBucket;
+      req.imageBucket = imageBucket;
       next();
     });
 
-    // --- تحميل Routes ---
+    // --- Routes ---
     const authRoutes = require('./routes/auth');
     const videoRoutes = require('./routes/videos');
     const userRoutes = require('./routes/users');
@@ -48,7 +47,6 @@ mongoose.connect(process.env.MONGODB_URI)
       res.json({ message: 'Otogram API is running successfully!' });
     });
 
-    // --- تشغيل السيرفر ---
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
@@ -56,6 +54,6 @@ mongoose.connect(process.env.MONGODB_URI)
 
   })
   .catch((err) => {
-    console.error('❌ FATAL: MongoDB connection error:', err.message || err);
+    console.error('❌ FATAL: MongoDB connection error:', err);
     process.exit(1);
   });

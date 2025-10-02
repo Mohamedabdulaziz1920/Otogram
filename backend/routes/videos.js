@@ -14,7 +14,10 @@ const storage = new GridFsStorage({
   url: process.env.MONGODB_URI,
   options: { useNewUrlParser: true, useUnifiedTopology: true },
   file: (req, file) => {
-    const match = ["video/mp4", "video/avi", "video/mov", "video/wmv", "video/flv", "video/mkv", "video/webm"];
+    const match = [
+      "video/mp4", "video/avi", "video/mov",
+      "video/wmv", "video/flv", "video/mkv", "video/webm"
+    ];
 
     if (match.indexOf(file.mimetype) === -1) {
       return `${Date.now()}-video-${file.originalname}`;
@@ -30,15 +33,6 @@ const storage = new GridFsStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 100 * 1024 * 1024 } // 100MB
-});
-
-// ✅ إعداد GridFSBucket للتحميل/الستريم
-let gfs;
-mongoose.connection.once('open', () => {
-  gfs = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
-    bucketName: 'videos'
-  });
-  console.log("📂 GridFSBucket initialized for videos");
 });
 
 // ✅ Get all main videos
@@ -93,7 +87,8 @@ router.post('/upload', auth, upload.single('video'), async (req, res) => {
 
     const video = new Video({
       user: req.userId,
-      videoUrl: `/api/videos/stream/${req.file.id}`,
+      videoUrl: `/api/videos/stream/${req.file.id}`, // stream endpoint
+      fileId: req.file.id, // ✅ تخزين الـ fileId
       description: description || '',
       isReply: false,
       parentVideo: null
@@ -126,6 +121,7 @@ router.post('/reply/:videoId', auth, upload.single('video'), async (req, res) =>
     const replyVideo = new Video({
       user: req.userId,
       videoUrl: `/api/videos/stream/${req.file.id}`,
+      fileId: req.file.id, // ✅ تخزين الـ fileId
       description: description || '',
       isReply: true,
       parentVideo: parentVideoId
@@ -148,19 +144,16 @@ router.post('/reply/:videoId', auth, upload.single('video'), async (req, res) =>
 // ✅ Stream video by GridFS ID
 router.get('/stream/:id', async (req, res) => {
   try {
-    if (!gfs) return res.status(500).json({ error: 'GridFS not initialized' });
-
+    const gfs = req.gfs;
     const fileId = new mongoose.Types.ObjectId(req.params.id);
 
-    const files = await gfs.find({ _id: fileId }).toArray();
-    if (!files || files.length === 0) {
-      return res.status(404).json({ error: 'File not found' });
-    }
+    const file = await gfs.files.findOne({ _id: fileId });
+    if (!file) return res.status(404).json({ error: 'File not found' });
 
-    res.set('Content-Type', files[0].contentType);
-    const downloadStream = gfs.openDownloadStream(fileId);
-    downloadStream.pipe(res);
+    res.set('Content-Type', file.contentType);
 
+    const readstream = gfs.createReadStream({ _id: fileId });
+    readstream.pipe(res);
   } catch (error) {
     console.error('Error streaming video:', error);
     res.status(500).json({ error: error.message });
@@ -188,7 +181,11 @@ router.post('/:videoId/like', auth, async (req, res) => {
     await video.save();
     await user.save();
 
-    res.json({ liked: !isLiked, likesCount: video.likes.length, message: isLiked ? 'تم إلغاء الإعجاب' : 'تم الإعجاب' });
+    res.json({
+      liked: !isLiked,
+      likesCount: video.likes.length,
+      message: isLiked ? 'تم إلغاء الإعجاب' : 'تم الإعجاب'
+    });
   } catch (error) {
     console.error('Error liking/unliking video:', error);
     res.status(500).json({ error: error.message });

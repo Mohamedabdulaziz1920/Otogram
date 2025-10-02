@@ -1,15 +1,18 @@
+// ملف: src/components/PrivateRoute.jsx
+
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const PrivateRoute = ({ children }) => {
+const PrivateRoute = () => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <div className="loading">جاري التحميل...</div>;
+    return <div>جاري التحميل...</div>; // أو loading spinner
   }
 
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  // إذا كان المستخدم مصادقًا عليه، اعرض المحتوى. وإلا، أعد توجيهه لصفحة الدخول.
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 export default PrivateRoute;

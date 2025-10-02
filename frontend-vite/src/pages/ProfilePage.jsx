@@ -81,7 +81,7 @@ const ProfilePage = () => {
     setUploadingImage(true);
 
     try {
-      const response = await api.post('/api/users/update-profile-image', formData, {
+      const response = await api.post('/api/users/me/update-profile-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -106,7 +106,7 @@ const ProfilePage = () => {
     }
 
     try {
-      const response = await api.put('/api/users/update-username', { username: newUsername });
+      const response = await api.patch('/api/users/me/update-username', { username: newUsername });
       setProfileUser(prev => ({ ...prev, username: response.data.username }));
       updateUser({ username: response.data.username });
       setEditingUsername(false);

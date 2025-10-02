@@ -68,27 +68,26 @@ router.get('/:videoId', async (req, res) => {
   }
 });
 
-// ✅ Upload main video
+// ✅ Upload main video (بدون كلمة مرور، يعتمد على الدور)
 router.post('/upload', auth, upload.single('video'), async (req, res) => {
   try {
-    if (!req.file || !req.file.id) {
+    // التأكد من رفع ملف الفيديو
+    if (!req.file || (!req.file.id && !req.file.filename)) {
       return res.status(400).json({ error: 'No video file uploaded' });
     }
 
-    const { description, uploadPassword } = req.body;
-    const UPLOAD_PASSWORD = process.env.UPLOAD_PASSWORD || 'upload123';
+    // التأكد من صلاحية المستخدم
+    const user = await User.findById(req.userId);
+    if (!user || !['creator', 'admin'].includes(user.role)) {
+      return res.status(403).json({ error: 'ليس لديك صلاحية رفع الفيديو' });
+    }
 
-    if (!uploadPassword) {
-      return res.status(400).json({ error: 'كلمة مرور الرفع مطلوبة' });
-    }
-    if (uploadPassword !== UPLOAD_PASSWORD) {
-      return res.status(403).json({ error: 'كلمة مرور الرفع غير صحيحة' });
-    }
+    const { description } = req.body;
 
     const video = new Video({
       user: req.userId,
-      videoUrl: `/api/videos/stream/${req.file.id}`, // stream endpoint
-      fileId: req.file.id, // ✅ تخزين الـ fileId
+      videoUrl: `/api/videos/stream/${req.file.id || req.file.filename}`,
+      fileId: req.file.id, // حفظ الـ GridFS File ID
       description: description || '',
       isReply: false,
       parentVideo: null
@@ -98,16 +97,17 @@ router.post('/upload', auth, upload.single('video'), async (req, res) => {
     await video.populate('user', 'username profileImage');
 
     res.status(201).json({ message: 'تم رفع الفيديو بنجاح', video });
+
   } catch (error) {
     console.error('Error uploading video:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ غير متوقع أثناء الرفع.' });
   }
 });
 
 // ✅ Upload reply video
 router.post('/reply/:videoId', auth, upload.single('video'), async (req, res) => {
   try {
-    if (!req.file || !req.file.id) {
+    if (!req.file || (!req.file.id && !req.file.filename)) {
       return res.status(400).json({ error: 'No video file uploaded' });
     }
 
@@ -120,15 +120,14 @@ router.post('/reply/:videoId', auth, upload.single('video'), async (req, res) =>
 
     const replyVideo = new Video({
       user: req.userId,
-      videoUrl: `/api/videos/stream/${req.file.id}`,
-      fileId: req.file.id, // ✅ تخزين الـ fileId
+      videoUrl: `/api/videos/stream/${req.file.id || req.file.filename}`,
+      fileId: req.file.id,
       description: description || '',
       isReply: true,
       parentVideo: parentVideoId
     });
 
     await replyVideo.save();
-
     parentVideo.replies.push(replyVideo._id);
     await parentVideo.save();
 
@@ -137,7 +136,7 @@ router.post('/reply/:videoId', auth, upload.single('video'), async (req, res) =>
     res.status(201).json({ message: 'تم رفع الرد بنجاح', video: replyVideo });
   } catch (error) {
     console.error('Error uploading reply:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ غير متوقع أثناء رفع الرد.' });
   }
 });
 
@@ -147,16 +146,16 @@ router.get('/stream/:id', async (req, res) => {
     const gfs = req.gfs;
     const fileId = new mongoose.Types.ObjectId(req.params.id);
 
-    const file = await gfs.files.findOne({ _id: fileId });
-    if (!file) return res.status(404).json({ error: 'File not found' });
+    const file = await gfs.find({ _id: fileId }).toArray();
+    if (!file || file.length === 0) return res.status(404).json({ error: 'File not found' });
 
-    res.set('Content-Type', file.contentType);
+    res.set('Content-Type', file[0].contentType);
 
-    const readstream = gfs.createReadStream({ _id: fileId });
+    const readstream = gfs.openDownloadStream(fileId);
     readstream.pipe(res);
   } catch (error) {
     console.error('Error streaming video:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ أثناء تشغيل الفيديو.' });
   }
 });
 
@@ -181,29 +180,21 @@ router.post('/:videoId/like', auth, async (req, res) => {
     await video.save();
     await user.save();
 
-    res.json({
-      liked: !isLiked,
-      likesCount: video.likes.length,
-      message: isLiked ? 'تم إلغاء الإعجاب' : 'تم الإعجاب'
-    });
+    res.json({ liked: !isLiked, likesCount: video.likes.length, message: isLiked ? 'تم إلغاء الإعجاب' : 'تم الإعجاب' });
   } catch (error) {
     console.error('Error liking/unliking video:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ أثناء الإعجاب/إلغاء الإعجاب.' });
   }
 });
 
 // ✅ Increment views
 router.post('/:videoId/view', async (req, res) => {
   try {
-    const video = await Video.findByIdAndUpdate(
-      req.params.videoId,
-      { $inc: { views: 1 } },
-      { new: true }
-    );
+    const video = await Video.findByIdAndUpdate(req.params.videoId, { $inc: { views: 1 } }, { new: true });
     if (!video) return res.status(404).json({ error: 'Video not found' });
     res.json({ views: video.views });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ أثناء زيادة المشاهدات.' });
   }
 });
 

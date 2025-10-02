@@ -55,6 +55,6 @@ mongoose.connect(process.env.MONGODB_URI)
 
 })
 .catch((err) => {
-  console.error('FATAL: MongoDB connection error:', err.message);
+  console.error('FATAL: MongoDB connection error:', err);
   process.exit(1);
 });

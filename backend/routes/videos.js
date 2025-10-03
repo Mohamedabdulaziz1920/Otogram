@@ -1,165 +1,105 @@
 const express = require('express');
-const router = express.Router();
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { GridFsStorage } = require('multer-gridfs-storage');
+const mongoose = require('mongoose');
 const Video = require('../models/Video');
+const User = require('../models/User');
 const auth = require('../middleware/auth');
-const checkRole = require('../middleware/checkRole');
 
-// إعداد multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadsDir = path.join(__dirname, '../uploads');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'video-' + uniqueSuffix + path.extname(file.originalname));
+const router = express.Router();
+
+// Multer + GridFS Storage
+const storage = new GridFsStorage({
+  url: process.env.MONGODB_URI,
+  options: { useNewUrlParser: true, useUnifiedTopology: true },
+  file: (req, file) => {
+    const match = ["video/mp4","video/avi","video/mov","video/wmv","video/flv","video/mkv","video/webm"];
+    if (match.indexOf(file.mimetype) === -1) return `${Date.now()}-video-${file.originalname}`;
+    return {
+      bucketName: "videos",
+      filename: `${Date.now()}-${file.originalname}`
+    };
   }
 });
 
-const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('video/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('يُسمح فقط بملفات الفيديو'));
-    }
-  }
-});
+const upload = multer({ storage, limits: { fileSize: 100 * 1024 * 1024 } }); // 100MB
 
-// رفع فيديو - متاح فقط للـ creators والـ admins
-router.post('/upload', 
-  auth, 
-  checkRole(['creator', 'admin']), 
-  upload.single('video'), 
-  async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: 'لم يتم رفع فيديو' });
-      }
-
-      const video = new Video({
-        user: req.userId,
-        videoUrl: `/uploads/${req.file.filename}`,
-        description: req.body.description || '',
-        replyTo: req.body.replyTo || null
-      });
-
-      await video.save();
-      await video.populate('user', 'username profileImage role');
-
-      res.status(201).json({
-        message: 'تم رفع الفيديو بنجاح',
-        video
-      });
-    } catch (error) {
-      console.error('Upload error:', error);
-      // حذف الملف في حالة الخطأ
-      if (req.file) {
-        fs.unlinkSync(path.join(__dirname, '../uploads', req.file.filename));
-      }
-      res.status(500).json({ message: 'خطأ في رفع الفيديو' });
-    }
-  }
-);
-
-// الحصول على جميع الفيديوهات - متاح للجميع
+// Get all main videos
 router.get('/', async (req, res) => {
   try {
-    const videos = await Video.find({ replyTo: null })
-      .populate('user', 'username profileImage role')
-      .populate({
-        path: 'replies',
-        populate: {
-          path: 'user',
-          select: 'username profileImage role'
-        }
-      })
+    const videos = await Video.find({ isReply: false })
+      .populate('user', 'username profileImage')
+      .populate({ path: 'replies', populate: { path: 'user', select: 'username profileImage' } })
       .sort('-createdAt');
-
     res.json(videos);
   } catch (error) {
-    console.error('Get videos error:', error);
-    res.status(500).json({ message: 'خطأ في جلب الفيديوهات' });
+    console.error('Error fetching videos:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-// حذف فيديو - المالك أو الأدمن فقط
-router.delete('/:id', auth, async (req, res) => {
+// Get single video with replies
+router.get('/:videoId', async (req, res) => {
   try {
-    const video = await Video.findById(req.params.id);
-    
-    if (!video) {
-      return res.status(404).json({ message: 'الفيديو غير موجود' });
-    }
-
-    // التحقق من الصلاحيات
-    const user = await User.findById(req.userId);
-    const isOwner = video.user.toString() === req.userId;
-    const isAdmin = user.role === 'admin';
-
-    if (!isOwner && !isAdmin) {
-      return res.status(403).json({ message: 'ليس لديك الصلاحية لحذف هذا الفيديو' });
-    }
-
-    // حذف الملف
-    const filePath = path.join(__dirname, '..', video.videoUrl);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    // حذف الردود المرتبطة
-    const replies = await Video.find({ replyTo: video._id });
-    for (const reply of replies) {
-      const replyPath = path.join(__dirname, '..', reply.videoUrl);
-      if (fs.existsSync(replyPath)) {
-        fs.unlinkSync(replyPath);
-      }
-      await reply.deleteOne();
-    }
-
-    await video.deleteOne();
-    
-    res.json({ message: 'تم حذف الفيديو بنجاح' });
+    const video = await Video.findById(req.params.videoId)
+      .populate('user', 'username profileImage')
+      .populate({ path: 'replies', populate: { path: 'user', select: 'username profileImage' } });
+    if (!video) return res.status(404).json({ error: 'Video not found' });
+    res.json(video);
   } catch (error) {
-    console.error('Delete error:', error);
-    res.status(500).json({ message: 'خطأ في حذف الفيديو' });
+    res.status(500).json({ error: error.message });
   }
 });
 
-// إعجاب/إلغاء إعجاب - متاح لجميع المستخدمين المسجلين
-router.post('/:id/like', auth, async (req, res) => {
+// Upload main video (only creators/admin)
+router.post('/upload', auth, upload.single('video'), async (req, res) => {
   try {
-    const video = await Video.findById(req.params.id);
-    
-    if (!video) {
-      return res.status(404).json({ message: 'الفيديو غير موجود' });
+    if (!req.file || !req.file.id) return res.status(400).json({ error: 'No video uploaded' });
+
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (!['creator','admin'].includes(user.role)) {
+      return res.status(403).json({ error: 'You do not have permission to upload videos' });
     }
 
-    const userIndex = video.likes.indexOf(req.userId);
-    
-    if (userIndex > -1) {
-      video.likes.splice(userIndex, 1);
-    } else {
-      video.likes.push(req.userId);
-    }
+    const { description } = req.body;
+
+    const video = new Video({
+      user: req.userId,
+      videoUrl: `/api/videos/stream/${req.file.id}`,
+      fileId: req.file.id,
+      description: description || '',
+      isReply: false,
+      parentVideo: null
+    });
 
     await video.save();
-    
-    res.json({ 
-      liked: userIndex === -1,
-      likes: video.likes.length 
-    });
+    await video.populate('user', 'username profileImage');
+
+    res.status(201).json({ message: 'Video uploaded successfully', video });
   } catch (error) {
-    console.error('Like error:', error);
-    res.status(500).json({ message: 'خطأ في معالجة الإعجاب' });
+    console.error('Error uploading video:', error);
+    res.status(500).json({ error: 'Unexpected error during upload' });
+  }
+});
+
+// Stream video
+router.get('/stream/:id', async (req, res) => {
+  try {
+    const fileId = new mongoose.Types.ObjectId(req.params.id);
+    const gfs = req.gfs;
+
+    const file = await gfs.find({ _id: fileId }).toArray();
+    if (!file || file.length === 0) return res.status(404).json({ error: 'Video not found' });
+
+    res.set('Content-Type', file[0].contentType);
+    const readStream = gfs.openDownloadStream(fileId);
+    readStream.pipe(res);
+
+  } catch (error) {
+    console.error('Error streaming video:', error);
+    res.status(500).json({ error: 'Failed to stream video' });
   }
 });
 

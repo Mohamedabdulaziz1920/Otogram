@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, api } from '../context/AuthContext';
-import { FaUser, FaUserShield, FaUserTie, FaSearch, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaUser, FaShieldAlt, FaUserTie, FaSearch, FaCheck, FaTimes } from 'react-icons/fa';
 import NavigationBar from '../components/NavigationBar';
 import './AdminDashboard.css';
 
@@ -76,7 +76,7 @@ const AdminDashboard = () => {
   const getRoleIcon = (role) => {
     switch (role) {
       case 'admin':
-        return <FaUserShield className="role-icon admin" />;
+        return <FaShieldAlt className="role-icon admin" />;
       case 'creator':
         return <FaUserTie className="role-icon creator" />;
       default:
@@ -185,7 +185,7 @@ const AdminDashboard = () => {
                       onClick={() => updateUserRole(u._id, 'admin')}
                       disabled={updating === u._id || u._id === user._id}
                     >
-                      <FaUserShield /> مدير
+                      <FaShieldAlt /> مدير
                     </button>
                   </div>
                 </td>

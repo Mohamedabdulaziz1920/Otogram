@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth, api } from '../context/AuthContext';
 import { FaUpload, FaVideo, FaSpinner, FaExclamationTriangle } from 'react-icons/fa';
@@ -10,23 +10,56 @@ const UploadPage = () => {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState('');
-  
+
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth(); // ✅ أضفت loading
   const [searchParams] = useSearchParams();
   const replyTo = searchParams.get('replyTo');
 
-  // التحقق من الصلاحيات
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    if (user.role !== 'creator' && user.role !== 'admin') {
-      setError('ليس لديك صلاحية لرفع الفيديوهات.');
-    }
-  }, [user, navigate]);
+  // ✅ حالة تحميل بيانات المستخدم
+  if (loading) {
+    return (
+      <div className="upload-page">
+        <p>جاري التحقق من الحساب...</p>
+        <NavigationBar currentPage="upload" />
+      </div>
+    );
+  }
 
+  // ✅ حالة عدم تسجيل الدخول
+  if (!user) {
+    return (
+      <div className="upload-page">
+        <div className="no-permission-container">
+          <FaExclamationTriangle className="warning-icon" />
+          <h2>يجب تسجيل الدخول</h2>
+          <button className="back-btn" onClick={() => navigate('/login')}>
+            الذهاب لتسجيل الدخول
+          </button>
+        </div>
+        <NavigationBar currentPage="upload" />
+      </div>
+    );
+  }
+
+  // ✅ حالة عدم وجود صلاحية
+  if (user.role === 'user') {
+    return (
+      <div className="upload-page">
+        <div className="no-permission-container">
+          <FaExclamationTriangle className="warning-icon" />
+          <h2>ليس لديك صلاحية للنشر</h2>
+          <p>لرفع الفيديوهات، تحتاج إلى صلاحية "منشئ محتوى".</p>
+          <button className="back-btn" onClick={() => navigate('/')}>
+            العودة للرئيسية
+          </button>
+        </div>
+        <NavigationBar currentPage="upload" />
+      </div>
+    );
+  }
+
+  // ✅ اختيار ملف
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -40,13 +73,10 @@ const UploadPage = () => {
     }
   };
 
+  // ✅ رفع الفيديو
   const handleUpload = async () => {
     if (!file) {
       setError('الرجاء اختيار فيديو');
-      return;
-    }
-    if (user.role !== 'creator' && user.role !== 'admin') {
-      setError('ليس لديك صلاحية لرفع الفيديوهات');
       return;
     }
 
@@ -55,12 +85,9 @@ const UploadPage = () => {
 
     const formData = new FormData();
     formData.append('video', file);
-    // ✨ تم حذف إرسال الوصف من هنا
 
     try {
-      // تحديد المسار الصحيح بناءً على ما إذا كان ردًا أم لا
       const url = replyTo ? `/api/videos/reply/${replyTo}` : '/api/videos/upload';
-      
       await api.post(url, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -74,28 +101,11 @@ const UploadPage = () => {
     }
   };
 
-  // عرض رسالة إذا لم يكن لديه صلاحية
-  if (user && user.role === 'user') {
-    return (
-      <div className="upload-page">
-        <div className="no-permission-container">
-          <FaExclamationTriangle className="warning-icon" />
-          <h2>ليس لديك صلاحية للنشر</h2>
-          <p>لرفع الفيديوهات، تحتاج إلى صلاحية "منشئ محتوى" من الإدارة.</p>
-          <button className="back-btn" onClick={() => navigate('/')}>
-            العودة للرئيسية
-          </button>
-        </div>
-        <NavigationBar currentPage="upload" />
-      </div>
-    );
-  }
-
   return (
     <div className="upload-page">
       <div className="upload-container">
         <h1>{replyTo ? 'رفع رد' : 'رفع فيديو جديد'}</h1>
-        
+
         {error && <div className="error-message">{error}</div>}
 
         <div className="upload-form">
@@ -114,8 +124,6 @@ const UploadPage = () => {
               </button>
             </div>
           )}
-
-          {/* ✨ تم حذف حقل إدخال الوصف من هنا */}
 
           <div className="upload-actions">
             <button className="upload-btn" onClick={handleUpload} disabled={!file || uploading}>

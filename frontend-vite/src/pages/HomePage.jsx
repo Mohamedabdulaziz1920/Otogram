@@ -4,7 +4,7 @@ import { Mousewheel, Keyboard, Navigation } from 'swiper';
 import { FaHeart, FaReply, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import NavigationBar from '../components/NavigationBar';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, api } from '../context/AuthContext'; // استخدام api من AuthContext
+import { useAuth, api } from '../context/AuthContext';
 import VideoPlayerSplit from '../components/VideoPlayerSplit';
 
 import 'swiper/css';
@@ -41,19 +41,14 @@ const HomePage = () => {
       if (response.data && Array.isArray(response.data)) {
         setVideos(response.data);
 
-        // تهيئة الإعجابات
         if (user) {
           const userLikedVideos = new Set();
           const userLikedReplies = new Set();
           
           response.data.forEach(video => {
-            if (video.likes?.includes(user._id || user.id)) {
-              userLikedVideos.add(video._id);
-            }
+            if (video.likes?.includes(user._id || user.id)) userLikedVideos.add(video._id);
             video.replies?.forEach(reply => {
-              if (reply.likes?.includes(user._id || user.id)) {
-                userLikedReplies.add(reply._id);
-              }
+              if (reply.likes?.includes(user._id || user.id)) userLikedReplies.add(reply._id);
             });
           });
           
@@ -73,11 +68,14 @@ const HomePage = () => {
     fetchVideos();
   }, [fetchVideos]);
 
-  // Handle wheel event for bottom section
+  // ===================================
+  // HANDLE VERTICAL SCROLL FOR FULL PAGE
+  // ===================================
   useEffect(() => {
     const handleWheel = (e) => {
       e.preventDefault();
-      
+      if (!videos.length) return;
+
       if (e.deltaY > 0 && activeVideoIndex < videos.length - 1) {
         mainSwiperRef.current?.slideNext();
       } else if (e.deltaY < 0 && activeVideoIndex > 0) {
@@ -85,36 +83,26 @@ const HomePage = () => {
       }
     };
 
-    const bottomSection = document.querySelector('.bottom-half');
-    if (bottomSection) {
-      bottomSection.addEventListener('wheel', handleWheel, { passive: false });
-    }
+    window.addEventListener('wheel', handleWheel, { passive: false });
 
     return () => {
-      if (bottomSection) {
-        bottomSection.removeEventListener('wheel', handleWheel);
-      }
+      window.removeEventListener('wheel', handleWheel);
     };
   }, [activeVideoIndex, videos.length]);
 
-  // Likes management
+  // ====================
+  // LIKE & REPLY HANDLERS
+  // ====================
   const handleLikeMainVideo = async (videoId) => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
+    if (!user) return navigate('/login');
     try {
       const response = await api.post(`/api/videos/${videoId}/like`);
       const liked = response.data.liked;
-      
       setLikedVideos(prev => {
         const newSet = new Set(prev);
         liked ? newSet.add(videoId) : newSet.delete(videoId);
         return newSet;
       });
-      
-      // تحديث عدد الإعجابات
       setVideos(prevVideos => 
         prevVideos.map(video => {
           if (video._id === videoId) {
@@ -135,22 +123,15 @@ const HomePage = () => {
   };
 
   const handleLikeReply = async (replyId, parentId) => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
+    if (!user) return navigate('/login');
     try {
       const response = await api.post(`/api/videos/${replyId}/like`);
       const liked = response.data.liked;
-      
       setLikedReplies(prev => {
         const newSet = new Set(prev);
         liked ? newSet.add(replyId) : newSet.delete(replyId);
         return newSet;
       });
-      
-      // تحديث عدد الإعجابات للرد
       setVideos(prevVideos => 
         prevVideos.map(video => {
           if (video._id === parentId) {
@@ -191,14 +172,16 @@ const HomePage = () => {
 
   const currentVideo = videos[activeVideoIndex];
 
-  // States for loading/error
+  // ====================
+  // LOADING / ERROR / EMPTY STATES
+  // ====================
   if (loading) return (
     <div className="loading-container">
       <div className="loading-spinner"></div>
       <p>جاري تحميل الفيديوهات...</p>
     </div>
   );
-  
+
   if (error) return (
     <div className="error-container">
       <h2>خطأ</h2>
@@ -206,7 +189,7 @@ const HomePage = () => {
       <button onClick={fetchVideos}>إعادة المحاولة</button>
     </div>
   );
-  
+
   if (!videos?.length) return (
     <div className="empty-state-container">
       <h2>لا توجد فيديوهات</h2>
@@ -214,9 +197,12 @@ const HomePage = () => {
     </div>
   );
 
+  // ====================
+  // MAIN RENDER
+  // ====================
   return (
     <div className="home-container">
-      {/* النصف العلوي - الفيديو الأساسي */}
+      {/* TOP HALF - MAIN VIDEO */}
       <div className="top-half">
         <Swiper
           direction="vertical"
@@ -224,9 +210,7 @@ const HomePage = () => {
           mousewheel={{ sensitivity: 1 }}
           keyboard
           modules={[Mousewheel, Keyboard]}
-          onSwiper={(swiper) => {
-            mainSwiperRef.current = swiper;
-          }}
+          onSwiper={(swiper) => mainSwiperRef.current = swiper}
           onSlideChange={(swiper) => {
             setActiveVideoIndex(swiper.activeIndex);
             setActiveReplyIndex(0);
@@ -241,21 +225,15 @@ const HomePage = () => {
                   isActive={index === activeVideoIndex}
                   autoPlay={true}
                   showPlayButton={true}
-                  className="full-video"
                 />
 
-                {/* صورة البروفايل */}
                 <div 
                   className="profile-avatar"
                   onClick={() => navigateToProfile(video.user.username)}
                 >
-                  <img 
-                    src={getAssetUrl(video.user.profileImage) || '/default-avatar.png'} 
-                    alt={video.user.username} 
-                  />
+                  <img src={getAssetUrl(video.user.profileImage) || '/default-avatar.png'} alt={video.user.username} />
                 </div>
 
-                {/* أزرار التفاعل */}
                 <div className="video-actions">
                   <button 
                     className={`action-btn ${likedVideos.has(video._id) ? 'liked' : ''}`}
@@ -270,7 +248,6 @@ const HomePage = () => {
                   </button>
                 </div>
 
-                {/* معلومات الفيديو */}
                 <div className="video-info">
                   <p className="video-description">{video.description}</p>
                 </div>
@@ -280,7 +257,7 @@ const HomePage = () => {
         </Swiper>
       </div>
 
-      {/* النصف السفلي - الردود */}
+      {/* BOTTOM HALF - REPLIES */}
       <div className="bottom-half">
         {currentVideo?.replies?.length > 0 ? (
           <Swiper
@@ -302,21 +279,15 @@ const HomePage = () => {
                     isActive={index === activeReplyIndex}
                     autoPlay={true}
                     showPlayButton={true}
-                    className="full-video"
                   />
 
-                  {/* صورة بروفايل الرد */}
                   <div 
                     className="profile-avatar reply-avatar"
                     onClick={() => navigateToProfile(reply.user.username)}
                   >
-                    <img 
-                      src={getAssetUrl(reply.user.profileImage) || '/default-avatar.png'} 
-                      alt={reply.user.username} 
-                    />
+                    <img src={getAssetUrl(reply.user.profileImage) || '/default-avatar.png'} alt={reply.user.username} />
                   </div>
 
-                  {/* زر الإعجاب للرد */}
                   <div className="reply-actions">
                     <button
                       className={`action-btn ${likedReplies.has(reply._id) ? 'liked' : ''}`}
@@ -329,8 +300,7 @@ const HomePage = () => {
                 </div>
               </SwiperSlide>
             ))}
-            
-            {/* أزرار التنقل للردود */}
+
             {currentVideo.replies.length > 1 && (
               <>
                 <button className="nav-btn nav-prev"><FaChevronRight /></button>

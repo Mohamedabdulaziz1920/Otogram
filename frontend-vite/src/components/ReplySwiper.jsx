@@ -48,14 +48,3 @@ const ReplySwiper = ({ replies, parentVideoOwner, onDelete }) => {
 };
 
 export default ReplySwiper;
-              isActive={index === activeReplyIndex}
-              parentVideoOwner={parentVideoOwner}
-            />
-          </SwiperSlide>
-        ))}
-      </Swiper>
-    </div>
-  );
-};
-
-export default ReplySwiper;

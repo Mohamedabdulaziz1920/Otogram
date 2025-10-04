@@ -43,9 +43,6 @@ body {
   flex-direction: column;
   background: var(--bg-primary);
   position: relative;
-  overflow: hidden;
-  touch-action: pan-y; /* ✅ تمكين التمرير العمودي في كامل الصفحة */
-  -webkit-overflow-scrolling: touch;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -81,7 +78,6 @@ body {
 .replies-swiper {
   width: 100%;
   height: 100%;
-  touch-action: pan-y !important; /* ✅ دعم السحب العمودي */
 }
 
 .main-swiper .swiper-slide,
@@ -101,10 +97,12 @@ body {
   background: var(--bg-primary);
 }
 
-.full-video {
+.full-video,
+.video-element-split {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  background: #000;
   will-change: transform;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
@@ -348,22 +346,12 @@ body {
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .error-container h2,
-.empty-state-container h2 {
-  font-size: 24px;
-  margin-bottom: 10px;
-}
-
+.empty-state-container h2 { font-size: 24px; margin-bottom: 10px; }
 .error-container p,
-.empty-state-container p {
-  font-size: 16px;
-  color: var(--text-secondary);
-  margin-bottom: 20px;
-}
+.empty-state-container p { font-size: 16px; color: var(--text-secondary); margin-bottom: 20px; }
 
 .error-container button {
   background: var(--primary-color);
@@ -376,9 +364,7 @@ body {
   transition: all var(--transition-speed) ease;
 }
 
-.error-container button:hover {
-  background: #e91e3a;
-}
+.error-container button:hover { background: #e91e3a; }
 
 /* ====================================
    NAVIGATION BAR
@@ -396,135 +382,185 @@ body {
 }
 
 /* ====================================
+   VIDEOPLAYER SPLIT (FULLSCREEN + PLAY OVERLAY)
+   ==================================== */
+.video-player-split {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.play-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+  z-index: 5;
+}
+
+.play-button {
+  width: 70px;
+  height: 70px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+
+.play-button:hover { transform: scale(1.1); background: #fff; }
+
+.fullscreen-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 999;
+}
+
+.fullscreen-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.fullscreen-video-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.fullscreen-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.fullscreen-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.fullscreen-close-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+
+/* ====================================
+   REPLYSWIPER
+   ==================================== */
+.reply-swiper-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 10;
+}
+
+.reply-indicator {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.1);
+  padding: 8px 20px;
+  border-radius: 20px;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+}
+
+.reply-indicator span {
+  color: #fff;
+  font-size: 14px;
+}
+
+.reply-swiper .swiper-button-next,
+.reply-swiper .swiper-button-prev {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+}
+
+.reply-swiper .swiper-button-next::after,
+.reply-swiper .swiper-button-prev::after {
+  font-size: 20px;
+}
+
+/* ====================================
    RESPONSIVE DESIGN
    ==================================== */
 @media (max-width: 768px) {
-  .profile-avatar {
-    width: 42px;
-    height: 42px;
-    top: 15px;
-    right: 15px;
-  }
-  
-  .reply-avatar {
-    width: 36px;
-    height: 36px;
-  }
-  
-  .action-btn {
-    width: 46px;
-    height: 46px;
-  }
-  
-  .action-btn svg {
-    font-size: 20px;
-  }
-  
-  .action-btn span {
-    font-size: 11px;
-  }
-  
-  .video-actions,
-  .reply-actions {
-    bottom: 15px;
-    right: 15px;
-    gap: 12px;
-  }
-  
-  .video-info {
-    bottom: 15px;
-    left: 15px;
-    right: 85px;
-  }
-  
-  .video-description {
-    font-size: 13px;
-  }
-  
-  .nav-btn {
-    width: 36px;
-    height: 36px;
-  }
-  
-  .nav-btn svg {
-    font-size: 14px;
-  }
+  .profile-avatar { width: 42px; height: 42px; top: 15px; right: 15px; }
+  .reply-avatar { width: 36px; height: 36px; }
+  .action-btn { width: 46px; height: 46px; }
+  .action-btn svg { font-size: 20px; }
+  .action-btn span { font-size: 11px; }
+  .video-actions, .reply-actions { bottom: 15px; right: 15px; gap: 12px; }
+  .video-info { bottom: 15px; left: 15px; right: 85px; }
+  .video-description { font-size: 13px; }
+  .nav-btn { width: 36px; height: 36px; }
+  .nav-btn svg { font-size: 14px; }
 }
 
 @media (max-width: 480px) {
-  .profile-avatar {
-    width: 38px;
-    height: 38px;
-    top: 12px;
-    right: 12px;
-  }
-  
-  .reply-avatar {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .action-btn {
-    width: 42px;
-    height: 42px;
-  }
-  
-  .action-btn svg {
-    font-size: 18px;
-  }
-  
-  .action-btn span {
-    font-size: 10px;
-  }
-  
-  .video-actions,
-  .reply-actions {
-    bottom: 12px;
-    right: 12px;
-    gap: 10px;
-  }
-  
-  .video-info {
-    bottom: 12px;
-    left: 12px;
-    right: 75px;
-  }
-  
-  .video-description {
-    font-size: 12px;
-    -webkit-line-clamp: 1;
-  }
+  .profile-avatar { width: 38px; height: 38px; top: 12px; right: 12px; }
+  .reply-avatar { width: 32px; height: 32px; }
+  .action-btn { width: 42px; height: 42px; }
+  .action-btn svg { font-size: 18px; }
+  .action-btn span { font-size: 10px; }
+  .video-actions, .reply-actions { bottom: 12px; right: 12px; gap: 10px; }
+  .video-info { bottom: 12px; left: 12px; right: 75px; }
+  .video-description { font-size: 12px; -webkit-line-clamp: 1; }
 }
 
 @media (orientation: landscape) and (max-height: 600px) {
-  .home-container {
-    flex-direction: row;
-  }
-  
-  .top-half,
-  .bottom-half {
-    width: 50vw;
-    height: 100vh;
-    border-top: none;
-  }
-  
-  .top-half {
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-  }
+  .home-container { flex-direction: row; }
+  .top-half, .bottom-half { width: 50vw; height: 100vh; border-top: none; }
+  .top-half { border-right: 1px solid rgba(255,255,255,0.1); }
 }
 
-/* Support for safe areas (iPhone X and newer) */
+/* Safe area support */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .home-container {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  
-  .navigation-bar {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+  .home-container { padding-bottom: env(safe-area-inset-bottom); }
+  .navigation-bar { padding-bottom: env(safe-area-inset-bottom); }
 }
 
-/* Touch optimizations */
+/* Mobile-friendly touch optimizations */
 .action-btn,
 .profile-avatar,
 .nav-btn,

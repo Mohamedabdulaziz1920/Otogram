@@ -24,10 +24,7 @@ const upload = multer({
   }
 });
 
-
-// --- المسارات ---
-
-// 1. رفع فيديو (باستخدام البث اليدوي إلى GridFS)
+// --- المسار الجديد لرفع الفيديو (مع التصحيح النهائي) ---
 router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('video'), (req, res) => {
   try {
     if (!req.file) {
@@ -47,13 +44,15 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
       return res.status(500).json({ error: 'فشل أثناء بث الملف إلى قاعدة البيانات.' });
     });
 
-    uploadStream.on('finish', async (file) => {
+    // ✨✨✨ التصحيح الحاسم هنا ✨✨✨
+    // حدث 'finish' لا يعيد أي متغير. سنستخدم uploadStream.id للحصول على المعرف.
+    uploadStream.on('finish', async () => {
       try {
         const { description } = req.body;
         const video = new Video({
           user: req.user._id,
-          fileId: file._id,
-          videoUrl: `/api/videos/stream/${file._id}`,
+          fileId: uploadStream.id, // <-- التصحيح 1: استخدام uploadStream.id
+          videoUrl: `/api/videos/stream/${uploadStream.id}`, // <-- التصحيح 2: استخدام uploadStream.id
           description: description || '',
           isReply: false,
         });
@@ -71,7 +70,7 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
 
       } catch (saveError) {
         console.error('!!! Error saving video metadata after upload:', saveError);
-        await bucket.delete(file._id);
+        await bucket.delete(uploadStream.id); // <-- التصحيح 3: استخدام uploadStream.id
         res.status(500).json({ error: 'فشل حفظ بيانات الفيديو بعد الرفع.' });
       }
     });
@@ -82,12 +81,13 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
   }
 });
 
-// 2. جلب جميع الفيديوهات الرئيسية (مع تتبع دقيق لتشخيص البطء)
+
+// --- باقي المسارات ---
+// (الكود التالي سليم ولم يتغير)
+
+// جلب جميع الفيديوهات الرئيسية
 router.get('/', async (req, res) => {
-  console.log(`[${new Date().toISOString()}] Received request for GET /api/videos`);
   try {
-    console.log("Step 1: Starting database query with Video.find()...");
-    
     const videos = await Video.find({ isReply: false })
       .populate('user', 'username profileImage')
       .populate({
@@ -95,25 +95,15 @@ router.get('/', async (req, res) => {
         populate: { path: 'user', select: 'username profileImage' }
       })
       .sort({ createdAt: -1 });
-
-    console.log(`Step 2: Database query finished. Found ${videos.length} main videos.`);
-
     const validVideos = videos.filter(video => video.user);
-    
-    console.log(`Step 3: Filtering complete. Sending ${validVideos.length} valid videos to the client.`);
-    
     res.json(validVideos);
-    
-    console.log(`Step 4: Response sent successfully.`);
-
   } catch (error) {
-    console.error('!!! CRITICAL ERROR in GET /api/videos:', error);
+    console.error('Fetch videos error:', error);
     res.status(500).json({ error: 'فشل في جلب الفيديوهات.' });
   }
 });
 
-
-// 3. بث الفيديو
+// بث الفيديو
 router.get('/stream/:fileId', async (req, res) => {
   try {
     const bucket = req.gfs;
@@ -124,7 +114,6 @@ router.get('/stream/:fileId', async (req, res) => {
       return res.status(404).json({ error: 'لم يتم العثور على الفيديو.' });
     }
     const file = files[0];
-
     const range = req.headers.range;
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");

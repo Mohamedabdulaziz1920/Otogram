@@ -5,7 +5,7 @@ import { FaHeart, FaReply, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import NavigationBar from '../components/NavigationBar';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, api } from '../context/AuthContext'; // استخدام api من AuthContext
-import VideoPlayer from '../components/VideoPlayer'; // استيراد المكون الجديد
+import VideoPlayerSplit from '../components/VideoPlayerSplit';
 
 import 'swiper/css';
 import 'swiper/css/navigation';

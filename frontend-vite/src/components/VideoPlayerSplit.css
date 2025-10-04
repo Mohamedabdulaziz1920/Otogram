@@ -212,3 +212,6 @@
     font-size: 18px;
   }
 }
+.video-player-split {
+  touch-action: pan-y;
+}

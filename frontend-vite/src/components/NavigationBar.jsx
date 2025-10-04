@@ -1,21 +1,23 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-// ✨ تم التأكد من أن FaShieldAlt هو المستورد الصحيح
-import { FaHome, FaUser, FaPlus, FaShieldAlt } from 'react-icons/fa'; 
+import { FaHome, FaUser, FaPlus, FaShieldAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import './NavigationBar.css';
 
 const NavigationBar = ({ currentPage }) => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth(); // استخدام isAuthenticated للتحقق السريع
 
   const canUpload = user && (user.role === 'creator' || user.role === 'admin');
   const isAdmin = user && user.role === 'admin';
 
+  // ✨✨ هذا هو التعديل الحاسم ✨✨
   const handleProfileClick = () => {
+    // تحقق مما إذا كان المستخدم مسجلاً ولديه اسم مستخدم صالح
     if (isAuthenticated && user?.username) {
       navigate(`/profile/${user.username}`);
     } else {
+      // إذا لم يكن مسجلاً أو لا يوجد اسم مستخدم، اذهب لصفحة الدخول
       navigate('/login');
     }
   };
@@ -60,17 +62,13 @@ const NavigationBar = ({ currentPage }) => {
         <span className="nav-label">{isAuthenticated ? 'حسابي' : 'الدخول'}</span>
       </button>
 
-      {/* --- زر لوحة التحكم (للأدمن فقط) --- */}
-      {isAdmin && (
-        <Link 
-          to="/admin" 
-          className={`nav-item ${currentPage === 'admin' ? 'active' : ''}`}
-        >
-          {/* ✨ تم تصحيح اسم الأيقونة هنا */}
-          <FaShieldAlt className="nav-icon" /> 
-          <span className="nav-label">الأدمن</span>
-        </Link>
-      )}
+      {/* ✨ عرض رابط لوحة التحكم فقط إذا كان المستخدم أدمن */}
+    {isAdmin && (
+      <Link to="/admin" className={`nav-item ${currentPage === 'admin' ? 'active' : ''}`}>
+        <FaShieldAlt className="nav-icon" />
+        <span className="nav-label">الأدمن</span>
+      </Link>
+    )}
     </nav>
   );
 };

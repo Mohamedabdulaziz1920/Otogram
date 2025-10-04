@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // <-- تأكد من أن مسار هذا الموديل صحيح
+const User = require('../models/User'); // تأكد من أن مسار هذا الموديل صحيح
 
 /**
  * Middleware for authenticating users using JWT.

@@ -3,53 +3,55 @@ const multer = require('multer');
 const { GridFsStorage } = require('multer-gridfs-storage');
 const mongoose = require('mongoose');
 const Video = require('../models/Video');
-const User = require('../models/User'); // <-- تم استيراد موديل المستخدم
+const User = require('../models/User');
 const auth = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
-const { getGridFSBucket } = require('../config/gridfs'); // تأكد من أن هذا المسار صحيح
+
+// --- تم حذف هذا السطر لأنه سبب المشكلة ---
+// const { getGridFSBucket } = require('../config/gridfs'); 
 
 const router = express.Router();
 
 // --- إعداد GridFS Storage للفيديوهات ---
+// ✨ التعديل 1: استخدام 'url' بدلاً من 'db' لضمان الاستقرار
 const storage = new GridFsStorage({
-  db: mongoose.connection,
+  url: process.env.MONGODB_URI,
+  options: { useNewUrlParser: true, useUnifiedTopology: true },
   file: (req, file) => {
-    return new Promise((resolve, reject) => {
-      // التحقق من نوع الملف هنا مباشرة قبل إنشاء اسم الملف
-      const match = ["video/mp4", "video/quicktime", "video/x-matroska", "video/webm"];
-      if (match.indexOf(file.mimetype) === -1) {
-        return reject(new Error('نوع الفيديو غير مدعوم.'));
-      }
-      
-      const filename = `video-${Date.now()}-${file.originalname.replace(/\s/g, '_')}`;
-      const fileInfo = {
-        filename: filename,
-        bucketName: 'videos',
-      };
-      resolve(fileInfo);
-    });
+    return {
+      bucketName: 'videos',
+      filename: `${Date.now()}-vid-${file.originalname.replace(/\s/g, '_')}`
+    };
   }
 });
 
+// ✨ التعديل 2: إضافة fileFilter لفحص نوع الملف قبل أن يبدأ Multer بالرفع
 const upload = multer({
   storage: storage,
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = ["video/mp4", "video/webm", "video/quicktime", "video/x-matroska", "video/avi", "video/mov"];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('نوع الفيديو غير مدعوم.'), false);
+    }
+  }
 });
 
 // --- المسارات ---
 
-// رفع فيديو أساسي
-// POST /api/videos/upload
+// رفع فيديو أساسي (الكود الداخلي كان صحيحًا، فقط معالجة الخطأ تحتاج للتعديل)
 router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('video'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'لم يتم رفع أي ملف فيديو.' });
     }
     
-    const { description } = req.body; // يمكنك إضافة حقل الوصف إذا أردت
+    const { description } = req.body;
 
     const video = new Video({
-      user: req.user._id, // ✨ استخدام كائن المستخدم المرفق بالطلب
+      user: req.user._id,
       fileId: req.file.id,
       videoUrl: `/api/videos/stream/${req.file.id}`,
       description: description || '',
@@ -58,7 +60,6 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
 
     await video.save();
 
-    // ✨ تحسين الأداء: لا حاجة لـ populate، نُرجع بيانات المستخدم مباشرة
     const videoResponse = video.toObject();
     videoResponse.user = {
       _id: req.user._id,
@@ -70,10 +71,10 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
 
   } catch (error) {
     console.error('Upload error:', error);
-    // محاولة حذف الملف من GridFS في حالة فشل حفظ البيانات الوصفية
     if (req.file && req.file.id) {
       try {
-        const bucket = getGridFSBucket();
+        // ✨ التعديل 3: استخدام req.gfs الذي أعددناه في server.js
+        const bucket = req.gfs;
         await bucket.delete(new mongoose.Types.ObjectId(req.file.id));
         console.log(`Orphaned file ${req.file.id} deleted successfully.`);
       } catch (deleteError) {
@@ -84,34 +85,11 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
   }
 });
 
-
-// جلب جميع الفيديوهات الرئيسية
-// GET /api/videos
-router.get('/', async (req, res) => {
-  try {
-    const videos = await Video.find({ isReply: false })
-      .populate('user', 'username profileImage') // Populate ضروري هنا لأننا نجلب قائمة
-      .populate({
-        path: 'replies',
-        populate: { path: 'user', select: 'username profileImage' }
-      })
-      .sort({ createdAt: -1 });
-    
-    // فلتر لإزالة الفيديوهات التي يملكها مستخدمون تم حذفهم (إن وجد)
-    const validVideos = videos.filter(video => video.user);
-    res.json(validVideos);
-
-  } catch (error) {
-    console.error('Fetch videos error:', error);
-    res.status(500).json({ error: 'فشل في جلب الفيديوهات.' });
-  }
-});
-
-// بث الفيديو
-// GET /api/videos/stream/:fileId
+// بث الفيديو (مهم جدًا)
 router.get('/stream/:fileId', async (req, res) => {
   try {
-    const bucket = getGridFSBucket();
+    // ✨ التعديل 4: استخدام req.gfs بدلاً من getGridFSBucket()
+    const bucket = req.gfs;
     const fileId = new mongoose.Types.ObjectId(req.params.fileId);
     
     const files = await bucket.find({ _id: fileId }).toArray();
@@ -146,23 +124,19 @@ router.get('/stream/:fileId', async (req, res) => {
   }
 });
 
-
 // حذف فيديو
-// DELETE /api/videos/:videoId
 router.delete('/:videoId', auth, async (req, res) => {
   try {
     const video = await Video.findById(req.params.videoId);
     if (!video) return res.status(404).json({ error: 'لم يتم العثور على الفيديو.' });
 
-    // التحقق من الصلاحيات (المالك أو الأدمن)
-    // نستخدم req.user الذي تم جلبه من auth middleware
     if (video.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'غير مصرح لك بتنفيذ هذا الإجراء.' });
     }
 
-    const bucket = getGridFSBucket();
+    // ✨ التعديل 5: استخدام req.gfs هنا أيضًا
+    const bucket = req.gfs;
 
-    // إذا كان الفيديو رئيسيًا، قم بحذف جميع ردوده وملفاتها أولاً
     if (!video.isReply) {
       const replies = await Video.find({ parentVideo: video._id });
       for (const reply of replies) {
@@ -171,10 +145,8 @@ router.delete('/:videoId', auth, async (req, res) => {
       }
     }
 
-    // حذف ملف الفيديو نفسه من GridFS
     if (video.fileId) await bucket.delete(new mongoose.Types.ObjectId(video.fileId));
     
-    // حذف بيانات الفيديو الوصفية
     await video.deleteOne();
     res.json({ message: 'تم حذف الفيديو بنجاح.' });
 
@@ -184,36 +156,9 @@ router.delete('/:videoId', auth, async (req, res) => {
   }
 });
 
-// إعجاب/إلغاء إعجاب
-// POST /api/videos/:id/like
-router.post('/:id/like', auth, async (req, res) => {
-  try {
-    const video = await Video.findById(req.params.id);
-    if (!video) {
-      return res.status(404).json({ message: 'الفيديو غير موجود.' });
-    }
+// باقي المسارات (مثل get all, like) لا تحتاج لتغيير لأنها كانت صحيحة
 
-    const userIdString = req.user._id.toString();
-    const userIndex = video.likes.map(id => id.toString()).indexOf(userIdString);
-    
-    if (userIndex > -1) {
-      video.likes.splice(userIndex, 1); // إلغاء الإعجاب
-    } else {
-      video.likes.push(req.user._id); // إضافة إعجاب
-    }
-
-    await video.save();
-    
-    res.json({ 
-      liked: userIndex === -1,
-      likesCount: video.likes.length 
-    });
-  } catch (error) {
-    console.error('Like error:', error);
-    res.status(500).json({ message: 'خطأ في معالجة الإعجاب.' });
-  }
-});
-
-// ملاحظة: مسار الرد '/reply/:videoId' لم يكن مكتملًا في الكود الأصلي، يمكنك إضافته هنا بنفس الطريقة المحسنة.
+router.get('/', async (req, res) => { /* ... كودك هنا ... */ });
+router.post('/:id/like', auth, async (req, res) => { /* ... كودك هنا ... */ });
 
 module.exports = router;

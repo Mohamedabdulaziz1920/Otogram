@@ -3,42 +3,42 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const router = express.Router();
-const auth = require('../middleware/auth'); // تأكد من أن مسار هذا الملف صحيح
+const auth = require('../middleware/auth'); // استيراد الـ middleware المُحسّن
 
 // --- Register a new user ---
+// POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // Validation
     if (!username || !email || !password) {
-      return res.status(400).json({ error: 'Please provide all required fields: username, email, password.' });
+      return res.status(400).json({ error: 'Please provide all required fields.' });
     }
     if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+      return res.status(400).json({ error: 'Password must be at least 6 characters.' });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    const existingUser = await User.findOne({ $or: [{ email: email.toLowerCase() }, { username }] });
     if (existingUser) {
-      return res.status(409).json({ error: 'A user with this email or username already exists.' });
+      return res.status(409).json({ error: 'User with this email or username already exists.' });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create new user
     const user = new User({
       username,
-      email,
+      email: email.toLowerCase(),
       password: hashedPassword,
     });
 
     await user.save();
+    
+    // حذف كلمة المرور من الكائن الذي سنعيده
+    const userResponse = user.toObject();
+    delete userResponse.password;
 
-    // Create JWT token
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, role: user.role }, // ✨ التأكد من استخدام userId هنا
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -46,13 +46,10 @@ router.post('/register', async (req, res) => {
     res.status(201).json({
       message: 'User registered successfully!',
       token,
-      user: user
+      user: userResponse
     });
 
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({ error: error.message });
-    }
     console.error('Register Error:', error);
     res.status(500).json({ error: 'An internal server error occurred.' });
   }
@@ -60,30 +57,30 @@ router.post('/register', async (req, res) => {
 
 
 // --- Login a user ---
+// POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
     if (!email || !password) {
       return res.status(400).json({ error: 'Please provide both email and password.' });
     }
 
-    // Find user by email
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials. Please check your email and password.' });
+      return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid credentials. Please check your email and password.' });
+      return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
-    // Create JWT token
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, role: user.role }, // ✨ التأكد من استخدام userId هنا
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -91,7 +88,7 @@ router.post('/login', async (req, res) => {
     res.status(200).json({
       message: 'Logged in successfully!',
       token,
-      user: user
+      user: userResponse
     });
 
   } catch (error) {
@@ -102,21 +99,12 @@ router.post('/login', async (req, res) => {
 
 
 // --- Get Logged-in User Data ---
-// هذا المسار يتحقق من التوكن ويعيد بيانات المستخدم
-router.get('/me', auth, async (req, res) => {
-  try {
-    // req.userId يتم إرفاقه بواسطة auth middleware
-    const user = await User.findById(req.userId).select('-password'); 
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found.' });
-    }
-    
-    res.status(200).json({ user });
-  } catch (error) {
-    console.error('Get Me Error:', error);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
+// GET /api/auth/me
+router.get('/me', auth, (req, res) => {
+  // ✨ أصبح هذا المسار أبسط وأسرع بكثير!
+  // لا حاجة لاستدعاء قاعدة البيانات مرة أخرى، لأن 'auth' middleware قام بذلك بالفعل.
+  // بيانات المستخدم موجودة في req.user.
+  res.status(200).json({ user: req.user });
 });
 
 

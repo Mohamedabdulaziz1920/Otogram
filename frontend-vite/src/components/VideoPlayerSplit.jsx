@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { FaTimes, FaPlay, FaPause, FaExpand } from 'react-icons/fa';
+import { FaTimes, FaPlay } from 'react-icons/fa';
 import './VideoPlayerSplit.css';
 
 const VideoPlayerSplit = ({ 
@@ -9,7 +9,7 @@ const VideoPlayerSplit = ({
   onPause,
   className = '',
   showPlayButton = true,
-  autoPlay = false
+  autoPlay = true
 }) => {
   const videoRef = useRef(null);
   const fullscreenVideoRef = useRef(null);
@@ -19,10 +19,12 @@ const VideoPlayerSplit = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (videoRef.current && isActive && autoPlay) {
-      playVideo();
-    } else if (videoRef.current && !isActive) {
-      pauseVideo();
+    if (videoRef.current) {
+      if (isActive && autoPlay) {
+        playVideo();
+      } else {
+        pauseVideo();
+      }
     }
   }, [isActive, autoPlay]);
 
@@ -59,28 +61,16 @@ const VideoPlayerSplit = ({
 
   const openFullscreen = () => {
     setShowFullscreen(true);
-    pauseVideo(); // إيقاف الفيديو الأصلي
-    
-    // تشغيل الفيديو في وضع ملء الشاشة
+    pauseVideo();
     setTimeout(() => {
-      if (fullscreenVideoRef.current) {
-        fullscreenVideoRef.current.play();
-      }
+      fullscreenVideoRef.current?.play();
     }, 100);
   };
 
   const closeFullscreen = () => {
     setShowFullscreen(false);
-    
-    // إيقاف فيديو ملء الشاشة
-    if (fullscreenVideoRef.current) {
-      fullscreenVideoRef.current.pause();
-    }
-    
-    // استئناف التشغيل إذا كان نشطاً
-    if (isActive && autoPlay) {
-      setTimeout(() => playVideo(), 100);
-    }
+    fullscreenVideoRef.current?.pause();
+    if (isActive && autoPlay) setTimeout(() => playVideo(), 100);
   };
 
   const handleVideoError = () => {
@@ -121,9 +111,7 @@ const VideoPlayerSplit = ({
               onPause={() => setIsPlaying(false)}
             />
             
-            {isLoading && (
-              <div className="video-loading"></div>
-            )}
+            {isLoading && <div className="video-loading"></div>}
             
             {showPlayButton && !isPlaying && !isLoading && (
               <div className="play-overlay" onClick={togglePlay}>
@@ -140,7 +128,6 @@ const VideoPlayerSplit = ({
         )}
       </div>
 
-      {/* Fullscreen Modal */}
       {showFullscreen && (
         <>
           <div className="fullscreen-backdrop" onClick={closeFullscreen} />

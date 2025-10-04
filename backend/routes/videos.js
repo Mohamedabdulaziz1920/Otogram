@@ -24,57 +24,46 @@ const upload = multer({
   }
 });
 
-// --- المسار الجديد لرفع الفيديو (مع التصحيح النهائي) ---
-router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('video'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'لم يتم استلام أي ملف فيديو.' });
-    }
 
+// --- المسارات ---
+
+// 1. رفع فيديو أساسي
+router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('video'), (req, res) => {
+  // ... (هذا الكود يعمل بشكل سليم، لا تغيير هنا) ...
+  try {
+    if (!req.file) { return res.status(400).json({ error: 'لم يتم استلام أي ملف فيديو.' }); }
     const bucket = req.gfs;
     const filename = `${Date.now()}-vid-${req.file.originalname.replace(/\s/g, '_')}`;
-    const uploadStream = bucket.openUploadStream(filename, {
-      contentType: req.file.mimetype
-    });
-
+    const uploadStream = bucket.openUploadStream(filename, { contentType: req.file.mimetype });
     streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
-
     uploadStream.on('error', (error) => {
       console.error('!!! GridFS Stream Error:', error);
       return res.status(500).json({ error: 'فشل أثناء بث الملف إلى قاعدة البيانات.' });
     });
-
-    // ✨✨✨ التصحيح الحاسم هنا ✨✨✨
-    // حدث 'finish' لا يعيد أي متغير. سنستخدم uploadStream.id للحصول على المعرف.
     uploadStream.on('finish', async () => {
       try {
         const { description } = req.body;
         const video = new Video({
           user: req.user._id,
-          fileId: uploadStream.id, // <-- التصحيح 1: استخدام uploadStream.id
-          videoUrl: `/api/videos/stream/${uploadStream.id}`, // <-- التصحيح 2: استخدام uploadStream.id
+          fileId: uploadStream.id,
+          videoUrl: `/api/videos/stream/${uploadStream.id}`,
           description: description || '',
           isReply: false,
         });
-
         await video.save();
-
         const videoResponse = video.toObject();
         videoResponse.user = {
           _id: req.user._id,
           username: req.user.username,
           profileImage: req.user.profileImage
         };
-        
         res.status(201).json({ message: 'تم رفع الفيديو بنجاح', video: videoResponse });
-
       } catch (saveError) {
-        console.error('!!! Error saving video metadata after upload:', saveError);
-        await bucket.delete(uploadStream.id); // <-- التصحيح 3: استخدام uploadStream.id
+        console.error('!!! Error saving video metadata:', saveError);
+        await bucket.delete(uploadStream.id);
         res.status(500).json({ error: 'فشل حفظ بيانات الفيديو بعد الرفع.' });
       }
     });
-
   } catch (error) {
     console.error('!!! Top-level upload error:', error);
     res.status(500).json({ error: 'حدث خطأ غير متوقع في بداية عملية الرفع.' });
@@ -82,8 +71,65 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
 });
 
 
-// --- باقي المسارات ---
-// (الكود التالي سليم ولم يتغير)
+// ✨✨✨ 2. رفع فيديو كرد (المسار الجديد) ✨✨✨
+// لاحظ أننا نسمح لجميع المستخدمين المسجلين بالرد
+router.post('/reply/:videoId', auth, checkRole(['user', 'creator', 'admin']), upload.single('video'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'لم يتم استلام أي ملف فيديو للرد.' });
+    }
+
+    const parentVideoId = req.params.videoId;
+    const bucket = req.gfs;
+    const filename = `${Date.now()}-reply-${req.file.originalname.replace(/\s/g, '_')}`;
+    const uploadStream = bucket.openUploadStream(filename, { contentType: req.file.mimetype });
+
+    streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+
+    uploadStream.on('error', (error) => {
+      console.error('!!! GridFS Reply Stream Error:', error);
+      return res.status(500).json({ error: 'فشل أثناء بث ملف الرد.' });
+    });
+
+    uploadStream.on('finish', async () => {
+      try {
+        // الخطوة 1: إنشاء وحفظ الرد كفيديو جديد
+        const replyVideo = new Video({
+          user: req.user._id,
+          fileId: uploadStream.id,
+          videoUrl: `/api/videos/stream/${uploadStream.id}`,
+          description: req.body.description || '',
+          isReply: true, // <-- مهم جدًا: تحديد أن هذا الفيديو هو رد
+          parentVideo: parentVideoId, // <-- مهم جدًا: ربطه بالفيديو الأصلي
+        });
+        await replyVideo.save();
+
+        // الخطوة 2: تحديث الفيديو الأصلي لإضافة هذا الرد إلى قائمة ردوده
+        await Video.findByIdAndUpdate(parentVideoId, {
+          $push: { replies: replyVideo._id }
+        });
+
+        // إرسال الرد الناجح
+        const replyResponse = replyVideo.toObject();
+        replyResponse.user = {
+            _id: req.user._id,
+            username: req.user.username,
+            profileImage: req.user.profileImage
+        };
+        res.status(201).json({ message: 'تم إضافة الرد بنجاح', video: replyResponse });
+
+      } catch (saveError) {
+        console.error('!!! Error saving reply metadata:', saveError);
+        await bucket.delete(uploadStream.id);
+        res.status(500).json({ error: 'فشل حفظ بيانات الرد بعد الرفع.' });
+      }
+    });
+
+  } catch (error) {
+    console.error('!!! Top-level reply error:', error);
+    res.status(500).json({ error: 'حدث خطأ غير متوقع في بداية عملية الرد.' });
+  }
+});
 
 // جلب جميع الفيديوهات الرئيسية
 router.get('/', async (req, res) => {

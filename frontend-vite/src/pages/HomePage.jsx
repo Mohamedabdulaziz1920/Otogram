@@ -5,20 +5,19 @@ import { FaHeart, FaReply, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import NavigationBar from '../components/NavigationBar';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, api } from '../context/AuthContext';
-import VideoPlayer from '../components/VideoPlayer'; // سنستخدم مكون فيديو مخصص
+import VideoPlayer from '../components/VideoPlayer'; // استيراد المكون الجديد
 
 import 'swiper/css';
 import 'swiper/css/navigation';
-import './HomePage.css'; // سنستخدم ملف التنسيق الجديد
+import './HomePage.css';
 
 const HomePage = () => {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // States للتحكم في الفيديو النشط حاليًا
   const [activeMainIndex, setActiveMainIndex] = useState(0);
-  const [activeReplyIndex, setActiveReplyIndex] = useState(null); // null يعني أن الفيديو الرئيسي هو النشط
+  const [activeReplyIndex, setActiveReplyIndex] = useState(null); 
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -53,7 +52,6 @@ const HomePage = () => {
   const handleLike = async (videoId, isReply = false) => {
     if (!user) return navigate('/login');
     try {
-        // Optimistic UI update
         setVideos(prevVideos => 
             prevVideos.map(video => {
                 const updateLikes = (item) => {
@@ -68,18 +66,15 @@ const HomePage = () => {
                     }
                     return item;
                 };
-
                 if (isReply) {
                     return { ...video, replies: video.replies.map(updateLikes) };
                 }
                 return updateLikes(video);
             })
         );
-        // Send request to server
         await api.post(`/api/videos/${videoId}/like`);
     } catch (err) {
         console.error('Like error:', err);
-        // Revert UI on error if needed
         fetchVideos(); 
     }
   };
@@ -99,12 +94,11 @@ const HomePage = () => {
         className="main-swiper"
         onSlideChange={(swiper) => {
           setActiveMainIndex(swiper.activeIndex);
-          setActiveReplyIndex(null); // عند تغيير الفيديو الرئيسي، أوقف الردود
+          setActiveReplyIndex(null);
         }}
       >
         {videos.map((video, mainIndex) => (
           <SwiperSlide key={video._id} className="main-slide">
-            {/* حاوية الفيديو الرئيسي */}
             <div className="main-video-container" onClick={() => setActiveReplyIndex(null)}>
               <VideoPlayer
                 src={getAssetUrl(video.videoUrl)}
@@ -112,7 +106,6 @@ const HomePage = () => {
               />
             </div>
             
-            {/* معلومات و أزرار الفيديو الرئيسي */}
             <div className="overlay-ui">
                 <div className="video-info">
                   <h3 onClick={() => navigate(`/profile/${video.user.username}`)}>@{video.user.username}</h3>
@@ -130,7 +123,6 @@ const HomePage = () => {
                 </div>
             </div>
 
-            {/* قسم الردود (يظهر فوق الفيديو الرئيسي) */}
             {video.replies && video.replies.length > 0 && (
               <div className="replies-section">
                 <Swiper

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { FaTimes, FaPlay } from 'react-icons/fa';
+import '../HomePage.css';
 import './VideoPlayerSplit.css';
 
 const VideoPlayerSplit = ({ 

@@ -63,12 +63,12 @@ body {
 
 .bottom-half {
   width: 100%;
-  height: 50vh;
-  height: 50dvh;
+  height: calc(50dvh - var(--nav-height)); /* نصف الشاشة ناقص ارتفاع الفوتر */
   position: relative;
   overflow: hidden;
   background: var(--bg-secondary);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: var(--nav-height); /* لإبعاد الأزرار عن الفوتر */
 }
 
 /* ====================================
@@ -153,15 +153,9 @@ body {
    ==================================== */
 .video-actions,
 .reply-actions {
-  position: absolute;
-  bottom: 20px;
+  bottom: 20px; /* أو أقل إذا أحببت */
   right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  z-index: 10;
 }
-
 .action-btn {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
@@ -567,4 +561,18 @@ body {
 .primary-btn {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+/* في الأجهزة الصغيرة */
+@media (max-width: 768px) {
+  .bottom-half {
+    height: calc(50dvh - var(--nav-height));
+    padding-bottom: var(--nav-height);
+  }
+}
+
+@media (max-width: 480px) {
+  .bottom-half {
+    height: calc(50dvh - var(--nav-height));
+    padding-bottom: var(--nav-height);
+  }
 }

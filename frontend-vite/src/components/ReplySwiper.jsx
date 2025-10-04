@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper';
-import VideoPlayer from './VideoPlayer';
+import { Navigation, Mousewheel } from 'swiper';
+import VideoPlayerSplit from './VideoPlayerSplit';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import './ReplySwiper.css';
@@ -9,9 +9,10 @@ import './ReplySwiper.css';
 const ReplySwiper = ({ replies, parentVideoOwner, onDelete }) => {
   const [activeReplyIndex, setActiveReplyIndex] = useState(0);
 
+  // إيقاف جميع الفيديوهات عند إلغاء المكون
   useEffect(() => {
     return () => {
-      // تنظيف تشغيل الفيديو عند الإلغاء يتم من داخل VideoPlayer
+      // التعامل مع هذا يتم داخل VideoPlayerSplit
     };
   }, []);
 
@@ -25,20 +26,19 @@ const ReplySwiper = ({ replies, parentVideoOwner, onDelete }) => {
         direction="horizontal"
         slidesPerView={1}
         navigation={true}
-        modules={[Navigation]}
-        nested={true}
-        touchReleaseOnEdges={true}
-        resistanceRatio={0.6}
-        className="reply-swiper"
+        mousewheel={{ forceToAxis: true }} // ✅ السحب العمودي مفعل
+        modules={[Navigation, Mousewheel]}
         onSlideChange={(swiper) => setActiveReplyIndex(swiper.activeIndex)}
+        className="reply-swiper"
       >
         {replies.map((reply, index) => (
           <SwiperSlide key={reply._id}>
-            <VideoPlayer
-              video={reply}
+            <VideoPlayerSplit
+              videoUrl={reply.videoUrl}
               onDelete={onDelete}
               isActive={index === activeReplyIndex}
               parentVideoOwner={parentVideoOwner}
+              autoPlay={true}
             />
           </SwiperSlide>
         ))}

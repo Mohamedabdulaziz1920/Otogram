@@ -10,7 +10,7 @@ const checkRole = require('../middleware/checkRole');
 const router = express.Router();
 
 // --- إعداد GridFS Storage للفيديوهات ---
-// هذه الطريقة هي الأكثر استقرارًا وموثوقية
+// هذه الطريقة هي الأكثر استقرارًا وموثوقية وتتوافق مع Render
 const storage = new GridFsStorage({
   url: process.env.MONGODB_URI,
   options: { useNewUrlParser: true, useUnifiedTopology: true },
@@ -27,20 +27,18 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
   fileFilter: (req, file, cb) => {
-    // قائمة بأنواع الفيديو الشائعة
     const allowedMimeTypes = ["video/mp4", "video/webm", "video/quicktime", "video/x-matroska", "video/avi", "video/mov"];
     if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('نوع الفيديو غير مدعوم. الأنواع المسموح بها: MP4, WebM, MOV, AVI, MKV'), false);
+      cb(new Error('نوع الفيديو غير مدعوم.'), false);
     }
   }
 });
 
-
 // --- المسارات ---
 
-// رفع فيديو أساسي
+// 1. رفع فيديو أساسي
 router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('video'), async (req, res) => {
   try {
     if (!req.file) {
@@ -72,7 +70,7 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
     console.error('!!! UPLOAD ROUTE CRITICAL ERROR:', error);
     if (req.file && req.file.id) {
       try {
-        const bucket = req.gfs; // استخدام req.gfs كما هو معرف في server.js
+        const bucket = req.gfs; // استخدام req.gfs الذي تم إعداده في server.js
         await bucket.delete(new mongoose.Types.ObjectId(req.file.id));
         console.log(`Orphaned file ${req.file.id} was deleted successfully.`);
       } catch (deleteError) {
@@ -83,8 +81,7 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
   }
 });
 
-
-// جلب جميع الفيديوهات الرئيسية
+// 2. جلب جميع الفيديوهات الرئيسية
 router.get('/', async (req, res) => {
   try {
     const videos = await Video.find({ isReply: false })
@@ -95,7 +92,7 @@ router.get('/', async (req, res) => {
       })
       .sort({ createdAt: -1 });
     
-    const validVideos = videos.filter(video => video.user); // لإزالة الفيديوهات التي يملكها مستخدمون تم حذفهم
+    const validVideos = videos.filter(video => video.user);
     res.json(validVideos);
 
   } catch (error) {
@@ -104,11 +101,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-
-// بث الفيديو (ضروري لمشاهدة الفيديوهات)
+// 3. بث الفيديو (ضروري لمشاهدة الفيديوهات)
 router.get('/stream/:fileId', async (req, res) => {
   try {
-    const bucket = req.gfs; // استخدام req.gfs كما هو معرف في server.js
+    const bucket = req.gfs;
     const fileId = new mongoose.Types.ObjectId(req.params.fileId);
     
     const files = await bucket.find({ _id: fileId }).toArray();
@@ -143,8 +139,7 @@ router.get('/stream/:fileId', async (req, res) => {
   }
 });
 
-
-// حذف فيديو
+// 4. حذف فيديو
 router.delete('/:videoId', auth, async (req, res) => {
   try {
     const video = await Video.findById(req.params.videoId);
@@ -175,8 +170,7 @@ router.delete('/:videoId', auth, async (req, res) => {
   }
 });
 
-
-// إعجاب/إلغاء إعجاب
+// 5. إعجاب/إلغاء إعجاب
 router.post('/:id/like', auth, async (req, res) => {
   try {
     const video = await Video.findById(req.params.id);
@@ -204,5 +198,6 @@ router.post('/:id/like', auth, async (req, res) => {
     res.status(500).json({ message: 'خطأ في معالجة الإعجاب.' });
   }
 });
+
 
 module.exports = router;

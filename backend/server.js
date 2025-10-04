@@ -5,6 +5,9 @@ const dotenv = require('dotenv');
 const path = require('path');
 const { GridFSBucket } = require('mongodb');
 
+// ✨✨✨ البصمة للتحقق من نسخة الكود ✨✨✨
+console.log(`--- SERVER CODE VERSION: ${new Date().toISOString()} --- THIS IS THE LATEST VERSION ---`);
+
 dotenv.config();
 const app = express();
 

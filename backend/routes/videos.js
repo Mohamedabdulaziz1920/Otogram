@@ -7,13 +7,10 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 
-// --- تم حذف هذا السطر لأنه سبب المشكلة ---
-// const { getGridFSBucket } = require('../config/gridfs'); 
-
 const router = express.Router();
 
 // --- إعداد GridFS Storage للفيديوهات ---
-// ✨ التعديل 1: استخدام 'url' بدلاً من 'db' لضمان الاستقرار
+// هذه الطريقة هي الأكثر استقرارًا وموثوقية
 const storage = new GridFsStorage({
   url: process.env.MONGODB_URI,
   options: { useNewUrlParser: true, useUnifiedTopology: true },
@@ -25,23 +22,25 @@ const storage = new GridFsStorage({
   }
 });
 
-// ✨ التعديل 2: إضافة fileFilter لفحص نوع الملف قبل أن يبدأ Multer بالرفع
+// إعداد Multer مع فلتر للتحقق من نوع الملف
 const upload = multer({
   storage: storage,
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
   fileFilter: (req, file, cb) => {
+    // قائمة بأنواع الفيديو الشائعة
     const allowedMimeTypes = ["video/mp4", "video/webm", "video/quicktime", "video/x-matroska", "video/avi", "video/mov"];
     if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('نوع الفيديو غير مدعوم.'), false);
+      cb(new Error('نوع الفيديو غير مدعوم. الأنواع المسموح بها: MP4, WebM, MOV, AVI, MKV'), false);
     }
   }
 });
 
+
 // --- المسارات ---
 
-// رفع فيديو أساسي (الكود الداخلي كان صحيحًا، فقط معالجة الخطأ تحتاج للتعديل)
+// رفع فيديو أساسي
 router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('video'), async (req, res) => {
   try {
     if (!req.file) {
@@ -70,26 +69,46 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
     res.status(201).json({ message: 'تم رفع الفيديو بنجاح', video: videoResponse });
 
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('!!! UPLOAD ROUTE CRITICAL ERROR:', error);
     if (req.file && req.file.id) {
       try {
-        // ✨ التعديل 3: استخدام req.gfs الذي أعددناه في server.js
-        const bucket = req.gfs;
+        const bucket = req.gfs; // استخدام req.gfs كما هو معرف في server.js
         await bucket.delete(new mongoose.Types.ObjectId(req.file.id));
-        console.log(`Orphaned file ${req.file.id} deleted successfully.`);
+        console.log(`Orphaned file ${req.file.id} was deleted successfully.`);
       } catch (deleteError) {
-        console.error('Failed to delete orphaned file from GridFS:', deleteError);
+        console.error('Failed to delete orphaned GridFS file:', deleteError);
       }
     }
-    res.status(500).json({ error: 'حدث خطأ غير متوقع أثناء رفع الفيديو.' });
+    res.status(500).json({ error: 'حدث خطأ غير متوقع أثناء معالجة طلبك.' });
   }
 });
 
-// بث الفيديو (مهم جدًا)
+
+// جلب جميع الفيديوهات الرئيسية
+router.get('/', async (req, res) => {
+  try {
+    const videos = await Video.find({ isReply: false })
+      .populate('user', 'username profileImage')
+      .populate({
+        path: 'replies',
+        populate: { path: 'user', select: 'username profileImage' }
+      })
+      .sort({ createdAt: -1 });
+    
+    const validVideos = videos.filter(video => video.user); // لإزالة الفيديوهات التي يملكها مستخدمون تم حذفهم
+    res.json(validVideos);
+
+  } catch (error) {
+    console.error('Fetch videos error:', error);
+    res.status(500).json({ error: 'فشل في جلب الفيديوهات.' });
+  }
+});
+
+
+// بث الفيديو (ضروري لمشاهدة الفيديوهات)
 router.get('/stream/:fileId', async (req, res) => {
   try {
-    // ✨ التعديل 4: استخدام req.gfs بدلاً من getGridFSBucket()
-    const bucket = req.gfs;
+    const bucket = req.gfs; // استخدام req.gfs كما هو معرف في server.js
     const fileId = new mongoose.Types.ObjectId(req.params.fileId);
     
     const files = await bucket.find({ _id: fileId }).toArray();
@@ -119,10 +138,11 @@ router.get('/stream/:fileId', async (req, res) => {
       bucket.openDownloadStream(fileId).pipe(res);
     }
   } catch (error) {
-    console.error('Stream error:', error);
+    console.error('Video stream error:', error);
     res.status(500).json({ error: 'فشل في بث الفيديو.' });
   }
 });
+
 
 // حذف فيديو
 router.delete('/:videoId', auth, async (req, res) => {
@@ -134,7 +154,6 @@ router.delete('/:videoId', auth, async (req, res) => {
       return res.status(403).json({ error: 'غير مصرح لك بتنفيذ هذا الإجراء.' });
     }
 
-    // ✨ التعديل 5: استخدام req.gfs هنا أيضًا
     const bucket = req.gfs;
 
     if (!video.isReply) {
@@ -156,9 +175,34 @@ router.delete('/:videoId', auth, async (req, res) => {
   }
 });
 
-// باقي المسارات (مثل get all, like) لا تحتاج لتغيير لأنها كانت صحيحة
 
-router.get('/', async (req, res) => { /* ... كودك هنا ... */ });
-router.post('/:id/like', auth, async (req, res) => { /* ... كودك هنا ... */ });
+// إعجاب/إلغاء إعجاب
+router.post('/:id/like', auth, async (req, res) => {
+  try {
+    const video = await Video.findById(req.params.id);
+    if (!video) {
+      return res.status(404).json({ message: 'الفيديو غير موجود.' });
+    }
+
+    const userIdString = req.user._id.toString();
+    const userIndex = video.likes.map(id => id.toString()).indexOf(userIdString);
+    
+    if (userIndex > -1) {
+      video.likes.splice(userIndex, 1); // إلغاء الإعجاب
+    } else {
+      video.likes.push(req.user._id); // إضافة إعجاب
+    }
+
+    await video.save();
+    
+    res.json({ 
+      liked: userIndex === -1,
+      likesCount: video.likes.length 
+    });
+  } catch (error) {
+    console.error('Like error:', error);
+    res.status(500).json({ message: 'خطأ في معالجة الإعجاب.' });
+  }
+});
 
 module.exports = router;

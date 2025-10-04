@@ -9,10 +9,9 @@ import './ReplySwiper.css';
 const ReplySwiper = ({ replies, parentVideoOwner, onDelete }) => {
   const [activeReplyIndex, setActiveReplyIndex] = useState(0);
 
-  // إيقاف جميع الفيديوهات عند إلغاء المكون
   useEffect(() => {
     return () => {
-      // سيتم التعامل مع هذا في VideoPlayer
+      // تنظيف تشغيل الفيديو عند الإلغاء يتم من داخل VideoPlayer
     };
   }, []);
 
@@ -21,19 +20,34 @@ const ReplySwiper = ({ replies, parentVideoOwner, onDelete }) => {
       <div className="reply-indicator">
         <span>الردود ({replies.length})</span>
       </div>
+
       <Swiper
         direction="horizontal"
         slidesPerView={1}
         navigation={true}
         modules={[Navigation]}
-        onSlideChange={(swiper) => setActiveReplyIndex(swiper.activeIndex)}
+        nested={true}
+        touchReleaseOnEdges={true}
+        resistanceRatio={0.6}
         className="reply-swiper"
+        onSlideChange={(swiper) => setActiveReplyIndex(swiper.activeIndex)}
       >
         {replies.map((reply, index) => (
           <SwiperSlide key={reply._id}>
             <VideoPlayer
               video={reply}
               onDelete={onDelete}
+              isActive={index === activeReplyIndex}
+              parentVideoOwner={parentVideoOwner}
+            />
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    </div>
+  );
+};
+
+export default ReplySwiper;
               isActive={index === activeReplyIndex}
               parentVideoOwner={parentVideoOwner}
             />

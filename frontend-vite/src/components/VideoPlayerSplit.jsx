@@ -1,16 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { FaTimes, FaPlay } from 'react-icons/fa';
-import '../HomePage.css';
 import './VideoPlayerSplit.css';
 
 const VideoPlayerSplit = ({ 
   videoUrl, 
   isActive, 
-  onPlay, 
-  onPause,
-  className = '',
-  showPlayButton = true,
-  autoPlay = true
+  autoPlay = false,
+  showPlayButton = true
 }) => {
   const videoRef = useRef(null);
   const fullscreenVideoRef = useRef(null);
@@ -20,69 +16,47 @@ const VideoPlayerSplit = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (videoRef.current) {
-      if (isActive && autoPlay) {
-        playVideo();
-      } else {
-        pauseVideo();
-      }
+    if (!videoRef.current) return;
+    if (isActive && autoPlay) {
+      videoRef.current.play().catch(() => setIsPlaying(false));
+      setIsPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
     }
   }, [isActive, autoPlay]);
 
-  const playVideo = () => {
-    if (videoRef.current) {
-      videoRef.current.play()
-        .then(() => {
-          setIsPlaying(true);
-          onPlay?.();
-        })
-        .catch(err => {
-          console.log('Play error:', err);
-          setIsPlaying(false);
-        });
-    }
-  };
-
-  const pauseVideo = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      setIsPlaying(false);
-      onPause?.();
-    }
-  };
-
   const togglePlay = (e) => {
     e?.stopPropagation();
+    if (!videoRef.current) return;
+
     if (isPlaying) {
-      pauseVideo();
+      videoRef.current.pause();
+      setIsPlaying(false);
     } else {
-      playVideo();
+      videoRef.current.play().catch(() => setIsPlaying(false));
+      setIsPlaying(true);
     }
   };
 
   const openFullscreen = () => {
     setShowFullscreen(true);
-    pauseVideo();
-    setTimeout(() => {
-      fullscreenVideoRef.current?.play();
-    }, 100);
+    videoRef.current?.pause();
+    setTimeout(() => fullscreenVideoRef.current?.play(), 50);
   };
 
   const closeFullscreen = () => {
     setShowFullscreen(false);
     fullscreenVideoRef.current?.pause();
-    if (isActive && autoPlay) setTimeout(() => playVideo(), 100);
+    setTimeout(() => isActive && autoPlay && videoRef.current?.play(), 50);
   };
 
   const handleVideoError = () => {
     setVideoError(true);
     setIsLoading(false);
-    console.error('Video failed to load:', videoUrl);
   };
 
-  const handleVideoLoaded = () => {
-    setIsLoading(false);
-  };
+  const handleVideoLoaded = () => setIsLoading(false);
 
   const getVideoUrl = () => {
     if (!videoUrl) return '';
@@ -93,10 +67,7 @@ const VideoPlayerSplit = ({
 
   return (
     <>
-      <div 
-        className={`video-player-split ${className} ${isPlaying ? 'playing' : ''} ${isLoading ? 'loading' : ''}`} 
-        onClick={openFullscreen}
-      >
+      <div className={`video-player-split ${isPlaying ? 'playing' : ''} ${isLoading ? 'loading' : ''}`} onClick={openFullscreen}>
         {!videoError ? (
           <>
             <video
@@ -108,17 +79,12 @@ const VideoPlayerSplit = ({
               className="video-element-split"
               onError={handleVideoError}
               onLoadedData={handleVideoLoaded}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
             />
-            
             {isLoading && <div className="video-loading"></div>}
-            
+
             {showPlayButton && !isPlaying && !isLoading && (
               <div className="play-overlay" onClick={togglePlay}>
-                <div className="play-button">
-                  <FaPlay />
-                </div>
+                <div className="play-button"><FaPlay /></div>
               </div>
             )}
           </>
@@ -140,16 +106,8 @@ const VideoPlayerSplit = ({
                 controls
                 autoPlay
                 className="fullscreen-video"
-                onClick={(e) => e.stopPropagation()}
               />
-              
-              <button 
-                className="fullscreen-close-btn" 
-                onClick={closeFullscreen}
-                aria-label="إغلاق"
-              >
-                <FaTimes />
-              </button>
+              <button className="fullscreen-close-btn" onClick={closeFullscreen} aria-label="إغلاق"><FaTimes /></button>
             </div>
           </div>
         </>

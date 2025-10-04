@@ -1,21 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Mousewheel } from 'swiper';
+import { Navigation } from 'swiper';
 import VideoPlayerSplit from './VideoPlayerSplit';
-import '../HomePage.css';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import './ReplySwiper.css';
 
-const ReplySwiper = ({ replies, parentVideoOwner, onDelete }) => {
-  const [activeReplyIndex, setActiveReplyIndex] = useState(0);
+const ReplySwiper = ({ replies, parentVideoOwner, activeIndex = 0, onLikeReply, onProfileClick }) => {
+  const [activeReplyIndex, setActiveReplyIndex] = useState(activeIndex);
+  const swiperRef = useRef(null);
 
-  // إيقاف جميع الفيديوهات عند إلغاء المكون
   useEffect(() => {
-    return () => {
-      // التعامل مع هذا يتم داخل VideoPlayerSplit
-    };
-  }, []);
+    setActiveReplyIndex(activeIndex);
+  }, [activeIndex]);
+
+  // تحديث الفيديوهات عند تغير index
+  useEffect(() => {
+    swiperRef.current?.slideTo(activeReplyIndex);
+  }, [activeReplyIndex]);
 
   return (
     <div className="reply-swiper-container">
@@ -27,20 +29,41 @@ const ReplySwiper = ({ replies, parentVideoOwner, onDelete }) => {
         direction="horizontal"
         slidesPerView={1}
         navigation={true}
-        mousewheel={{ forceToAxis: true }} // ✅ السحب العمودي مفعل
-        modules={[Navigation, Mousewheel]}
+        modules={[Navigation]}
+        onSwiper={(swiper) => (swiperRef.current = swiper)}
         onSlideChange={(swiper) => setActiveReplyIndex(swiper.activeIndex)}
         className="reply-swiper"
       >
         {replies.map((reply, index) => (
           <SwiperSlide key={reply._id}>
-            <VideoPlayerSplit
-              videoUrl={reply.videoUrl}
-              onDelete={onDelete}
-              isActive={index === activeReplyIndex}
-              parentVideoOwner={parentVideoOwner}
-              autoPlay={true}
-            />
+            <div className="reply-slide-wrapper">
+              <VideoPlayerSplit
+                videoUrl={reply.videoUrl}
+                isActive={index === activeReplyIndex}
+                autoPlay={true}
+                showPlayButton={true}
+              />
+
+              <div 
+                className="profile-avatar reply-avatar"
+                onClick={() => onProfileClick(reply.user.username)}
+              >
+                <img 
+                  src={reply.user.profileImage || '/default-avatar.png'} 
+                  alt={reply.user.username} 
+                />
+              </div>
+
+              <div className="reply-actions">
+                <button
+                  className={`action-btn ${reply.liked ? 'liked' : ''}`}
+                  onClick={() => onLikeReply(reply._id)}
+                >
+                  <span>❤️</span>
+                  <span>{reply.likes?.length || 0}</span>
+                </button>
+              </div>
+            </div>
           </SwiperSlide>
         ))}
       </Swiper>

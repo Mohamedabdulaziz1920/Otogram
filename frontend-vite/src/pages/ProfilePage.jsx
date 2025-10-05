@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth, api } from '../context/AuthContext';
-import { 
-  FaSignOutAlt, FaCamera, FaHeart, FaPlay, FaTrash, 
-  FaFilm, FaReply, FaEdit, FaCheck, FaTimes, 
-  FaCog, FaShare, FaEllipsisV 
-} from 'react-icons/fa';
+import { FaSignOutAlt, FaCamera, FaFilm, FaReply, FaHeart } from 'react-icons/fa';
 import NavigationBar from '../components/NavigationBar';
 import './ProfilePage.css';
 
@@ -14,19 +10,10 @@ const ProfilePage = () => {
   const { user, logout, updateUser, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const [profileUser, setProfileUser] = useState(null);
-  const [videos, setVideos] = useState([]);
-  const [replies, setReplies] = useState([]);
-  const [likedVideos, setLikedVideos] = useState([]);
-  const [stats, setStats] = useState({ videosCount: 0, repliesCount: 0, totalLikes: 0 });
+  const [profileData, setProfileData] = useState(null);
   const [activeTab, setActiveTab] = useState('posts');
   const [loading, setLoading] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [editingUsername, setEditingUsername] = useState(false);
-  const [newUsername, setNewUsername] = useState('');
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [videoToDelete, setVideoToDelete] = useState(null);
-  const [showSettings, setShowSettings] = useState(false);
 
   const isOwnProfile = user && user.username === username;
 
@@ -36,42 +23,26 @@ const ProfilePage = () => {
     return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
   };
 
-  // Fetch profile
   const fetchProfileData = useCallback(async () => {
     if (!username) return;
     setLoading(true);
     try {
       const response = await api.get(`/api/users/profile/${username}`);
-      if (!response.data || !response.data.user) {
-        setProfileUser(null);
-        return;
-      }
-      setProfileUser(response.data.user);
-      setVideos(response.data.videos || []);
-      setReplies(response.data.replies || []);
-      setStats(response.data.stats || { videosCount:0,repliesCount:0,totalLikes:0 });
-
-      if (isOwnProfile) {
-        try {
-          const likedRes = await api.get('/api/users/me/liked-videos');
-          setLikedVideos(likedRes.data || []);
-        } catch (error) {
-          console.error('Error fetching liked videos:', error);
-        }
-      }
+      setProfileData(response.data);
     } catch (error) {
       console.error('Error fetching profile data:', error);
-      setProfileUser(null);
+      setProfileData(null);
     } finally {
       setLoading(false);
     }
-  }, [username, isOwnProfile]);
+  }, [username]);
 
   useEffect(() => {
-    if (!authLoading) fetchProfileData();
-  }, [authLoading, fetchProfileData]);
+    if (!authLoading) {
+        fetchProfileData();
+    }
+  }, [authLoading, username, fetchProfileData]);
 
-  // Image upload
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -81,194 +52,79 @@ const ProfilePage = () => {
     setUploadingImage(true);
 
     try {
+      // لا حاجة لإضافة التوكن يدويًا، `api` context يقوم بذلك
       const response = await api.post('/api/users/me/update-profile-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setProfileUser(prev => ({ ...prev, profileImage: response.data.profileImage }));
-      updateUser({ profileImage: response.data.profileImage });
-      showNotification('تم تحديث الصورة بنجاح', 'success');
+      // تحديث الحالة المحلية والمصادقة
+      const newImageUrl = response.data.profileImage;
+      setProfileData(prev => ({ ...prev, user: { ...prev.user, profileImage: newImageUrl } }));
+      updateUser({ profileImage: newImageUrl });
     } catch (error) {
       console.error(error);
-      showNotification('فشل تحديث الصورة', 'error');
+      alert('فشل تحديث الصورة: ' + (error.response?.data?.error || error.message));
     } finally {
       setUploadingImage(false);
     }
   };
 
-  // Update username
-  const handleUsernameUpdate = async () => {
-    if (!newUsername || newUsername === profileUser.username) {
-      setEditingUsername(false);
-      return;
-    }
-
-    try {
-      const response = await api.patch('/api/users/me/update-username', { username: newUsername });
-      setProfileUser(prev => ({ ...prev, username: response.data.username }));
-      updateUser({ username: response.data.username });
-      setEditingUsername(false);
-      navigate(`/profile/${response.data.username}`, { replace: true });
-      showNotification('تم تحديث اسم المستخدم بنجاح', 'success');
-    } catch (error) {
-      console.error(error);
-      showNotification(error.response?.data?.message || 'فشل تحديث اسم المستخدم', 'error');
-    }
-  };
-
-  // Delete
-  const handleDelete = async () => {
-    if (!videoToDelete) return;
-    try {
-      await api.delete(`/api/videos/${videoToDelete.id}`);
-      if (videoToDelete.type === 'video') {
-        setVideos(prev => prev.filter(v => v._id !== videoToDelete.id));
-        setReplies(prev => prev.filter(r => r.replyTo !== videoToDelete.id));
-      } else {
-        setReplies(prev => prev.filter(r => r._id !== videoToDelete.id));
-      }
-      setShowDeleteModal(false);
-      setVideoToDelete(null);
-      showNotification('تم الحذف بنجاح', 'success');
-      fetchProfileData();
-    } catch (error) {
-      console.error(error);
-      showNotification('فشل الحذف', 'error');
-    }
-  };
-
-  const confirmDelete = (id, type) => {
-    setVideoToDelete({ id, type });
-    setShowDeleteModal(true);
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
-  const showNotification = (message, type) => {
-    console.log(`${type}: ${message}`);
-  };
-
-  const shareProfile = () => {
-    const profileUrl = `${window.location.origin}/profile/${profileUser.username}`;
-    if (navigator.share) navigator.share({ title: `${profileUser.username}@ على Otogram`, url: profileUrl });
-    else { navigator.clipboard.writeText(profileUrl); showNotification('تم نسخ الرابط','success'); }
-  };
-
   if (authLoading || loading) {
     return <div className="loading-container"><div className="loading-spinner"></div><p>جاري التحميل...</p></div>;
   }
-
-  if (!profileUser) {
+  if (!profileData || !profileData.user) {
     return <div className="error-container"><h2>المستخدم غير موجود</h2><button onClick={() => navigate('/')}>العودة للرئيسية</button></div>;
   }
+  
+  const { user: profileUser, videos, replies, stats } = profileData;
 
-  let displayedContent = [];
-  switch (activeTab) {
-    case 'posts': displayedContent = videos; break;
-    case 'replies': displayedContent = replies; break;
-    case 'liked': displayedContent = likedVideos; break;
-  }
+  const displayedContent = activeTab === 'posts' ? videos : replies;
 
   return (
     <div className="profile-page">
-      {/* Profile Header */}
       <div className="profile-header">
-        <div className="profile-cover">
-          {isOwnProfile && <button className="settings-btn" onClick={() => setShowSettings(!showSettings)}><FaCog /></button>}
-          <button className="share-btn" onClick={shareProfile}><FaShare /></button>
+        <div className="profile-image-container">
+          <img src={getAssetUrl(profileUser.profileImage)} alt={profileUser.username} className="profile-image" />
+          {isOwnProfile && (
+            <label htmlFor="profile-image-input" className="edit-image-label">
+              <FaCamera />
+              <input id="profile-image-input" type="file" accept="image/*" onChange={handleImageUpload} hidden disabled={uploadingImage} />
+            </label>
+          )}
+          {uploadingImage && <div className="image-upload-spinner"></div>}
         </div>
 
-        <div className="profile-main-info">
-          <div className="profile-image-section">
-            <div className={`profile-image-wrapper ${isOwnProfile ? 'editable' : ''}`}>
-              <img src={getAssetUrl(profileUser.profileImage)} alt={profileUser.username} className="profile-image" />
-              {isOwnProfile && <>
-                <label htmlFor="profile-image-input" className="edit-image-overlay"><FaCamera /><span>{uploadingImage ? 'جاري...' : 'تغيير'}</span></label>
-                <input type="file" id="profile-image-input" accept="image/*" onChange={handleImageUpload} hidden disabled={uploadingImage} />
-              </>}
-            </div>
-          </div>
+        <h1 className="profile-username">@{profileUser.username}</h1>
 
-          <div className="profile-details">
-            <div className="username-section">
-              {editingUsername ? (
-                <div className="username-edit">
-                  <input type="text" value={newUsername} onChange={(e)=>setNewUsername(e.target.value)} placeholder="اسم المستخدم الجديد" className="username-input" autoFocus />
-                  <button onClick={handleUsernameUpdate} className="save-btn"><FaCheck /></button>
-                  <button onClick={()=>setEditingUsername(false)} className="cancel-btn"><FaTimes /></button>
-                </div>
-              ) : (
-                <div className="username-display">
-                  <h1 className="profile-username">{profileUser.username}@</h1>
-                  {isOwnProfile && <button onClick={()=>{setEditingUsername(true); setNewUsername(profileUser.username);}} className="edit-username-btn"><FaEdit /></button>}
-                </div>
-              )}
-            </div>
-
-            <div className="profile-stats">
-              <div className="stat-item"><span className="stat-value">{stats.videosCount}</span><span className="stat-label">منشور</span></div>
-              <div className="stat-item"><span className="stat-value">{stats.repliesCount}</span><span className="stat-label">رد</span></div>
-              <div className="stat-item"><span className="stat-value">{stats.totalLikes}</span><span className="stat-label">إعجاب</span></div>
-            </div>
-
-            {profileUser.bio && <p className="profile-bio">{profileUser.bio}</p>}
-
-            {isOwnProfile && <div className="profile-actions"><button className="logout-btn" onClick={handleLogout}><FaSignOutAlt /> تسجيل الخروج</button></div>}
-          </div>
+        <div className="profile-stats">
+          <div className="stat-item"><strong>{stats.videosCount}</strong><span>منشورات</span></div>
+          <div className="stat-item"><strong>{stats.repliesCount}</strong><span>ردود</span></div>
+          <div className="stat-item"><strong>{stats.totalLikes}</strong><span>إعجابات</span></div>
         </div>
+
+        {isOwnProfile && <button className="logout-button" onClick={logout}><FaSignOutAlt /> تسجيل الخروج</button>}
       </div>
 
-      {/* Tabs */}
       <div className="profile-tabs">
-        <button className={`tab ${activeTab==='posts'?'active':''}`} onClick={()=>setActiveTab('posts')}><FaFilm /><span>المنشورات</span></button>
-        <button className={`tab ${activeTab==='replies'?'active':''}`} onClick={()=>setActiveTab('replies')}><FaReply /><span>الردود</span></button>
-        {isOwnProfile && <button className={`tab ${activeTab==='liked'?'active':''}`} onClick={()=>setActiveTab('liked')}><FaHeart /><span>الإعجابات</span></button>}
+        <button className={`tab ${activeTab === 'posts' ? 'active' : ''}`} onClick={() => setActiveTab('posts')}><FaFilm /><span>المنشورات</span></button>
+        <button className={`tab ${activeTab === 'replies' ? 'active' : ''}`} onClick={() => setActiveTab('replies')}><FaReply /><span>الردود</span></button>
       </div>
 
-      {/* Content */}
       <div className="profile-content">
-        <div className="videos-grid">
-          {displayedContent.map(item => (
-            <div key={item._id} className="video-item">
-              <div className="video-thumbnail" onClick={()=>navigate(`/video/${item._id}`)}>
-                <video src={getAssetUrl(item.videoUrl)} muted onMouseEnter={e=>e.target.play()} onMouseLeave={e=>{e.target.pause(); e.target.currentTime=0;}} />
-                <div className="video-overlay"><span><FaHeart /> {item.likes?.length||0}</span><span><FaPlay /> {item.views||0}</span></div>
+        {displayedContent.length > 0 ? (
+          <div className="videos-grid">
+            {displayedContent.map(item => (
+              <div key={item._id} className="video-item" onClick={() => navigate(`/video/${item._id}`)}>
+                <video src={getAssetUrl(item.videoUrl)} muted />
+                <div className="video-item-overlay">
+                  <FaHeart /> {item.likes?.length || 0}
+                </div>
               </div>
-              {isOwnProfile && (activeTab==='posts'||activeTab==='replies') && <button className="video-menu-btn" onClick={e=>{e.stopPropagation(); confirmDelete(item._id, activeTab==='posts'?'video':'reply');}}><FaEllipsisV /></button>}
-            </div>
-          ))}
-        </div>
-
-        {displayedContent.length===0 && <div className="empty-state">
-          <p>لا يوجد محتوى لعرضه</p>
-          {isOwnProfile && activeTab==='posts' && <button className="upload-btn" onClick={()=>navigate('/upload')}>رفع فيديو جديد</button>}
-        </div>}
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state"><p>لا يوجد محتوى لعرضه هنا.</p></div>
+        )}
       </div>
-
-      {/* Delete Modal */}
-      {showDeleteModal && <div className="modal-overlay" onClick={()=>setShowDeleteModal(false)}>
-        <div className="modal-content" onClick={e=>e.stopPropagation()}>
-          <h3>تأكيد الحذف</h3>
-          <p>{videoToDelete?.type==='video'?'سيتم حذف هذا الفيديو وجميع الردود المرتبطة به. هل أنت متأكد؟':'هل أنت متأكد من حذف هذا الرد؟'}</p>
-          <div className="modal-actions"><button className="confirm-btn" onClick={handleDelete}><FaTrash /> حذف</button></div>
-        </div>
-      </div>}
-
-      {/* Settings Menu */}
-      {showSettings && isOwnProfile && <div className="settings-menu">
-        <div className="settings-header"><h3>الإعدادات</h3><button onClick={()=>setShowSettings(false)}><FaTimes /></button></div>
-        <div className="settings-options">
-          <button className="setting-option"><FaCog /> إعدادات الحساب</button>
-          <button className="setting-option"><FaHeart /> إدارة الإعجابات</button>
-          <button className="setting-option danger" onClick={handleLogout}><FaSignOutAlt /> تسجيل الخروج</button>
-        </div>
-      </div>}
-
       <NavigationBar currentPage="profile" />
     </div>
   );

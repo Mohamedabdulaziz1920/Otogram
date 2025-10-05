@@ -1032,3 +1032,178 @@ select:focus-visible {
     border: 1px solid #000;
   }
 }
+/* Theme Support for Admin Dashboard */
+[data-theme="light"] .admin-dashboard {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+[data-theme="light"] {
+  --bg-dark: #ffffff;
+  --bg-card: #ffffff;
+  --bg-hover: #f8f9fa;
+  --bg-input: #f1f2f6;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-muted: #adb5bd;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-light: rgba(0, 0, 0, 0.05);
+}
+
+/* Theme Toggle Button */
+.theme-toggle-admin {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 999;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-toggle-admin:hover {
+  transform: scale(1.1) rotate(20deg);
+  border-color: var(--admin-primary);
+}
+
+.theme-toggle-admin svg {
+  font-size: 22px;
+}
+
+/* Loading Hint */
+.loading-hint {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Error Container */
+.error-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-dark);
+  padding: 20px;
+}
+
+.error-wrapper {
+  text-align: center;
+  max-width: 500px;
+  background: var(--bg-card);
+  padding: 40px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+}
+
+.error-icon {
+  font-size: 64px;
+  color: var(--admin-danger);
+  margin-bottom: 20px;
+}
+
+.error-wrapper h2 {
+  color: var(--text-primary);
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.error-wrapper p {
+  color: var(--text-secondary);
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.retry-btn, .back-btn {
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px;
+}
+
+.retry-btn {
+  background: var(--admin-primary);
+  color: white;
+  border: none;
+}
+
+.retry-btn:hover {
+  background: #e91e3a;
+  transform: translateY(-2px);
+}
+
+.back-btn {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.back-btn:hover {
+  background: var(--bg-input);
+}
+
+/* Refresh Button */
+.refresh-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.refresh-btn:hover {
+  background: var(--admin-primary);
+  color: white;
+  transform: rotate(180deg);
+}
+
+/* Empty State Hint */
+.empty-hint {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Loading Container - Fix for Theme */
+[data-theme="light"] .loading-container {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+[data-theme="light"] .loading-wrapper p {
+  color: var(--text-secondary);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .theme-toggle-admin {
+    top: 15px;
+    left: 15px;
+    width: 42px;
+    height: 42px;
+  }
+  
+  .theme-toggle-admin svg {
+    font-size: 20px;
+  }
+}

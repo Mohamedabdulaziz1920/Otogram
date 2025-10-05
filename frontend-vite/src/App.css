@@ -47,7 +47,7 @@
 }
 
 /* ========================================
-   GLOBAL RESET
+   GLOBAL RESET - مع دعم التمرير باللمس
    ======================================== */
 
 * {
@@ -57,21 +57,52 @@
   font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
+/* ✅ إصلاح التمرير على HTML */
 html {
+  /* السماح بالتمرير */
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: 100%;
   background-color: var(--bg-primary);
   transition: background-color 0.3s ease;
+  /* تمرير سلس على iOS */
+  -webkit-overflow-scrolling: touch;
+  /* تمكين التمرير السلس */
+  scroll-behavior: smooth;
 }
 
+/* ✅ إصلاح التمرير على Body */
 body {
   font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  /* السماح بالتمرير */
   overflow-x: hidden;
+  overflow-y: auto;
+  /* تحسينات النص */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: 0;
   line-height: 1.6;
+  /* الانتقالات */
   transition: background-color 0.3s ease, color 0.3s ease;
+  /* ✅ تمرير سلس على iOS */
+  -webkit-overflow-scrolling: touch;
+  /* ✅ السماح بجميع إجراءات اللمس */
+  touch-action: pan-y pan-x;
+  /* ✅ منع pull-to-refresh المزعج */
+  overscroll-behavior-y: contain;
+  /* الحد الأدنى للارتفاع */
+  min-height: 100%;
+  position: relative;
+}
+
+/* ✅ إصلاح التمرير على #root */
+#root {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 100vh;
 }
 
 /* تحديث جميع العناصر لاستخدام Cairo */
@@ -110,7 +141,7 @@ label, a, li, td, th {
 }
 
 /* ========================================
-   APP CONTAINER
+   APP CONTAINER - مع دعم التمرير
    ======================================== */
 
 .App {
@@ -118,6 +149,10 @@ label, a, li, td, th {
   position: relative;
   background-color: var(--bg-primary);
   transition: background-color 0.3s ease;
+  /* ✅ السماح بالتمرير */
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ========================================
@@ -157,7 +192,7 @@ label, a, li, td, th {
   border: none;
   border-radius: 4px;
   font-size: 16px;
-  font-weight: 600; /* Cairo SemiBold */
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'Cairo', sans-serif;
@@ -209,7 +244,7 @@ label, a, li, td, th {
   margin-bottom: 8px;
   color: var(--text-primary);
   font-size: 14px;
-  font-weight: 500; /* Cairo Medium */
+  font-weight: 500;
   font-family: 'Cairo', sans-serif;
   transition: color 0.3s ease;
 }
@@ -331,6 +366,13 @@ label, a, li, td, th {
   background-color: var(--bg-tertiary);
 }
 
+/* ✅ Utility class للعناصر القابلة للتمرير */
+.scrollable {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 /* ========================================
    SELECTION STYLING
    ======================================== */
@@ -426,8 +468,16 @@ svg,
 }
 
 /* ========================================
-   MOBILE OPTIMIZATIONS
+   MOBILE OPTIMIZATIONS & TOUCH SUPPORT
    ======================================== */
+
+/* ✅ إصلاح التمرير على iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  body {
+    height: 100%;
+    overflow: auto;
+  }
+}
 
 /* Prevent iOS zoom on input focus */
 @media screen and (max-width: 768px) {
@@ -436,6 +486,16 @@ svg,
   textarea {
     font-size: 16px !important;
   }
+  
+  /* ✅ تحسين التمرير على الموبايل */
+  html,
+  body,
+  #root,
+  .App {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
 }
 
 /* Safe Area for Mobile Devices */
@@ -443,6 +503,30 @@ svg,
   .App {
     padding-left: max(0px, env(safe-area-inset-left));
     padding-right: max(0px, env(safe-area-inset-right));
+  }
+  
+  body {
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ✅ منع pull-to-refresh على Chrome Android */
+body {
+  overscroll-behavior: contain;
+}
+
+/* ✅ تحسين الأداء على الأجهزة المحمولة */
+@media (hover: none) and (pointer: coarse) {
+  /* تحسينات خاصة بالأجهزة اللمسية */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* زيادة حجم منطقة النقر للأزرار */
+  button,
+  a {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 
@@ -579,6 +663,18 @@ svg,
 }
 
 /* ========================================
+   MODAL BODY SCROLL LOCK
+   ======================================== */
+
+/* ✅ منع التمرير عند فتح المودال */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+/* ========================================
    PRINT STYLES
    ======================================== */
 
@@ -605,3 +701,28 @@ svg,
 [dir="rtl"] .form-group textarea {
   text-align: right;
 }
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/* ✅ تحسين الأداء للرسوم المتحركة */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ✅ GPU acceleration للعناصر المتحركة */
+.card,
+.btn,
+.badge {
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+     }

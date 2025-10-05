@@ -50,14 +50,15 @@
 }
 
 /* Main Container - إصلاح التمرير */
-.admin-dashboard {
   min-height: 100vh;
   min-height: 100dvh;
   background: linear-gradient(135deg, #0a0a0a 0%, #161823 100%);
-  padding-bottom: calc(var(--nav-height) + 20px); /* مساحة للـ Navigation Bar */
+  padding-bottom: calc(var(--nav-height) + 20px);
+  /* ✅ السماح بالتمرير */
   overflow-x: hidden;
-  overflow-y: auto; /* ✅ السماح بالتمرير العمودي */
-  -webkit-overflow-scrolling: touch; /* ✅ تمرير سلس على iOS */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   position: relative;
   transition: background-color 0.3s ease;
 }
@@ -66,8 +67,10 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
-  padding-bottom: 20px; /* مساحة إضافية في الأسفل */
+  padding-bottom: 20px;
   animation: fadeIn 0.5s ease;
+  /* ✅ السماح بالتمرير */
+  overflow: visible;
 }
 
 /* Header */
@@ -427,9 +430,9 @@
   background: var(--bg-card);
   border-radius: var(--radius);
   border: 1px solid var(--border-color);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--shadow-md);
-  margin-bottom: 20px; /* ✅ مساحة في الأسفل */
+  margin-bottom: 20px;
 }
 
 .table-header {
@@ -448,8 +451,9 @@
 /* ✅ إصلاح التمرير الأفقي للجدول */
 .table-wrapper {
   overflow-x: auto;
-  overflow-y: visible; /* ✅ السماح بظهور القوائم المنسدلة */
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
   max-width: 100%;
 }
 

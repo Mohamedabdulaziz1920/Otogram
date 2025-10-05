@@ -1,14 +1,23 @@
+/* ========================================
+   HOME PAGE - TIKTOK STYLE SPLIT SCREEN
+   ======================================== */
+
+/* Variables */
 :root {
   --primary-color: #fe2c55;
-  --bg-primary: #000;
-  --bg-secondary: #111;
-  --text-primary: #fff;
-  --text-secondary: #aaa;
+  --secondary-color: #25f4ee;
+  --bg-primary: #000000;
+  --bg-secondary: #161823;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.75);
+  --text-muted: rgba(255, 255, 255, 0.5);
   --nav-height: 60px;
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --transition-speed: 0.3s;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --radius: 12px;
 }
 
+/* Reset */
 * {
   margin: 0;
   padding: 0;
@@ -22,301 +31,676 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Hide scrollbars */
+/* Hide scrollbars globally */
 ::-webkit-scrollbar {
   display: none;
 }
 
-/* ====================================
-   MAIN CONTAINER
-   ==================================== */
-.home-container {
+/* Main Container */
+.home-page {
   width: 100vw;
   height: 100vh;
   height: 100dvh;
+  background: var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Content Wrapper - Split Screen */
+.content-wrapper {
+  width: 100%;
+  height: calc(100vh - var(--nav-height));
+  height: calc(100dvh - var(--nav-height));
   display: flex;
-  flex-direction: column;
-  background: var(--bg-primary);
   position: relative;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
 }
 
-/* ====================================
-   TOP & BOTTOM HALVES
-   ==================================== */
-.top-half {
-  width: 100%;
-  height: 50vh;
-  height: 50dvh;
+/* Main Video Section (Left) */
+.main-video-section {
+  flex: 1;
+  height: 100%;
   position: relative;
+  background: var(--bg-primary);
   overflow: hidden;
-  background: var(--bg-primary);
 }
 
-.bottom-half {
-  width: 100%;
-  height: calc(50dvh - var(--nav-height)); /* نصف الشاشة ناقص ارتفاع الفوتر */
-  position: relative;
-  overflow: hidden;
-  background: var(--bg-secondary);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: var(--nav-height); /* لإبعاد الأزرار عن الفوتر */
-}
-
-/* ====================================
-   SWIPER STYLES
-   ==================================== */
-.main-swiper,
-.replies-swiper {
-  width: 100%;
-  height: 100%;
-}
-
-.main-swiper .swiper-slide,
-.replies-swiper .swiper-slide {
-  width: 100%;
-  height: 100%;
-}
-
-/* ====================================
-   VIDEO CONTAINERS
-   ==================================== */
-.video-container,
-.reply-container {
+.video-wrapper {
   width: 100%;
   height: 100%;
   position: relative;
-  background: var(--bg-primary);
 }
 
-.full-video,
-.video-element-split {
+.video-player {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  background: #000;
-  will-change: transform;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  backface-visibility: hidden;
+  cursor: pointer;
 }
 
-/* ====================================
-   PROFILE AVATAR
-   ==================================== */
-.profile-avatar {
+/* Video Gradient Overlay */
+.video-gradient {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  overflow: hidden;
-  cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  z-index: 10;
-  transition: transform var(--transition-speed) ease;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 70%,
+    rgba(0, 0, 0, 0.9) 100%
+  );
+  pointer-events: none;
 }
 
-.profile-avatar:hover {
-  transform: scale(1.1);
-}
-
-.profile-avatar:active {
-  transform: scale(0.95);
-}
-
-.profile-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.reply-avatar {
-  width: 40px;
-  height: 40px;
-  top: 15px;
-  right: 15px;
-}
-
-/* ====================================
-   ACTION BUTTONS
-   ==================================== */
-.video-actions,
-.reply-actions {
-  bottom: 20px; /* أو أقل إذا أحببت */
-  right: 20px;
-}
-.action-btn {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: none;
-  border-radius: 50%;
-  width: 52px;
-  height: 52px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  cursor: pointer;
-  transition: all var(--transition-speed) ease;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-.action-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
-}
-
-.action-btn:active {
-  transform: scale(0.95);
-}
-
-.action-btn.liked {
-  background: rgba(254, 44, 85, 0.2);
-}
-
-.action-btn.liked svg {
-  color: var(--primary-color);
-}
-
-.action-btn svg {
-  font-size: 22px;
-  margin-bottom: 4px;
-}
-
-.action-btn span {
-  font-size: 12px;
-  font-weight: 600;
-}
-
-/* ====================================
-   VIDEO INFO
-   ==================================== */
+/* Video Info */
 .video-info {
   position: absolute;
   bottom: 20px;
   left: 20px;
   right: 100px;
-  color: #fff;
   z-index: 10;
 }
 
+.user-info {
+  display: inline-block;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.username {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  transition: var(--transition);
+}
+
+.username:hover {
+  color: var(--primary-color);
+}
+
 .video-description {
+  color: var(--text-primary);
   font-size: 14px;
-  line-height: 1.5;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  line-height: 1.4;
+  margin-bottom: 8px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.video-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tag {
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tag:hover {
+  color: var(--secondary-color);
+}
+
+/* Action Buttons - TikTok Style */
+.action-buttons {
+  position: absolute;
+  bottom: 100px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  z-index: 10;
+}
+
+.profile-btn {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.profile-image,
+.reply-profile-image {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--text-primary);
+  transition: var(--transition);
+}
+
+.profile-btn:hover .profile-image {
+  transform: scale(1.1);
+  border-color: var(--primary-color);
+}
+
+.follow-badge {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  border: 2px solid var(--bg-primary);
+}
+
+.action-btn,
+.reply-action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+
+.action-btn:hover,
+.reply-action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.action-btn:active,
+.reply-action-btn:active {
+  transform: scale(0.95);
+}
+
+.action-btn.liked,
+.reply-action-btn.liked {
+  animation: likeAnimation 0.5s ease;
+}
+
+.action-btn.liked svg,
+.reply-action-btn.liked svg {
+  color: var(--primary-color);
+}
+
+.action-btn.saved svg {
+  color: #ffb800;
+}
+
+@keyframes likeAnimation {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.3); }
+  30% { transform: scale(0.95); }
+  45% { transform: scale(1.15); }
+  60% { transform: scale(1); }
+}
+
+.action-btn svg,
+.reply-action-btn svg {
+  font-size: 24px;
+}
+
+.action-btn span,
+.reply-action-btn span {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Volume Button */
+.volume-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.volume-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.volume-btn svg {
+  font-size: 20px;
+}
+
+/* Video Progress Indicators */
+.video-indicators {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.indicator {
+  width: 3px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.indicator.active {
+  background: var(--text-primary);
+  height: 24px;
+}
+
+.indicator.passed {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Replies Section (Right) */
+.replies-section {
+  flex: 1;
+  height: 100%;
+  background: var(--bg-secondary);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Replies Header */
+.replies-header {
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+.replies-header h3 {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.reply-indicators {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.dot.active {
+  background: var(--primary-color);
+  width: 18px;
+  border-radius: 3px;
+}
+
+/* Reply Video Container */
+.reply-video-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.replies-swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.reply-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.reply-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* Play Overlay for Replies */
+.play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  font-size: 32px;
+  cursor: pointer;
+  opacity: 0;
+  transition: var(--transition);
+  pointer-events: none;
+}
+
+.play-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.play-overlay:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Reply Gradient */
+.reply-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  pointer-events: none;
+}
+
+/* Reply Info */
+.reply-info {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 80px;
+  z-index: 10;
+}
+
+.reply-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.reply-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--text-primary);
+}
+
+.reply-user span {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.reply-description {
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.4;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
 }
 
-/* ====================================
-   NAVIGATION BUTTONS
-   ==================================== */
-.nav-btn {
+/* Reply Actions */
+.reply-actions {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  z-index: 10;
+}
+
+.reply-profile-btn {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+
+.reply-profile-btn img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--text-primary);
+  transition: var(--transition);
+}
+
+.reply-profile-btn:hover img {
+  transform: scale(1.1);
+  border-color: var(--primary-color);
+}
+
+/* Navigation Arrows for Replies */
+.reply-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: none;
-  border-radius: 50%;
   width: 40px;
   height: 40px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--text-primary);
   cursor: pointer;
+  transition: var(--transition);
   z-index: 20;
-  transition: all var(--transition-speed) ease;
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
-.nav-btn:hover {
+.reply-nav:hover {
   background: rgba(255, 255, 255, 0.2);
   opacity: 1;
   transform: translateY(-50%) scale(1.1);
 }
 
-.nav-prev {
+.reply-nav-prev {
   right: 10px;
 }
 
-.nav-next {
+.reply-nav-next {
   left: 10px;
 }
 
-.nav-btn svg {
-  font-size: 16px;
+.reply-nav svg {
+  font-size: 18px;
 }
 
-/* ====================================
-   NO REPLIES STATE
-   ==================================== */
+/* No Replies State */
 .no-replies {
-  width: 100%;
-  height: 100%;
+  flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
-  gap: 20px;
-  padding: 20px;
-  text-align: center;
+  padding: 40px;
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, #1a1a2e 100%);
 }
 
-.no-replies p {
-  font-size: 16px;
+.no-replies-content {
+  text-align: center;
+  max-width: 300px;
+}
+
+.no-replies-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 36px;
+}
+
+.no-replies h3 {
+  color: var(--text-primary);
+  font-size: 20px;
   margin-bottom: 10px;
 }
 
-.primary-btn {
+.no-replies p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.create-reply-btn {
   background: var(--primary-color);
-  color: #fff;
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 25px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(254, 44, 85, 0.3);
+}
+
+.create-reply-btn:hover {
+  background: #e91e3a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(254, 44, 85, 0.4);
+}
+
+/* Loading State */
+.loading-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+}
+
+.loading-wrapper {
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-wrapper p {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+/* Error State */
+.error-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+}
+
+.error-wrapper {
+  text-align: center;
+  padding: 40px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.error-wrapper h2 {
+  color: var(--text-primary);
+  font-size: 24px;
+  margin-bottom: 15px;
+}
+
+.error-wrapper p {
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin-bottom: 25px;
+}
+
+.retry-btn {
+  background: var(--primary-color);
+  color: white;
   border: none;
   padding: 12px 30px;
   border-radius: 25px;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-speed) ease;
+  transition: var(--transition);
 }
 
-.primary-btn:hover {
+.retry-btn:hover {
   background: #e91e3a;
-  transform: scale(1.05);
+  transform: translateY(-2px);
 }
 
-.primary-btn:active {
-  transform: scale(0.98);
-}
-
-/* ====================================
-   LOADING & ERROR STATES
-   ==================================== */
-.loading-container,
-.error-container,
+/* Empty State */
 .empty-state-container {
   width: 100vw;
   height: 100vh;
@@ -325,254 +709,224 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--bg-primary);
-  color: #fff;
-  gap: 20px;
-  padding: 20px;
+}
+
+.empty-wrapper {
   text-align: center;
+  padding: 40px;
 }
 
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--primary-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.empty-wrapper h2 {
+  color: var(--text-primary);
+  font-size: 28px;
+  margin-bottom: 15px;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.error-container h2,
-.empty-state-container h2 { font-size: 24px; margin-bottom: 10px; }
-.error-container p,
-.empty-state-container p { font-size: 16px; color: var(--text-secondary); margin-bottom: 20px; }
-
-.error-container button {
-  background: var(--primary-color);
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all var(--transition-speed) ease;
+.empty-wrapper p {
+  color: var(--text-secondary);
+  font-size: 16px;
 }
 
-.error-container button:hover { background: #e91e3a; }
-
-/* ====================================
-   NAVIGATION BAR
-   ==================================== */
-.navigation-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: rgba(0, 0, 0, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* ====================================
-   VIDEOPLAYER SPLIT (FULLSCREEN + PLAY OVERLAY)
-   ==================================== */
-.video-player-split {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background: #000;
-  cursor: pointer;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.play-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.3s ease;
-  z-index: 5;
-}
-
-.play-button {
-  width: 70px;
-  height: 70px;
-  background: rgba(255,255,255,0.9);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  color: #000;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
-}
-
-.play-button:hover { transform: scale(1.1); background: #fff; }
-
-.fullscreen-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.9);
-  z-index: 999;
-}
-
-.fullscreen-container {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.fullscreen-video-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.fullscreen-video {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.fullscreen-close-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  background: rgba(255,255,255,0.2);
-  backdrop-filter: blur(10px);
-  border: none;
-  border-radius: 50%;
-  color: #fff;
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  transition: all 0.3s ease;
-}
-
-.fullscreen-close-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
-
-/* ====================================
-   REPLYSWIPER
-   ==================================== */
-.reply-swiper-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.95);
-  z-index: 10;
-}
-
-.reply-indicator {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255,255,255,0.1);
-  padding: 8px 20px;
-  border-radius: 20px;
-  z-index: 20;
-  backdrop-filter: blur(10px);
-}
-
-.reply-indicator span {
-  color: #fff;
-  font-size: 14px;
-}
-
-.reply-swiper .swiper-button-next,
-.reply-swiper .swiper-button-prev {
-  color: #fff;
-  background: rgba(255,255,255,0.1);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  backdrop-filter: blur(10px);
-}
-
-.reply-swiper .swiper-button-next::after,
-.reply-swiper .swiper-button-prev::after {
-  font-size: 20px;
-}
-
-/* ====================================
-   RESPONSIVE DESIGN
-   ==================================== */
+/* Responsive Design */
 @media (max-width: 768px) {
-  .profile-avatar { width: 42px; height: 42px; top: 15px; right: 15px; }
-  .reply-avatar { width: 36px; height: 36px; }
-  .action-btn { width: 46px; height: 46px; }
-  .action-btn svg { font-size: 20px; }
-  .action-btn span { font-size: 11px; }
-  .video-actions, .reply-actions { bottom: 15px; right: 15px; gap: 12px; }
-  .video-info { bottom: 15px; left: 15px; right: 85px; }
-  .video-description { font-size: 13px; }
-  .nav-btn { width: 36px; height: 36px; }
-  .nav-btn svg { font-size: 14px; }
+  .content-wrapper {
+    flex-direction: column;
+  }
+
+  .main-video-section,
+  .replies-section {
+    flex: none;
+    height: 50%;
+  }
+
+  .replies-section {
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .action-buttons {
+    bottom: 70px;
+    right: 15px;
+    gap: 15px;
+  }
+
+  .profile-btn,
+  .action-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .profile-image {
+    width: 44px;
+    height: 44px;
+  }
+
+  .action-btn svg {
+    font-size: 20px;
+  }
+
+  .action-btn span {
+    font-size: 11px;
+  }
+
+  .video-info {
+    bottom: 15px;
+    left: 15px;
+    right: 80px;
+  }
+
+  .username {
+    font-size: 14px;
+  }
+
+  .video-description {
+    font-size: 13px;
+    -webkit-line-clamp: 2;
+  }
+
+  .replies-header {
+    padding: 15px;
+  }
+
+  .reply-actions {
+    bottom: 60px;
+    right: 15px;
+    gap: 15px;
+  }
+
+  .reply-profile-btn,
+  .reply-action-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .reply-profile-btn img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .play-overlay {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
 }
 
 @media (max-width: 480px) {
-  .profile-avatar { width: 38px; height: 38px; top: 12px; right: 12px; }
-  .reply-avatar { width: 32px; height: 32px; }
-  .action-btn { width: 42px; height: 42px; }
-  .action-btn svg { font-size: 18px; }
-  .action-btn span { font-size: 10px; }
-  .video-actions, .reply-actions { bottom: 12px; right: 12px; gap: 10px; }
-  .video-info { bottom: 12px; left: 12px; right: 75px; }
-  .video-description { font-size: 12px; -webkit-line-clamp: 1; }
+  .action-buttons {
+    gap: 12px;
+  }
+
+  .profile-btn,
+  .action-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .profile-image {
+    width: 40px;
+    height: 40px;
+  }
+
+  .action-btn svg {
+    font-size: 18px;
+  }
+
+  .action-btn span {
+    font-size: 10px;
+  }
+
+  .video-indicators {
+    display: none;
+  }
+
+  .volume-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .volume-btn svg {
+    font-size: 18px;
+  }
 }
 
+/* Landscape Mode */
 @media (orientation: landscape) and (max-height: 600px) {
-  .home-container { flex-direction: row; }
-  .top-half, .bottom-half { width: 50vw; height: 100vh; border-top: none; }
-  .top-half { border-right: 1px solid rgba(255,255,255,0.1); }
+  .content-wrapper {
+    flex-direction: row;
+  }
+
+  .main-video-section,
+  .replies-section {
+    height: 100%;
+  }
+
+  .action-buttons,
+  .reply-actions {
+    bottom: 20px;
+    gap: 10px;
+  }
+
+  .profile-btn,
+  .action-btn,
+  .reply-profile-btn,
+  .reply-action-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .profile-image,
+  .reply-profile-btn img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .action-btn svg,
+  .reply-action-btn svg {
+    font-size: 16px;
+  }
+
+  .action-btn span,
+  .reply-action-btn span {
+    font-size: 9px;
+  }
 }
 
-/* Safe area support */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .home-container { padding-bottom: env(safe-area-inset-bottom); }
-  .navigation-bar { padding-bottom: env(safe-area-inset-bottom); }
+/* Prevent text selection */
+.home-page {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-/* Mobile-friendly touch optimizations */
+/* Allow text selection for descriptions */
+.video-description,
+.reply-description {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Touch optimizations */
 .action-btn,
-.profile-avatar,
-.nav-btn,
-.primary-btn {
+.reply-action-btn,
+.profile-btn,
+.reply-profile-btn,
+.volume-btn,
+.reply-nav,
+.create-reply-btn,
+.retry-btn {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
-/* في الأجهزة الصغيرة */
-@media (max-width: 768px) {
-  .bottom-half {
-    height: calc(50dvh - var(--nav-height));
-    padding-bottom: var(--nav-height);
-  }
-}
 
-@media (max-width: 480px) {
-  .bottom-half {
-    height: calc(50dvh - var(--nav-height));
-    padding-bottom: var(--nav-height);
-  }
+/* Performance optimizations */
+.video-player,
+.reply-video {
+  will-change: transform;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }

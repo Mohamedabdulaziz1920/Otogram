@@ -36,6 +36,8 @@
   min-height: 100vh;
   background: var(--bg-primary);
   padding-bottom: 70px;
+  overflow-y: auto; /* Enable scrolling */
+  height: 100vh; /* Set viewport height */
 }
 
 .profile-container {
@@ -43,6 +45,7 @@
   width: 100%;
   margin: 0 auto;
   animation: fadeIn 0.5s ease;
+  min-height: 100%; /* Ensure container takes full height */
 }
 
 /* Profile Header */
@@ -174,6 +177,7 @@
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+  direction: ltr; /* Ensure @ appears on the left */
 }
 
 .edit-username-btn {
@@ -188,7 +192,7 @@
   justify-content: center;
   cursor: pointer;
   transition: var(--transition);
-  order: -1; /* Move to right side */
+  order: 1; /* Move to left side of username */
 }
 
 .edit-username-btn:hover {
@@ -361,10 +365,13 @@
   font-size: 18px;
 }
 
-/* Content Grid */
+/* Content Grid - FIXED SCROLLING */
 .profile-content {
   padding: 10px;
   min-height: 400px;
+  max-height: calc(100vh - 450px); /* Adjust based on header and tabs height */
+  overflow-y: auto; /* Enable vertical scrolling */
+  overflow-x: hidden;
 }
 
 .videos-grid {
@@ -372,6 +379,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 3px;
   animation: fadeInUp 0.5s ease;
+  padding-bottom: 20px; /* Add padding at bottom for better scrolling */
 }
 
 /* Video Card */
@@ -844,8 +852,31 @@
   }
 }
 
+/* Custom Scrollbar for profile content */
+.profile-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.profile-content::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 3px;
+}
+
+.profile-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.profile-content::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
+  .profile-content {
+    max-height: calc(100vh - 400px);
+  }
+
   .profile-avatar {
     width: 120px;
     height: 120px;
@@ -878,6 +909,10 @@
 }
 
 @media (max-width: 480px) {
+  .profile-page {
+    padding-bottom: 60px;
+  }
+
   .profile-header {
     height: 80px;
   }
@@ -924,6 +959,11 @@
     display: none;
   }
 
+  .profile-content {
+    max-height: calc(100vh - 350px);
+    padding: 5px;
+  }
+
   .videos-grid {
     gap: 1px;
   }
@@ -959,24 +999,6 @@ button:focus-visible,
 .video-card:focus-visible {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
-}
-
-/* Custom Scrollbar */
-.profile-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.profile-content::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-}
-
-.profile-content::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-
-.profile-content::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-color);
 }
 
 /* Prevent text selection on interactive elements */

@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, api } from '../context/AuthContext';
-import { FaUser, FaShieldAlt, FaUserTie, FaSearch, FaCheck, FaTimes } from 'react-icons/fa';
+import { 
+  FaUser, FaShieldAlt, FaUserTie, FaSearch, FaCheck, FaTimes,
+  FaUsers, FaChartLine, FaFilter, FaEye, FaEdit, FaTrash,
+  FaCrown, FaUsersCog, FaChartBar, FaSortAmountDown,
+  FaSortAmountUp, FaExclamationTriangle, FaCheckCircle
+} from 'react-icons/fa';
 import NavigationBar from '../components/NavigationBar';
 import './AdminDashboard.css';
 
@@ -11,6 +16,14 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
+  const [filterRole, setFilterRole] = useState('all');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -34,19 +47,49 @@ const AdminDashboard = () => {
       setFilteredUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
+      showNotification('فشل في جلب المستخدمين', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  // البحث عن المستخدمين
+  // البحث والفلترة
   useEffect(() => {
-    const filtered = users.filter(u => 
-      u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    let filtered = users;
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(u => 
+        u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by role
+    if (filterRole !== 'all') {
+      filtered = filtered.filter(u => u.role === filterRole);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      let compareValue = 0;
+      switch (sortBy) {
+        case 'name':
+          compareValue = a.username.localeCompare(b.username);
+          break;
+        case 'role':
+          compareValue = a.role.localeCompare(b.role);
+          break;
+        case 'date':
+        default:
+          compareValue = new Date(b.createdAt) - new Date(a.createdAt);
+          break;
+      }
+      return sortOrder === 'asc' ? compareValue : -compareValue;
+    });
+
     setFilteredUsers(filtered);
-  }, [searchTerm, users]);
+  }, [searchTerm, users, filterRole, sortBy, sortOrder]);
 
   // تحديث صلاحيات المستخدم
   const updateUserRole = async (userId, newRole) => {
@@ -54,7 +97,6 @@ const AdminDashboard = () => {
     try {
       await api.patch(`/api/users/role/${userId}`, { role: newRole });
       
-      // تحديث القائمة محلياً
       setUsers(users.map(u => 
         u._id === userId ? { ...u, role: newRole } : u
       ));
@@ -68,15 +110,52 @@ const AdminDashboard = () => {
     }
   };
 
+  // حذف مستخدم
+  const deleteUser = async () => {
+    if (!userToDelete) return;
+    
+    try {
+      await api.delete(`/api/users/${userToDelete._id}`);
+      setUsers(users.filter(u => u._id !== userToDelete._id));
+      showNotification('تم حذف المستخدم بنجاح', 'success');
+      setShowDeleteModal(false);
+      setUserToDelete(null);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      showNotification('فشل حذف المستخدم', 'error');
+    }
+  };
+
+  const confirmDelete = (user) => {
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  };
+
   const showNotification = (message, type) => {
-    // يمكنك استخدام مكتبة toast هنا
-    console.log(`${type}: ${message}`);
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleSelectUser = (userId) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedUsers.length === filteredUsers.length) {
+      setSelectedUsers([]);
+    } else {
+      setSelectedUsers(filteredUsers.map(u => u._id));
+    }
   };
 
   const getRoleIcon = (role) => {
     switch (role) {
       case 'admin':
-        return <FaShieldAlt className="role-icon admin" />;
+        return <FaCrown className="role-icon admin" />;
       case 'creator':
         return <FaUserTie className="role-icon creator" />;
       default:
@@ -95,106 +174,328 @@ const AdminDashboard = () => {
     }
   };
 
+  const getAssetUrl = (url) => {
+    if (!url || url === '/default-avatar.png') return '/default-avatar.png';
+    if (url.startsWith('http')) return url;
+    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
+  };
+
+  // احصائيات المستخدمين
+  const stats = {
+    total: users.length,
+    admins: users.filter(u => u.role === 'admin').length,
+    creators: users.filter(u => u.role === 'creator').length,
+    users: users.filter(u => u.role === 'user').length,
+    newThisWeek: users.filter(u => {
+      const createdDate = new Date(u.createdAt);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return createdDate > weekAgo;
+    }).length
+  };
+
   if (loading) return (
     <div className="loading-container">
-      <div className="loading-spinner"></div>
-      <p>جاري تحميل البيانات...</p>
+      <div className="loading-wrapper">
+        <div className="loading-spinner"></div>
+        <p>جاري تحميل البيانات...</p>
+      </div>
     </div>
   );
 
   return (
     <div className="admin-dashboard">
-      <div className="dashboard-header">
-        <h1>لوحة تحكم المدير</h1>
-        <div className="stats-summary">
-          <div className="stat-card">
-            <h3>إجمالي المستخدمين</h3>
-            <p>{users.length}</p>
+      <div className="dashboard-container">
+        {/* Header */}
+        <div className="dashboard-header">
+          <div className="header-content">
+            <h1>
+              <FaUsersCog className="header-icon" />
+              لوحة تحكم المدير
+            </h1>
+            <p className="header-subtitle">إدارة المستخدمين والصلاحيات</p>
           </div>
-          <div className="stat-card">
-            <h3>منشئي المحتوى</h3>
-            <p>{users.filter(u => u.role === 'creator').length}</p>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="stats-grid">
+          <div className="stat-card total">
+            <div className="stat-icon">
+              <FaUsers />
+            </div>
+            <div className="stat-content">
+              <h3>إجمالي المستخدمين</h3>
+              <p className="stat-value">{stats.total}</p>
+              <span className="stat-change">
+                +{stats.newThisWeek} هذا الأسبوع
+              </span>
+            </div>
           </div>
-          <div className="stat-card">
-            <h3>المديرين</h3>
-            <p>{users.filter(u => u.role === 'admin').length}</p>
+
+          <div className="stat-card admins">
+            <div className="stat-icon">
+              <FaCrown />
+            </div>
+            <div className="stat-content">
+              <h3>المديرين</h3>
+              <p className="stat-value">{stats.admins}</p>
+              <div className="stat-progress">
+                <div 
+                  className="progress-bar"
+                  style={{ width: `${(stats.admins / stats.total) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="stat-card creators">
+            <div className="stat-icon">
+              <FaUserTie />
+            </div>
+            <div className="stat-content">
+              <h3>منشئي المحتوى</h3>
+              <p className="stat-value">{stats.creators}</p>
+              <div className="stat-progress">
+                <div 
+                  className="progress-bar"
+                  style={{ width: `${(stats.creators / stats.total) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="stat-card users">
+            <div className="stat-icon">
+              <FaUser />
+            </div>
+            <div className="stat-content">
+              <h3>المستخدمين العاديين</h3>
+              <p className="stat-value">{stats.users}</p>
+              <div className="stat-progress">
+                <div 
+                  className="progress-bar"
+                  style={{ width: `${(stats.users / stats.total) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls Section */}
+        <div className="controls-section">
+          <div className="search-filter-wrapper">
+            <div className="search-box">
+              <FaSearch className="search-icon" />
+              <input
+                type="text"
+                placeholder="البحث عن مستخدم..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+            </div>
+
+            <div className="filter-controls">
+              <div className="filter-dropdown">
+                <FaFilter />
+                <select 
+                  value={filterRole} 
+                  onChange={(e) => setFilterRole(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="all">جميع الصلاحيات</option>
+                  <option value="admin">المديرين فقط</option>
+                  <option value="creator">منشئي المحتوى</option>
+                  <option value="user">المستخدمين العاديين</option>
+                </select>
+              </div>
+
+              <div className="sort-controls">
+                <button 
+                  className={`sort-btn ${sortOrder === 'asc' ? 'active' : ''}`}
+                  onClick={() => setSortOrder('asc')}
+                >
+                  <FaSortAmountUp />
+                </button>
+                <button 
+                  className={`sort-btn ${sortOrder === 'desc' ? 'active' : ''}`}
+                  onClick={() => setSortOrder('desc')}
+                >
+                  <FaSortAmountDown />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {selectedUsers.length > 0 && (
+            <div className="bulk-actions">
+              <span>{selectedUsers.length} مستخدم محدد</span>
+              <button className="bulk-btn">تغيير الصلاحيات</button>
+              <button className="bulk-btn danger">حذف المحدد</button>
+            </div>
+          )}
+        </div>
+
+        {/* Users Table */}
+        <div className="users-table-container">
+          <div className="table-header">
+            <h2>قائمة المستخدمين ({filteredUsers.length})</h2>
+          </div>
+
+          <div className="table-wrapper">
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>
+                    <input 
+                      type="checkbox"
+                      checked={selectedUsers.length === filteredUsers.length}
+                      onChange={handleSelectAll}
+                      className="checkbox"
+                    />
+                  </th>
+                  <th>المستخدم</th>
+                  <th>البريد الإلكتروني</th>
+                  <th>الصلاحية</th>
+                  <th>تاريخ التسجيل</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((u) => (
+                  <tr key={u._id} className={selectedUsers.includes(u._id) ? 'selected' : ''}>
+                    <td>
+                      <input 
+                        type="checkbox"
+                        checked={selectedUsers.includes(u._id)}
+                        onChange={() => handleSelectUser(u._id)}
+                        className="checkbox"
+                      />
+                    </td>
+                    <td>
+                      <div className="user-info">
+                        <img 
+                          src={getAssetUrl(u.profileImage)} 
+                          alt={u.username}
+                          className="user-avatar"
+                        />
+                        <div className="user-details">
+                          <span className="username">@{u.username}</span>
+                          <span className="user-id">ID: {u._id.slice(-6)}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="email-cell">{u.email}</td>
+                    <td>
+                      <div className={`role-badge ${u.role}`}>
+                        {getRoleIcon(u.role)}
+                        <span>{getRoleLabel(u.role)}</span>
+                      </div>
+                    </td>
+                    <td className="date-cell">
+                      <span className="date">
+                        {new Date(u.createdAt).toLocaleDateString('ar-SA')}
+                      </span>
+                      <span className="time">
+                        {new Date(u.createdAt).toLocaleTimeString('ar-SA', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="actions-cell">
+                        <div className="role-selector">
+                          <button
+                            className={`role-btn ${u.role === 'user' ? 'active' : ''}`}
+                            onClick={() => updateUserRole(u._id, 'user')}
+                            disabled={updating === u._id || u._id === user._id}
+                            title="مستخدم عادي"
+                          >
+                            <FaUser />
+                          </button>
+                          <button
+                            className={`role-btn ${u.role === 'creator' ? 'active' : ''}`}
+                            onClick={() => updateUserRole(u._id, 'creator')}
+                            disabled={updating === u._id || u._id === user._id}
+                            title="منشئ محتوى"
+                          >
+                            <FaUserTie />
+                          </button>
+                          <button
+                            className={`role-btn ${u.role === 'admin' ? 'active' : ''}`}
+                            onClick={() => updateUserRole(u._id, 'admin')}
+                            disabled={updating === u._id || u._id === user._id}
+                            title="مدير"
+                          >
+                            <FaCrown />
+                          </button>
+                        </div>
+                        
+                        <div className="action-buttons">
+                          <button 
+                            className="action-btn view"
+                            onClick={() => navigate(`/profile/${u.username}`)}
+                            title="عرض الملف الشخصي"
+                          >
+                            <FaEye />
+                          </button>
+                          <button 
+                            className="action-btn delete"
+                            onClick={() => confirmDelete(u)}
+                            disabled={u._id === user._id}
+                            title="حذف المستخدم"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {filteredUsers.length === 0 && (
+              <div className="empty-state">
+                <FaExclamationTriangle />
+                <p>لا يوجد مستخدمين للعرض</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="search-section">
-        <div className="search-box">
-          <FaSearch />
-          <input
-            type="text"
-            placeholder="البحث عن مستخدم..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>تأكيد الحذف</h3>
+            </div>
+            <div className="modal-body">
+              <p>هل أنت متأكد من حذف المستخدم <strong>@{userToDelete?.username}</strong>؟</p>
+              <p className="warning">هذا الإجراء لا يمكن التراجع عنه!</p>
+            </div>
+            <div className="modal-actions">
+              <button className="confirm-delete-btn" onClick={deleteUser}>
+                <FaTrash /> حذف نهائياً
+              </button>
+              <button className="cancel-modal-btn" onClick={() => setShowDeleteModal(false)}>
+                إلغاء
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="users-table">
-        <table>
-          <thead>
-            <tr>
-              <th>الصورة</th>
-              <th>اسم المستخدم</th>
-              <th>البريد الإلكتروني</th>
-              <th>الصلاحية الحالية</th>
-              <th>تغيير الصلاحية</th>
-              <th>تاريخ التسجيل</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map((u) => (
-              <tr key={u._id}>
-                <td>
-                  <img 
-                    src={u.profileImage || '/default-avatar.png'} 
-                    alt={u.username}
-                    className="user-avatar"
-                  />
-                </td>
-                <td>@{u.username}</td>
-                <td>{u.email}</td>
-                <td>
-                  <div className="role-badge">
-                    {getRoleIcon(u.role)}
-                    <span>{getRoleLabel(u.role)}</span>
-                  </div>
-                </td>
-                <td>
-                  <div className="role-selector">
-                    <button
-                      className={`role-btn ${u.role === 'user' ? 'active' : ''}`}
-                      onClick={() => updateUserRole(u._id, 'user')}
-                      disabled={updating === u._id || u._id === user._id}
-                    >
-                      <FaUser /> عادي
-                    </button>
-                    <button
-                      className={`role-btn ${u.role === 'creator' ? 'active' : ''}`}
-                      onClick={() => updateUserRole(u._id, 'creator')}
-                      disabled={updating === u._id || u._id === user._id}
-                    >
-                      <FaUserTie /> منشئ
-                    </button>
-                    <button
-                      className={`role-btn ${u.role === 'admin' ? 'active' : ''}`}
-                      onClick={() => updateUserRole(u._id, 'admin')}
-                      disabled={updating === u._id || u._id === user._id}
-                    >
-                      <FaShieldAlt /> مدير
-                    </button>
-                  </div>
-                </td>
-                <td>{new Date(u.createdAt).toLocaleDateString('ar-SA')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Notification Toast */}
+      {notification && (
+        <div className={`notification-toast ${notification.type}`}>
+          {notification.type === 'success' ? <FaCheckCircle /> : <FaExclamationTriangle />}
+          <span>{notification.message}</span>
+        </div>
+      )}
 
       <NavigationBar currentPage="admin" />
     </div>

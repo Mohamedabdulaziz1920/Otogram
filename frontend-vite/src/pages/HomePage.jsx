@@ -69,11 +69,114 @@ const HomePage = () => {
     }
   }, [user]);
 
+  // ✅ useEffect منفصل لجلب الفيديوهات
   useEffect(() => {
     fetchVideos();
   }, [fetchVideos]);
 
-  // Scroll handler for vertical navigation
+  // Helper functions - يجب تعريفها قبل الـ useEffect
+  const goToNextReply = useCallback(() => {
+    setActiveReplyIndex(prev => {
+      const currentVideo = videos[activeVideoIndex];
+      if (currentVideo?.replies && prev < currentVideo.replies.length - 1) {
+        return prev + 1;
+      }
+      return prev;
+    });
+  }, [videos, activeVideoIndex]);
+
+  const goToPrevReply = useCallback(() => {
+    setActiveReplyIndex(prev => {
+      if (prev > 0) {
+        return prev - 1;
+      }
+      return prev;
+    });
+  }, []);
+
+  // ✅ Touch events for mobile - منفصل تماماً
+  useEffect(() => {
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let touchStartTime = 0;
+
+    const handleMainTouchStart = (e) => {
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+    };
+
+    const handleMainTouchEnd = (e) => {
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchEndTime = Date.now();
+      const deltaY = touchStartY - touchEndY;
+      const deltaTime = touchEndTime - touchStartTime;
+
+      // سرعة التمرير
+      const velocity = Math.abs(deltaY) / deltaTime;
+
+      // إذا كان التمرير سريع أو المسافة كبيرة
+      if (Math.abs(deltaY) > 50 || velocity > 0.3) {
+        if (deltaY > 0) {
+          // Swipe up - next video
+          if (activeVideoIndex < videos.length - 1) {
+            setActiveVideoIndex(prev => prev + 1);
+            setActiveReplyIndex(0);
+          }
+        } else {
+          // Swipe down - previous video
+          if (activeVideoIndex > 0) {
+            setActiveVideoIndex(prev => prev - 1);
+            setActiveReplyIndex(0);
+          }
+        }
+      }
+    };
+
+    const handleReplyTouchStart = (e) => {
+      touchStartX = e.touches[0].clientX;
+    };
+
+    const handleReplyTouchEnd = (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const deltaX = touchStartX - touchEndX;
+
+      if (Math.abs(deltaX) > 50) {
+        if (deltaX > 0) {
+          // Swipe left - next reply
+          goToNextReply();
+        } else {
+          // Swipe right - previous reply
+          goToPrevReply();
+        }
+      }
+    };
+
+    const mainSection = document.querySelector('.main-video-section');
+    const replySection = document.querySelector('.replies-section');
+
+    if (mainSection) {
+      mainSection.addEventListener('touchstart', handleMainTouchStart, { passive: true });
+      mainSection.addEventListener('touchend', handleMainTouchEnd, { passive: true });
+    }
+
+    if (replySection) {
+      replySection.addEventListener('touchstart', handleReplyTouchStart, { passive: true });
+      replySection.addEventListener('touchend', handleReplyTouchEnd, { passive: true });
+    }
+
+    return () => {
+      if (mainSection) {
+        mainSection.removeEventListener('touchstart', handleMainTouchStart);
+        mainSection.removeEventListener('touchend', handleMainTouchEnd);
+      }
+      if (replySection) {
+        replySection.removeEventListener('touchstart', handleReplyTouchStart);
+        replySection.removeEventListener('touchend', handleReplyTouchEnd);
+      }
+    };
+  }, [activeVideoIndex, videos.length, goToNextReply, goToPrevReply]);
+
+  // ✅ Scroll handler for vertical navigation - منفصل
   useEffect(() => {
     const handleWheel = (e) => {
       const now = Date.now();
@@ -102,7 +205,7 @@ const HomePage = () => {
     return () => window.removeEventListener('wheel', handleWheel);
   }, [activeVideoIndex, videos.length]);
 
-  // Keyboard navigation
+  // ✅ Keyboard navigation - منفصل
   useEffect(() => {
     const handleKeyDown = (e) => {
       switch(e.key) {
@@ -119,21 +222,17 @@ const HomePage = () => {
           }
           break;
         case 'ArrowRight':
-          if (activeReplyIndex > 0) {
-            setActiveReplyIndex(prev => prev - 1);
-          }
+          goToPrevReply();
           break;
         case 'ArrowLeft':
-          if (currentVideo?.replies?.length > 0 && activeReplyIndex < currentVideo.replies.length - 1) {
-            setActiveReplyIndex(prev => prev + 1);
-          }
+          goToNextReply();
           break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeVideoIndex, activeReplyIndex, videos.length]);
+  }, [activeVideoIndex, videos.length, goToNextReply, goToPrevReply]);
 
   const toggleMute = () => {
     setIsMuted(prev => !prev);
@@ -231,18 +330,6 @@ const HomePage = () => {
   const navigateToProfile = (username) => navigate(`/profile/${username}`);
 
   const currentVideo = videos[activeVideoIndex];
-
-  const goToNextReply = () => {
-    if (currentVideo?.replies && activeReplyIndex < currentVideo.replies.length - 1) {
-      setActiveReplyIndex(prev => prev + 1);
-    }
-  };
-
-  const goToPrevReply = () => {
-    if (activeReplyIndex > 0) {
-      setActiveReplyIndex(prev => prev - 1);
-    }
-  };
 
   if (loading) return (
     <div className="loading-container">
@@ -447,5 +534,6 @@ const HomePage = () => {
     </div>
   );
 };
+
 
 export default HomePage;

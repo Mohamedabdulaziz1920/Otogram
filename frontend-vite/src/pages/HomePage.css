@@ -850,3 +850,29 @@ button {
   transition-duration: 0.3s;
   transition-timing-function: ease;
 }
+/* ========================================
+   TOUCH SUPPORT FOR MOBILE
+   ======================================== */
+
+/* تمكين التمرير باللمس */
+.home-page {
+  touch-action: pan-y; /* السماح بالتمرير العمودي فقط */
+  -webkit-overflow-scrolling: touch;
+}
+
+.content-wrapper {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.main-video-section,
+.replies-section {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* السماح بالتمرير الأفقي للردود */
+.reply-video-container {
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}

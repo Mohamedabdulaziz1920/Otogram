@@ -852,33 +852,46 @@ button {
   transition-timing-function: ease;
 }
 /* ========================================
-   TOUCH SUPPORT - تحديث
+   TOUCH SUPPORT FOR MOBILE - UPDATED
    ======================================== */
 
-/* ✅ التمرير العمودي على كامل الصفحة */
+/* ✅ السماح بالتمرير العمودي على كامل الصفحة */
 .home-page {
-  touch-action: pan-y; /* فقط التمرير العمودي */
+  touch-action: manipulation; /* السماح بجميع التفاعلات */
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .content-wrapper {
-  touch-action: pan-y; /* فقط التمرير العمودي */
+  touch-action: pan-y; /* التمرير العمودي */
   -webkit-overflow-scrolling: touch;
 }
 
-/* ✅ التمرير العمودي في قسم الفيديو الرئيسي */
+/* قسم الفيديو الرئيسي */
 .main-video-section {
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
+  user-select: none;
 }
 
-/* ✅ التمرير الأفقي والعمودي في قسم الردود */
+/* قسم الردود - يدعم الأفقي والعمودي */
 .replies-section {
-  touch-action: pan-x pan-y; /* كلا الاتجاهين */
-  -webkit-overflow-scrolling: touch;
-}
-
-.reply-video-container {
   touch-action: pan-x pan-y;
   -webkit-overflow-scrolling: touch;
+  user-select: none;
+}
+
+/* الفيديوهات نفسها */
+.video-player,
+.reply-video {
+  touch-action: none; /* منع التفاعلات الافتراضية */
+  pointer-events: auto;
+}
+
+/* الأزرار */
+.action-buttons,
+.reply-actions,
+.action-btn-unified,
+.reply-nav {
+  touch-action: manipulation;
 }

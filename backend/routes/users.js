@@ -35,7 +35,7 @@ router.get('/me', auth, async (req, res) => {
     }
     res.json(user);
   } catch (error) {
-    console.error('Error fetching current user:', error);
+    console.error('❌ Error fetching current user:', error);
     res.status(500).json({ error: 'فشل جلب بيانات المستخدم' });
   }
 });
@@ -105,7 +105,10 @@ router.post('/me/update-profile-image', auth, upload.single('profileImage'), asy
         // تحديث بيانات المستخدم
         const updatedUser = await User.findByIdAndUpdate(
           req.user._id,
-          { profileImage: newProfileImageUrl },
+          { 
+            profileImage: newProfileImageUrl,
+            profileImageFileId: uploadStream.id
+          },
           { new: true }
         ).select('-password');
         
@@ -404,8 +407,8 @@ router.delete('/:userId', auth, isAdmin, async (req, res) => {
     }
     
     // حذف جميع فيديوهات المستخدم
-    await Video.deleteMany({ user: userId });
-    console.log('✅ User videos deleted');
+    const deletedVideos = await Video.deleteMany({ user: userId });
+    console.log(`✅ Deleted ${deletedVideos.deletedCount} videos`);
     
     // حذف المستخدم
     await User.findByIdAndDelete(userId);
@@ -413,7 +416,8 @@ router.delete('/:userId', auth, isAdmin, async (req, res) => {
     
     res.json({ 
       message: 'تم حذف المستخدم وجميع محتوياته بنجاح',
-      deletedUserId: userId
+      deletedUserId: userId,
+      deletedVideosCount: deletedVideos.deletedCount
     });
     
   } catch (error) {
@@ -483,11 +487,15 @@ router.get('/profile/:username', async (req, res) => {
     const [videos, replies] = await Promise.all([
       Video.find({ user: user._id, isReply: false })
         .populate('user', 'username profileImage')
+        .populate({
+          path: 'replies',
+          populate: { path: 'user', select: 'username profileImage' }
+        })
         .sort({ createdAt: -1 })
         .lean(),
       Video.find({ user: user._id, isReply: true })
         .populate('user', 'username profileImage')
-        .populate('replyTo', 'description')
+        .populate('parentVideo', 'description user videoUrl thumbnail') // ← استخدم parentVideo بدلاً من replyTo
         .sort({ createdAt: -1 })
         .lean()
     ]);
@@ -516,7 +524,10 @@ router.get('/profile/:username', async (req, res) => {
     
   } catch (error) {
     console.error('❌ Error fetching profile:', error);
-    res.status(500).json({ error: 'حدث خطأ في الخادم' });
+    res.status(500).json({ 
+      error: 'حدث خطأ في الخادم',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

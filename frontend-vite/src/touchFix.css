@@ -1,0 +1,61 @@
+/* ========================================
+   TOUCH SCROLL FIX FOR ALL DEVICES
+   ======================================== */
+
+/* إصلاح التمرير على جميع الأجهزة */
+html,
+body,
+#root {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* السماح بالتمرير في جميع الصفحات */
+body {
+  touch-action: pan-y pan-x;
+  overscroll-behavior-y: contain;
+}
+
+/* منع pull-to-refresh في بعض المتصفحات */
+body {
+  overscroll-behavior: contain;
+}
+
+/* إصلاح التمرير في iOS */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* تمكين التمرير السلس */
+html {
+  scroll-behavior: smooth;
+}
+
+/* إصلاح مشاكل التمرير في Safari */
+@supports (-webkit-touch-callout: none) {
+  body {
+    /* iOS Safari specific fix */
+    height: 100%;
+    overflow: auto;
+  }
+}
+
+/* Disable pull-to-refresh on Chrome Android */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* Fix for momentum scrolling */
+.scrollable {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: scroll;
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+
+}

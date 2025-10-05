@@ -23,8 +23,6 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const FOOTER_HEIGHT = 70; // ارتفاع الفوتر - عدله حسب تصميمك
-
   const getAssetUrl = (url) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
@@ -64,7 +62,7 @@ const HomePage = () => {
 
   useEffect(() => { fetchVideos(); }, [fetchVideos]);
 
-  // التمرير العمودي للصفحة كلها (بما في ذلك الردود)
+  // التمرير العمودي لكل الصفحة
   useEffect(() => {
     const handleWheel = (e) => {
       e.preventDefault();
@@ -93,9 +91,7 @@ const HomePage = () => {
       setVideos(prevVideos =>
         prevVideos.map(v => v._id === videoId ? {
           ...v,
-          likes: liked
-            ? [...(v.likes || []), user._id || user.id]
-            : (v.likes || []).filter(id => id !== (user._id || user.id))
+          likes: liked ? [...(v.likes || []), user._id || user.id] : (v.likes || []).filter(id => id !== (user._id || user.id))
         } : v)
       );
     } catch (err) { console.error(err); }
@@ -116,9 +112,7 @@ const HomePage = () => {
           ...video,
           replies: video.replies.map(r => r._id === replyId ? {
             ...r,
-            likes: liked
-              ? [...(r.likes || []), user._id || user.id]
-              : (r.likes || []).filter(id => id !== (user._id || user.id))
+            likes: liked ? [...(r.likes || []), user._id || user.id] : (r.likes || []).filter(id => id !== (user._id || user.id))
           } : r)
         } : video)
       );
@@ -126,11 +120,7 @@ const HomePage = () => {
   };
 
   const handleReply = (videoId) => {
-    if (!user) {
-      sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
-      navigate('/login');
-      return;
-    }
+    if (!user) { sessionStorage.setItem('redirectAfterLogin', window.location.pathname); navigate('/login'); return; }
     navigate(`/upload?replyTo=${videoId}`);
   };
 
@@ -160,12 +150,9 @@ const HomePage = () => {
     </div>
   );
 
-  // حساب الارتفاع المتاح للشاشة (بعد خصم الفوتر)
-  const availableHeight = `calc(100vh - ${FOOTER_HEIGHT}px)`;
-
   return (
-    <div className="home-container" style={{ height: availableHeight }}>
-      <div className="top-half" style={{ height: '50%' }}>
+    <div className="home-container">
+      <div className="top-half">
         <Swiper
           direction="vertical"
           slidesPerView={1}
@@ -210,7 +197,7 @@ const HomePage = () => {
         </Swiper>
       </div>
 
-      <div className="bottom-half" style={{ height: '50%' }}>
+      <div className="bottom-half">
         {currentVideo?.replies?.length > 0 ? (
           <ReplySwiper
             replies={currentVideo.replies.map(r => ({ ...r, liked: likedReplies.has(r._id) }))}

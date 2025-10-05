@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Mousewheel, Keyboard, Navigation } from 'swiper';
+import { Navigation } from 'swiper';
 import { 
   FaHeart, FaComment, FaShare, FaChevronLeft, FaChevronRight,
   FaPlay, FaPause, FaVolumeUp, FaVolumeMute, FaBookmark
@@ -25,14 +25,13 @@ const HomePage = () => {
   const [isMainPlaying, setIsMainPlaying] = useState(true);
   const [isReplyPlaying, setIsReplyPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
-  const [showReplyPlayButton, setShowReplyPlayButton] = useState(false);
 
   const navigate = useNavigate();
   const { user } = useAuth();
-  const mainSwiperRef = useRef(null);
-  const replySwiperRef = useRef(null);
   const mainVideoRef = useRef(null);
   const replyVideoRef = useRef(null);
+  const replySwiperRef = useRef(null);
+  const lastScrollTime = useRef(0);
 
   const getAssetUrl = (url) => {
     if (!url) return '';
@@ -51,7 +50,7 @@ const HomePage = () => {
       if (response.data && Array.isArray(response.data)) {
         setVideos(response.data);
 
-        // تهيئة الإعجابات
+        // Initialize likes
         if (user) {
           const userLikedVideos = new Set();
           const userLikedReplies = new Set();
@@ -88,52 +87,71 @@ const HomePage = () => {
     fetchVideos();
   }, [fetchVideos]);
 
-  // Handle main scroll for full page navigation
+  // Fixed scroll handler for video navigation
   useEffect(() => {
-    let isScrolling = false;
     const handleWheel = (e) => {
-      if (isScrolling) return;
+      const now = Date.now();
+      // Debounce scrolling to prevent too rapid changes
+      if (now - lastScrollTime.current < 500) return;
       
-      e.preventDefault();
-      isScrolling = true;
+      const delta = e.deltaY;
       
-      if (e.deltaY > 50 && activeVideoIndex < videos.length - 1) {
-        setActiveVideoIndex(prev => prev + 1);
-        setActiveReplyIndex(0);
-      } else if (e.deltaY < -50 && activeVideoIndex > 0) {
-        setActiveVideoIndex(prev => prev - 1);
-        setActiveReplyIndex(0);
+      if (Math.abs(delta) > 30) { // Threshold for scroll
+        if (delta > 0) {
+          // Scroll down - next video
+          if (activeVideoIndex < videos.length - 1) {
+            setActiveVideoIndex(prev => prev + 1);
+            setActiveReplyIndex(0);
+            lastScrollTime.current = now;
+          }
+        } else {
+          // Scroll up - previous video
+          if (activeVideoIndex > 0) {
+            setActiveVideoIndex(prev => prev - 1);
+            setActiveReplyIndex(0);
+            lastScrollTime.current = now;
+          }
+        }
       }
-      
-      setTimeout(() => {
-        isScrolling = false;
-      }, 800);
     };
 
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => window.removeEventListener('wheel', handleWheel);
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+    };
   }, [activeVideoIndex, videos.length]);
 
-  // Handle keyboard navigation
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'ArrowDown' && activeVideoIndex < videos.length - 1) {
-        setActiveVideoIndex(prev => prev + 1);
-        setActiveReplyIndex(0);
-      } else if (e.key === 'ArrowUp' && activeVideoIndex > 0) {
-        setActiveVideoIndex(prev => prev - 1);
-        setActiveReplyIndex(0);
-      } else if (e.key === 'ArrowRight' && currentVideo?.replies?.length > 0) {
-        if (activeReplyIndex < currentVideo.replies.length - 1) {
-          setActiveReplyIndex(prev => prev + 1);
-        }
-      } else if (e.key === 'ArrowLeft' && currentVideo?.replies?.length > 0) {
-        if (activeReplyIndex > 0) {
-          setActiveReplyIndex(prev => prev - 1);
-        }
-      } else if (e.key === ' ') {
-        e.preventDefault();
-        togglePlayPause();
+      switch(e.key) {
+        case 'ArrowDown':
+          if (activeVideoIndex < videos.length - 1) {
+            setActiveVideoIndex(prev => prev + 1);
+            setActiveReplyIndex(0);
+          }
+          break;
+        case 'ArrowUp':
+          if (activeVideoIndex > 0) {
+            setActiveVideoIndex(prev => prev - 1);
+            setActiveReplyIndex(0);
+          }
+          break;
+        case 'ArrowRight':
+          if (currentVideo?.replies?.length > 0 && activeReplyIndex < currentVideo.replies.length - 1) {
+            setActiveReplyIndex(prev => prev + 1);
+          }
+          break;
+        case 'ArrowLeft':
+          if (activeReplyIndex > 0) {
+            setActiveReplyIndex(prev => prev - 1);
+          }
+          break;
+        case ' ':
+          e.preventDefault();
+          togglePlayPause();
+          break;
       }
     };
 
@@ -145,13 +163,6 @@ const HomePage = () => {
     setIsMainPlaying(prev => !prev);
     if (mainVideoRef.current) {
       isMainPlaying ? mainVideoRef.current.pause() : mainVideoRef.current.play();
-    }
-  };
-
-  const toggleReplyPlayPause = () => {
-    setIsReplyPlaying(prev => !prev);
-    if (replyVideoRef.current) {
-      isReplyPlaying ? replyVideoRef.current.pause() : replyVideoRef.current.play();
     }
   };
 
@@ -276,7 +287,6 @@ const HomePage = () => {
       }
     } else {
       navigator.clipboard.writeText(shareUrl);
-      // Show toast notification
     }
   };
 
@@ -284,6 +294,19 @@ const HomePage = () => {
 
   const currentVideo = videos[activeVideoIndex];
   const currentReply = currentVideo?.replies?.[activeReplyIndex];
+
+  // Navigate to next/previous reply
+  const goToNextReply = () => {
+    if (currentVideo?.replies && activeReplyIndex < currentVideo.replies.length - 1) {
+      setActiveReplyIndex(prev => prev + 1);
+    }
+  };
+
+  const goToPrevReply = () => {
+    if (activeReplyIndex > 0) {
+      setActiveReplyIndex(prev => prev - 1);
+    }
+  };
 
   // Loading state
   if (loading) return (
@@ -322,7 +345,7 @@ const HomePage = () => {
   return (
     <div className="home-page">
       <div className="content-wrapper">
-        {/* النصف الأيسر - الفيديو الأساسي */}
+        {/* Left Half - Main Video */}
         <div className="main-video-section">
           <div className="video-wrapper">
             <video
@@ -333,7 +356,6 @@ const HomePage = () => {
               loop
               muted={isMuted}
               playsInline
-              onClick={togglePlayPause}
             />
             
             {/* Gradient overlay */}
@@ -345,11 +367,6 @@ const HomePage = () => {
                 <span className="username">@{currentVideo.user.username}</span>
               </div>
               <p className="video-description">{currentVideo.description}</p>
-              <div className="video-tags">
-                {currentVideo.tags?.map((tag, index) => (
-                  <span key={index} className="tag">#{tag}</span>
-                ))}
-              </div>
             </div>
 
             {/* Action buttons - TikTok style */}
@@ -379,7 +396,7 @@ const HomePage = () => {
                 onClick={() => handleReply(currentVideo._id)}
               >
                 <FaComment />
-                <span>{currentVideo.replies?.length || 0}</span>
+                <span>رد</span>
               </button>
 
               <button 
@@ -387,7 +404,7 @@ const HomePage = () => {
                 onClick={() => handleSaveVideo(currentVideo._id)}
               >
                 <FaBookmark />
-                <span>{currentVideo.saved?.length || 0}</span>
+                <span>حفظ</span>
               </button>
 
               <button 
@@ -410,13 +427,17 @@ const HomePage = () => {
                 <div 
                   key={index}
                   className={`indicator ${index === activeVideoIndex ? 'active' : ''} ${index < activeVideoIndex ? 'passed' : ''}`}
+                  onClick={() => {
+                    setActiveVideoIndex(index);
+                    setActiveReplyIndex(0);
+                  }}
                 />
               ))}
             </div>
           </div>
         </div>
 
-        {/* النصف الأيمن - الردود */}
+        {/* Right Half - Replies */}
         <div className="replies-section">
           {currentVideo?.replies?.length > 0 ? (
             <>
@@ -434,96 +455,84 @@ const HomePage = () => {
               </div>
 
               <div className="reply-video-container">
-                <Swiper
-                  spaceBetween={0}
-                  slidesPerView={1}
-                  navigation={{
-                    prevEl: '.reply-nav-prev',
-                    nextEl: '.reply-nav-next'
-                  }}
-                  modules={[Navigation]}
-                  onSlideChange={(swiper) => setActiveReplyIndex(swiper.activeIndex)}
-                  onSwiper={(swiper) => {
-                    replySwiperRef.current = swiper;
-                  }}
-                  className="replies-swiper"
-                >
-                  {currentVideo.replies.map((reply, index) => (
-                    <SwiperSlide key={reply._id}>
-                      <div className="reply-wrapper">
-                        <video
-                          ref={index === activeReplyIndex ? replyVideoRef : null}
-                          src={getAssetUrl(reply.videoUrl)}
-                          className="reply-video"
-                          autoPlay={index === activeReplyIndex}
-                          loop
-                          muted={isMuted}
-                          playsInline
-                          onMouseEnter={() => setShowReplyPlayButton(true)}
-                          onMouseLeave={() => setShowReplyPlayButton(false)}
-                          onClick={toggleReplyPlayPause}
-                        />
+                <div className="reply-wrapper">
+                  <video
+                    ref={replyVideoRef}
+                    src={getAssetUrl(currentVideo.replies[activeReplyIndex].videoUrl)}
+                    className="reply-video"
+                    autoPlay
+                    loop
+                    muted={isMuted}
+                    playsInline
+                  />
 
-                        {/* Play button overlay for replies */}
-                        <div 
-                          className={`play-overlay ${showReplyPlayButton ? 'visible' : ''}`}
-                          onClick={toggleReplyPlayPause}
-                        >
-                          {isReplyPlaying ? <FaPause /> : <FaPlay />}
-                        </div>
+                  {/* Play button overlay */}
+                  <div className="play-overlay-center">
+                    <button className="play-btn-center" onClick={() => {
+                      if (replyVideoRef.current) {
+                        if (replyVideoRef.current.paused) {
+                          replyVideoRef.current.play();
+                        } else {
+                          replyVideoRef.current.pause();
+                        }
+                      }
+                    }}>
+                      {isReplyPlaying ? <FaPause /> : <FaPlay />}
+                    </button>
+                  </div>
 
-                        {/* Reply gradient */}
-                        <div className="reply-gradient"></div>
+                  {/* Reply gradient */}
+                  <div className="reply-gradient"></div>
 
-                        {/* Reply info */}
-                        <div className="reply-info">
-                          <div 
-                            className="reply-user"
-                            onClick={() => navigateToProfile(reply.user.username)}
-                          >
-                            <img 
-                              src={getAssetUrl(reply.user.profileImage) || '/default-avatar.png'} 
-                              alt={reply.user.username}
-                              className="reply-user-avatar"
-                            />
-                            <span>@{reply.user.username}</span>
-                          </div>
-                          <p className="reply-description">{reply.description}</p>
-                        </div>
+                  {/* Reply info */}
+                  <div className="reply-info">
+                    <div 
+                      className="reply-user"
+                      onClick={() => navigateToProfile(currentVideo.replies[activeReplyIndex].user.username)}
+                    >
+                      <span>@{currentVideo.replies[activeReplyIndex].user.username}</span>
+                    </div>
+                    <p className="reply-description">{currentVideo.replies[activeReplyIndex].description}</p>
+                  </div>
 
-                        {/* Reply actions */}
-                        <div className="reply-actions">
-                          <div 
-                            className="reply-profile-btn"
-                            onClick={() => navigateToProfile(reply.user.username)}
-                          >
-                            <img 
-                              src={getAssetUrl(reply.user.profileImage) || '/default-avatar.png'} 
-                              alt={reply.user.username}
-                              className="reply-profile-image"
-                            />
-                          </div>
+                  {/* Reply actions */}
+                  <div className="reply-actions">
+                    <div 
+                      className="reply-profile-btn"
+                      onClick={() => navigateToProfile(currentVideo.replies[activeReplyIndex].user.username)}
+                    >
+                      <img 
+                        src={getAssetUrl(currentVideo.replies[activeReplyIndex].user.profileImage) || '/default-avatar.png'} 
+                        alt={currentVideo.replies[activeReplyIndex].user.username}
+                        className="reply-profile-image"
+                      />
+                    </div>
 
-                          <button
-                            className={`reply-action-btn ${likedReplies.has(reply._id) ? 'liked' : ''}`}
-                            onClick={() => handleLikeReply(reply._id, currentVideo._id)}
-                          >
-                            <FaHeart />
-                            <span>{reply.likes?.length || 0}</span>
-                          </button>
-                        </div>
-                      </div>
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
+                    <button
+                      className={`reply-action-btn ${likedReplies.has(currentVideo.replies[activeReplyIndex]._id) ? 'liked' : ''}`}
+                      onClick={() => handleLikeReply(currentVideo.replies[activeReplyIndex]._id, currentVideo._id)}
+                    >
+                      <FaHeart />
+                      <span>{currentVideo.replies[activeReplyIndex].likes?.length || 0}</span>
+                    </button>
+                  </div>
+                </div>
 
-                {/* Navigation arrows */}
+                {/* Navigation arrows - Fixed visibility */}
                 {currentVideo.replies.length > 1 && (
                   <>
-                    <button className="reply-nav reply-nav-prev">
+                    <button 
+                      className={`reply-nav reply-nav-prev ${activeReplyIndex === 0 ? 'disabled' : ''}`}
+                      onClick={goToPrevReply}
+                      disabled={activeReplyIndex === 0}
+                    >
                       <FaChevronRight />
                     </button>
-                    <button className="reply-nav reply-nav-next">
+                    <button 
+                      className={`reply-nav reply-nav-next ${activeReplyIndex === currentVideo.replies.length - 1 ? 'disabled' : ''}`}
+                      onClick={goToNextReply}
+                      disabled={activeReplyIndex === currentVideo.replies.length - 1}
+                    >
                       <FaChevronLeft />
                     </button>
                   </>

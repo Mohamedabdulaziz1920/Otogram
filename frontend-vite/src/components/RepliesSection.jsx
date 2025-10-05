@@ -1,237 +1,451 @@
-import React, { useState } from 'react';
-import { FaTimes, FaPlay, FaTrash } from 'react-icons/fa';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { 
+  FaTimes, FaPlay, FaTrash, FaHeart, FaComment, 
+  FaShare, FaEllipsisV, FaChevronLeft, FaChevronRight,
+  FaPause, FaVolumeUp, FaVolumeMute, FaExpand
+} from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper';
+import { Navigation, FreeMode } from 'swiper';
 import VideoPlayer from './VideoPlayer';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import { api } from '../context/AuthContext';
 import 'swiper/css';
 import 'swiper/css/navigation';
+import 'swiper/css/free-mode';
 import './RepliesSection.css';
 
-const RepliesSection = ({ replies, parentVideo, parentVideoOwner, onDelete, onClose }) => {
+const RepliesSection = ({ 
+  replies = [], 
+  parentVideo, 
+  parentVideoOwner, 
+  onDelete, 
+  onClose,
+  onLikeReply,
+  onReplyToReply,
+  likedReplies = new Set()
+}) => {
   const [selectedReply, setSelectedReply] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteType, setDeleteType] = useState(null); // 'reply' or 'main'
+  const [deleteType, setDeleteType] = useState(null);
   const [replyToDelete, setReplyToDelete] = useState(null);
+  const [playingVideos, setPlayingVideos] = useState({});
+  const [showMoreMenu, setShowMoreMenu] = useState(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const [expandedView, setExpandedView] = useState(false);
+  
   const { user } = useAuth();
+  const swiperRef = useRef(null);
+  const videoRefs = useRef({});
 
-  const handleReplyClick = (reply) => {
+  // Handle reply selection
+  const handleReplyClick = useCallback((reply) => {
     setSelectedReply(reply);
-  };
+    setExpandedView(true);
+  }, []);
 
-  const handleCloseFullscreen = () => {
+  // Close fullscreen
+  const handleCloseFullscreen = useCallback(() => {
     setSelectedReply(null);
-  };
+    setExpandedView(false);
+  }, []);
 
-  const getVideoUrl = (video) => {
-    if (video.videoUrl.startsWith('http')) {
-      return video.videoUrl;
-    }
+  // Get URLs
+  const getVideoUrl = useCallback((video) => {
+    if (!video?.videoUrl) return '';
+    if (video.videoUrl.startsWith('http')) return video.videoUrl;
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     return `${baseURL}${video.videoUrl}`;
-  };
+  }, []);
 
-  const getProfileImageUrl = (user) => {
-    if (!user.profileImage) return '/default-avatar.png';
+  const getProfileImageUrl = useCallback((user) => {
+    if (!user?.profileImage || user.profileImage === '/default-avatar.png') {
+      return '/default-avatar.png';
+    }
     if (user.profileImage.startsWith('http')) return user.profileImage;
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     return `${baseURL}${user.profileImage}`;
-  };
+  }, []);
 
-  // حذف رد
+  // Delete reply
   const handleDeleteReply = async (reply) => {
     try {
-      await axios.delete(`/api/videos/reply/${reply._id}`);
+      await api.delete(`/api/videos/reply/${reply._id}`);
       onDelete(reply._id);
       if (selectedReply && selectedReply._id === reply._id) {
         handleCloseFullscreen();
       }
       setShowDeleteConfirm(false);
+      setReplyToDelete(null);
     } catch (error) {
       console.error('Error deleting reply:', error);
-      alert('فشل حذف الرد');
     }
   };
 
-  // حذف الفيديو الأساسي مع جميع الردود
+  // Delete main video
   const handleDeleteMainVideo = async () => {
     try {
-      await axios.delete(`/api/videos/${parentVideo._id}`);
+      await api.delete(`/api/videos/${parentVideo._id}`);
       onDelete(parentVideo._id);
       onClose();
       setShowDeleteConfirm(false);
     } catch (error) {
       console.error('Error deleting main video:', error);
-      alert('فشل حذف الفيديو');
     }
   };
 
-  const confirmDelete = () => {
+  // Confirm delete
+  const confirmDelete = useCallback(() => {
     if (deleteType === 'reply' && replyToDelete) {
       handleDeleteReply(replyToDelete);
     } else if (deleteType === 'main') {
       handleDeleteMainVideo();
     }
-  };
+  }, [deleteType, replyToDelete]);
 
-  // التحقق من صلاحيات الحذف
-  const canDeleteReply = (reply) => {
+  // Check permissions
+  const canDeleteReply = useCallback((reply) => {
     return user && (
-      reply.user._id === user.id || // صاحب الرد
-      parentVideoOwner === user.id   // صاحب الفيديو الأساسي
+      reply.user._id === user.id ||
+      reply.user._id === user._id ||
+      parentVideoOwner === user.id ||
+      parentVideoOwner === user._id
     );
+  }, [user, parentVideoOwner]);
+
+  const canDeleteMainVideo = useCallback(() => {
+    return user && (
+      parentVideo.user._id === user.id ||
+      parentVideo.user._id === user._id
+    );
+  }, [user, parentVideo]);
+
+  // Toggle video play/pause
+  const toggleVideoPlay = useCallback((replyId) => {
+    const video = videoRefs.current[replyId];
+    if (video) {
+      if (video.paused) {
+        video.play();
+        setPlayingVideos(prev => ({ ...prev, [replyId]: true }));
+      } else {
+        video.pause();
+        setPlayingVideos(prev => ({ ...prev, [replyId]: false }));
+      }
+    }
+  }, []);
+
+  // Handle share
+  const handleShare = useCallback(async (reply) => {
+    const shareUrl = `${window.location.origin}/video/${reply._id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `رد من @${reply.user.username}`,
+          text: reply.description || '',
+          url: shareUrl
+        });
+      } catch (error) {
+        console.log('Share cancelled');
+      }
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      // Show toast notification
+    }
+  }, []);
+
+  // Format numbers
+  const formatNumber = (num) => {
+    if (!num) return '0';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
   };
 
-  const canDeleteMainVideo = () => {
-    return user && parentVideo.user._id === user.id;
-  };
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (selectedReply) {
+          handleCloseFullscreen();
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedReply, onClose, handleCloseFullscreen]);
 
   return (
     <>
-      <div className="replies-section">
+      <div className={`replies-section ${expandedView ? 'expanded' : ''}`}>
+        {/* Header */}
         <div className="replies-header">
-          <h3>الردود ({replies.length})</h3>
+          <div className="header-left">
+            <h3>
+              <FaComment className="header-icon" />
+              <span>الردود</span>
+              <span className="replies-count">{replies.length}</span>
+            </h3>
+          </div>
+          
           <div className="header-actions">
             {canDeleteMainVideo() && (
               <button 
-                className="delete-main-btn"
+                className="action-btn delete-all-btn"
                 onClick={() => {
                   setDeleteType('main');
                   setShowDeleteConfirm(true);
                 }}
-                title="حذف الفيديو الأساسي وجميع الردود"
+                title="حذف الفيديو وجميع الردود"
               >
                 <FaTrash />
-                <span>حذف الكل</span>
               </button>
             )}
+            
+            <button 
+              className="action-btn mute-btn"
+              onClick={() => setIsMuted(!isMuted)}
+              title={isMuted ? 'تشغيل الصوت' : 'كتم الصوت'}
+            >
+              {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+            </button>
+            
             <button className="close-replies" onClick={onClose}>
               <FaTimes />
             </button>
           </div>
         </div>
+
+        {/* Drag handle */}
+        <div className="drag-handle">
+          <span></span>
+        </div>
         
-        <div className="replies-slider">
-          <Swiper
-            spaceBetween={10}
-            slidesPerView={2.5}
-            navigation={true}
-            modules={[Navigation]}
-            breakpoints={{
-              320: {
-                slidesPerView: 2,
-                spaceBetween: 8
-              },
-              480: {
-                slidesPerView: 2.5,
-                spaceBetween: 10
-              },
-              640: {
-                slidesPerView: 3,
-                spaceBetween: 10
-              },
-              768: {
-                slidesPerView: 3.5,
-                spaceBetween: 12
-              }
-            }}
-            className="replies-swiper"
-          >
-            {replies.map((reply) => (
-              <SwiperSlide key={reply._id}>
-                <div className="reply-thumbnail-wrapper">
-                  <div 
-                    className="reply-thumbnail"
-                    onClick={() => handleReplyClick(reply)}
-                  >
-                    <video 
-                      src={getVideoUrl(reply)}
-                      muted
-                      loop
-                      onMouseEnter={(e) => e.target.play()}
-                      onMouseLeave={(e) => e.target.pause()}
-                    />
-                    <div className="reply-overlay">
-                      <FaPlay className="play-icon" />
+        {/* Replies carousel */}
+        <div className="replies-container">
+          {replies.length > 0 ? (
+            <Swiper
+              ref={swiperRef}
+              spaceBetween={12}
+              slidesPerView="auto"
+              freeMode={true}
+              navigation={{
+                prevEl: '.replies-nav-prev',
+                nextEl: '.replies-nav-next',
+              }}
+              modules={[Navigation, FreeMode]}
+              className="replies-swiper"
+            >
+              {replies.map((reply) => (
+                <SwiperSlide key={reply._id} className="reply-slide">
+                  <div className="reply-card">
+                    {/* Video thumbnail */}
+                    <div 
+                      className="reply-thumbnail"
+                      onClick={() => handleReplyClick(reply)}
+                    >
+                      <video 
+                        ref={el => videoRefs.current[reply._id] = el}
+                        src={getVideoUrl(reply)}
+                        muted={isMuted}
+                        loop
+                        playsInline
+                        onMouseEnter={(e) => {
+                          e.target.play();
+                          setPlayingVideos(prev => ({ ...prev, [reply._id]: true }));
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.pause();
+                          e.target.currentTime = 0;
+                          setPlayingVideos(prev => ({ ...prev, [reply._id]: false }));
+                        }}
+                      />
+                      
+                      {/* Play/Pause overlay */}
+                      <div className="video-overlay">
+                        <button 
+                          className="play-pause-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleVideoPlay(reply._id);
+                          }}
+                        >
+                          {playingVideos[reply._id] ? <FaPause /> : <FaPlay />}
+                        </button>
+                      </div>
+
+                      {/* Expand button */}
+                      <button 
+                        className="expand-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReplyClick(reply);
+                        }}
+                      >
+                        <FaExpand />
+                      </button>
                     </div>
-                    <div className="reply-info">
+
+                    {/* User info */}
+                    <div className="reply-user-info">
                       <img 
                         src={getProfileImageUrl(reply.user)} 
                         alt={reply.user.username}
-                        className="reply-user-avatar"
+                        className="reply-avatar"
                       />
-                      <span>@{reply.user.username}</span>
+                      <div className="reply-user-details">
+                        <span className="reply-username">@{reply.user.username}</span>
+                        {reply.user._id === parentVideoOwner && (
+                          <span className="creator-badge">المنشئ</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Reply stats */}
+                    <div className="reply-stats">
+                      <div className="stat-item">
+                        <FaHeart className={likedReplies.has(reply._id) ? 'liked' : ''} />
+                        <span>{formatNumber(reply.likes?.length || 0)}</span>
+                      </div>
+                      <div className="stat-item">
+                        <FaComment />
+                        <span>{formatNumber(reply.replies?.length || 0)}</span>
+                      </div>
+                    </div>
+
+                    {/* Action menu */}
+                    <div className="reply-actions">
+                      <button 
+                        className="action-menu-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMoreMenu(showMoreMenu === reply._id ? null : reply._id);
+                        }}
+                      >
+                        <FaEllipsisV />
+                      </button>
+                      
+                      {showMoreMenu === reply._id && (
+                        <div className="action-menu">
+                          {onLikeReply && (
+                            <button onClick={() => onLikeReply(reply._id)}>
+                              <FaHeart /> إعجاب
+                            </button>
+                          )}
+                          {onReplyToReply && (
+                            <button onClick={() => onReplyToReply(reply._id)}>
+                              <FaComment /> رد
+                            </button>
+                          )}
+                          <button onClick={() => handleShare(reply)}>
+                            <FaShare /> مشاركة
+                          </button>
+                          {canDeleteReply(reply) && (
+                            <button 
+                              className="danger"
+                              onClick={() => {
+                                setReplyToDelete(reply);
+                                setDeleteType('reply');
+                                setShowDeleteConfirm(true);
+                                setShowMoreMenu(null);
+                              }}
+                            >
+                              <FaTrash /> حذف
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  {canDeleteReply(reply) && (
-                    <button 
-                      className="delete-reply-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setReplyToDelete(reply);
-                        setDeleteType('reply');
-                        setShowDeleteConfirm(true);
-                      }}
-                    >
-                      <FaTrash />
-                    </button>
-                  )}
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <div className="no-replies">
+              <FaComment />
+              <p>لا توجد ردود بعد</p>
+              <span>كن أول من يرد على هذا الفيديو</span>
+            </div>
+          )}
+
+          {/* Navigation arrows */}
+          {replies.length > 3 && (
+            <>
+              <button className="replies-nav replies-nav-prev">
+                <FaChevronRight />
+              </button>
+              <button className="replies-nav replies-nav-next">
+                <FaChevronLeft />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* عرض الرد بملء الشاشة */}
+      {/* Fullscreen reply view */}
       {selectedReply && (
         <div className="fullscreen-reply">
           <div className="fullscreen-header">
             <button className="close-fullscreen" onClick={handleCloseFullscreen}>
               <FaTimes />
             </button>
-            {canDeleteReply(selectedReply) && (
+            
+            <div className="fullscreen-actions">
+              {canDeleteReply(selectedReply) && (
+                <button 
+                  className="delete-fullscreen-btn"
+                  onClick={() => {
+                    setReplyToDelete(selectedReply);
+                    setDeleteType('reply');
+                    setShowDeleteConfirm(true);
+                  }}
+                >
+                  <FaTrash />
+                </button>
+              )}
+              
               <button 
-                className="delete-fullscreen-btn"
-                onClick={() => {
-                  setReplyToDelete(selectedReply);
-                  setDeleteType('reply');
-                  setShowDeleteConfirm(true);
-                }}
+                className="share-fullscreen-btn"
+                onClick={() => handleShare(selectedReply)}
               >
-                <FaTrash />
-                <span>حذف الرد</span>
+                <FaShare />
               </button>
-            )}
+            </div>
           </div>
-    <VideoPlayer
-  video={selectedReply}
-  onDelete={(videoId) => {
-    onDelete(videoId);
-    handleCloseFullscreen();
-  }}
-  isActive={true}
-  parentVideoOwner={parentVideoOwner} // تمرير معرف مالك الفيديو الأساسي
-  isReply={true}
-/>
+          
+          <VideoPlayer
+            video={selectedReply}
+            onDelete={(videoId) => {
+              onDelete(videoId);
+              handleCloseFullscreen();
+            }}
+            isActive={true}
+            parentVideoOwner={parentVideoOwner}
+            isReply={true}
+          />
         </div>
       )}
 
-      {/* تأكيد الحذف */}
+      {/* Delete confirmation modal */}
       {showDeleteConfirm && (
-        <div className="delete-confirm-modal">
-          <div className="confirm-dialog">
+        <div className="delete-modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="delete-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-icon">
+              <FaTrash />
+            </div>
+            
             <h3>تأكيد الحذف</h3>
+            
             <p>
               {deleteType === 'main' 
-                ? 'هل أنت متأكد من حذف الفيديو الأساسي وجميع الردود؟'
-                : 'هل أنت متأكد من حذف هذا الرد؟'
+                ? 'سيتم حذف الفيديو الأساسي وجميع الردود المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.'
+                : 'سيتم حذف هذا الرد نهائياً. هل أنت متأكد؟'
               }
             </p>
-            <div className="confirm-buttons">
-              <button onClick={confirmDelete} className="btn btn-danger">
-                نعم، احذف
+            
+            <div className="modal-actions">
+              <button onClick={confirmDelete} className="btn-danger">
+                <FaTrash /> حذف نهائياً
               </button>
               <button 
                 onClick={() => {
@@ -239,7 +453,7 @@ const RepliesSection = ({ replies, parentVideo, parentVideoOwner, onDelete, onCl
                   setReplyToDelete(null);
                   setDeleteType(null);
                 }} 
-                className="btn btn-secondary"
+                className="btn-cancel"
               >
                 إلغاء
               </button>

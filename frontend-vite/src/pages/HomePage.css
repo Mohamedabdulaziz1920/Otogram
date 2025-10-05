@@ -36,11 +36,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Hide scrollbars globally */
-::-webkit-scrollbar {
-  display: none;
-}
-
 /* Main Container */
 .home-page {
   width: 100vw;
@@ -134,25 +129,7 @@ body {
   overflow: hidden;
 }
 
-.video-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.tag {
-  color: var(--text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.tag:hover {
-  color: var(--secondary-color);
-}
-
-/* Action Buttons - TikTok Style */
+/* Action Buttons - Fixed Layout */
 .action-buttons {
   position: absolute;
   bottom: 100px;
@@ -160,7 +137,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   z-index: 10;
 }
 
@@ -169,11 +146,10 @@ body {
   width: 48px;
   height: 48px;
   cursor: pointer;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
-.profile-image,
-.reply-profile-image {
+.profile-image {
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -205,8 +181,8 @@ body {
   border: 2px solid var(--bg-primary);
 }
 
-.action-btn,
-.reply-action-btn {
+/* Uniform action buttons */
+.action-btn {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -225,24 +201,20 @@ body {
   position: relative;
 }
 
-.action-btn:hover,
-.reply-action-btn:hover {
+.action-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: scale(1.1);
 }
 
-.action-btn:active,
-.reply-action-btn:active {
+.action-btn:active {
   transform: scale(0.95);
 }
 
-.action-btn.liked,
-.reply-action-btn.liked {
+.action-btn.liked {
   animation: likeAnimation 0.5s ease;
 }
 
-.action-btn.liked svg,
-.reply-action-btn.liked svg {
+.action-btn.liked svg {
   color: var(--primary-color);
 }
 
@@ -258,16 +230,14 @@ body {
   60% { transform: scale(1); }
 }
 
-.action-btn svg,
-.reply-action-btn svg {
-  font-size: 24px;
+.action-btn svg {
+  font-size: 22px;
 }
 
-.action-btn span,
-.reply-action-btn span {
-  font-size: 12px;
+.action-btn span {
+  font-size: 11px;
   font-weight: 600;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 /* Volume Button */
@@ -316,6 +286,10 @@ body {
   border-radius: 2px;
   transition: var(--transition);
   cursor: pointer;
+}
+
+.indicator:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .indicator.active {
@@ -370,6 +344,10 @@ body {
   transition: var(--transition);
 }
 
+.dot:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
 .dot.active {
   background: var(--primary-color);
   width: 18px;
@@ -383,11 +361,6 @@ body {
   overflow: hidden;
 }
 
-.replies-swiper {
-  width: 100%;
-  height: 100%;
-}
-
 .reply-wrapper {
   width: 100%;
   height: 100%;
@@ -398,19 +371,29 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  cursor: pointer;
 }
 
-/* Play Overlay for Replies */
-.play-overlay {
+/* Centered Play Button for Replies */
+.play-overlay-center {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  z-index: 15;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.reply-wrapper:hover .play-overlay-center {
+  opacity: 1;
+}
+
+.play-btn-center {
   width: 80px;
   height: 80px;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(10px);
+  border: none;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -418,19 +401,12 @@ body {
   color: var(--text-primary);
   font-size: 32px;
   cursor: pointer;
-  opacity: 0;
   transition: var(--transition);
-  pointer-events: none;
 }
 
-.play-overlay.visible {
-  opacity: 1;
-  pointer-events: all;
-}
-
-.play-overlay:hover {
+.play-btn-center:hover {
   background: rgba(0, 0, 0, 0.8);
-  transform: translate(-50%, -50%) scale(1.1);
+  transform: scale(1.1);
 }
 
 /* Reply Gradient */
@@ -456,19 +432,8 @@ body {
 }
 
 .reply-user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   margin-bottom: 10px;
   cursor: pointer;
-}
-
-.reply-user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--text-primary);
 }
 
 .reply-user span {
@@ -476,6 +441,11 @@ body {
   font-size: 14px;
   font-weight: 600;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  transition: var(--transition);
+}
+
+.reply-user:hover span {
+  color: var(--primary-color);
 }
 
 .reply-description {
@@ -497,7 +467,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   z-index: 10;
 }
 
@@ -507,7 +477,8 @@ body {
   cursor: pointer;
 }
 
-.reply-profile-btn img {
+.reply-profile-btn img,
+.reply-profile-image {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -521,16 +492,51 @@ body {
   border-color: var(--primary-color);
 }
 
-/* Navigation Arrows for Replies */
+.reply-action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.reply-action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.reply-action-btn.liked svg {
+  color: var(--primary-color);
+}
+
+.reply-action-btn svg {
+  font-size: 20px;
+}
+
+.reply-action-btn span {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Navigation Arrows for Replies - Always Visible */
 .reply-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
   border: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -539,25 +545,29 @@ body {
   cursor: pointer;
   transition: var(--transition);
   z-index: 20;
-  opacity: 0.7;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.reply-nav:hover {
-  background: rgba(255, 255, 255, 0.2);
-  opacity: 1;
+.reply-nav:hover:not(.disabled) {
+  background: rgba(255, 255, 255, 0.25);
   transform: translateY(-50%) scale(1.1);
 }
 
+.reply-nav.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 .reply-nav-prev {
-  right: 10px;
+  right: 15px;
 }
 
 .reply-nav-next {
-  left: 10px;
+  left: 15px;
 }
 
 .reply-nav svg {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 /* No Replies State */
@@ -747,18 +757,18 @@ body {
   .action-buttons {
     bottom: 70px;
     right: 15px;
-    gap: 15px;
+    gap: 12px;
   }
 
   .profile-btn,
   .action-btn {
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
   }
 
   .profile-image {
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
   }
 
   .action-btn svg {
@@ -766,129 +776,22 @@ body {
   }
 
   .action-btn span {
-    font-size: 11px;
-  }
-
-  .video-info {
-    bottom: 15px;
-    left: 15px;
-    right: 80px;
-  }
-
-  .username {
-    font-size: 14px;
-  }
-
-  .video-description {
-    font-size: 13px;
-    -webkit-line-clamp: 2;
-  }
-
-  .replies-header {
-    padding: 15px;
-  }
-
-  .reply-actions {
-    bottom: 60px;
-    right: 15px;
-    gap: 15px;
-  }
-
-  .reply-profile-btn,
-  .reply-action-btn {
-    width: 40px;
-    height: 40px;
-  }
-
-  .reply-profile-btn img {
-    width: 40px;
-    height: 40px;
-  }
-
-  .play-overlay {
-    width: 60px;
-    height: 60px;
-    font-size: 24px;
-  }
-}
-
-@media (max-width: 480px) {
-  .action-buttons {
-    gap: 12px;
-  }
-
-  .profile-btn,
-  .action-btn {
-    width: 40px;
-    height: 40px;
-  }
-
-  .profile-image {
-    width: 40px;
-    height: 40px;
-  }
-
-  .action-btn svg {
-    font-size: 18px;
-  }
-
-  .action-btn span {
     font-size: 10px;
   }
 
-  .video-indicators {
-    display: none;
+  .reply-nav {
+    width: 40px;
+    height: 40px;
   }
 
-  .volume-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .volume-btn svg {
+  .reply-nav svg {
     font-size: 18px;
   }
-}
 
-/* Landscape Mode */
-@media (orientation: landscape) and (max-height: 600px) {
-  .content-wrapper {
-    flex-direction: row;
-  }
-
-  .main-video-section,
-  .replies-section {
-    height: 100%;
-  }
-
-  .action-buttons,
-  .reply-actions {
-    bottom: 20px;
-    gap: 10px;
-  }
-
-  .profile-btn,
-  .action-btn,
-  .reply-profile-btn,
-  .reply-action-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .profile-image,
-  .reply-profile-btn img {
-    width: 36px;
-    height: 36px;
-  }
-
-  .action-btn svg,
-  .reply-action-btn svg {
-    font-size: 16px;
-  }
-
-  .action-btn span,
-  .reply-action-btn span {
-    font-size: 9px;
+  .play-btn-center {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
   }
 }
 
@@ -920,13 +823,4 @@ body {
 .retry-btn {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-}
-
-/* Performance optimizations */
-.video-player,
-.reply-video {
-  will-change: transform;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }

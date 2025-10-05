@@ -1,121 +1,236 @@
-/* ==========================================
-   🎥 VideoPlayerSplit – Modern Style
-   ========================================== */
+/* ========================================
+   VIDEO PLAYER SPLIT - MODERN TIKTOK STYLE
+   ======================================== */
 
+/* Main container */
 .video-player-split {
   position: relative;
   width: 100%;
   height: 100%;
   background: #000;
   overflow: hidden;
-  cursor: pointer;
-  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.video-player-split:hover {
-  transform: scale(1.01);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
-}
-
+/* Video element */
 .video-element-split {
   width: 100%;
   height: 100%;
   object-fit: cover;
   background: #000;
-  border-radius: 16px;
+  display: block;
 }
 
-/* ==================== ⏳ حالة التحميل ==================== */
+/* Loading state */
 .video-loading {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
-  z-index: 5;
+  z-index: 10;
 }
 
-.video-loading::after {
-  content: '';
-  width: 46px;
-  height: 46px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #fe2c55;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
-/* ==================== ▶️ زر التشغيل ==================== */
+/* Play/Pause overlay */
 .play-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
-  opacity: 1;
-  transition: background 0.3s ease;
-  z-index: 10;
+  background: transparent;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 5;
+  cursor: pointer;
 }
 
-.play-overlay:hover {
-  background: rgba(0, 0, 0, 0.4);
+.play-overlay.visible {
+  opacity: 1;
 }
 
 .play-button {
-  width: 70px;
-  height: 70px;
-  background: rgba(255, 255, 255, 0.25);
+  width: 80px;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: #fff;
-  font-size: 24px;
+  font-size: 32px;
   border-radius: 50%;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s ease;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .play-button:hover {
-  transform: scale(1.15);
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
 }
 
-/* ==================== ❌ رسالة الخطأ ==================== */
-.video-error {
+.play-button svg {
+  margin-left: 3px;
+}
+
+/* Progress bar */
+.video-progress {
   position: absolute;
-  inset: 0;
-  background: rgba(15, 15, 15, 0.9);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 6;
+}
+
+.progress-bar {
+  height: 100%;
+  background: #fe2c55;
+  transition: width 0.1s linear;
+  position: relative;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Fullscreen button */
+.fullscreen-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
-  font-size: 1rem;
-  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 7;
+  opacity: 0;
 }
 
-/* ==================== 🖥️ وضع ملء الشاشة ==================== */
+.video-player-split:hover .fullscreen-btn {
+  opacity: 1;
+}
+
+.fullscreen-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1);
+}
+
+.fullscreen-btn svg {
+  font-size: 18px;
+}
+
+/* Time display */
+.time-display {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 6;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.video-player-split:hover .time-display {
+  opacity: 1;
+}
+
+/* Error state */
+.video-error {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.error-content {
+  text-align: center;
+  color: #fff;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.video-error p {
+  font-size: 16px;
+  margin-bottom: 20px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.retry-btn {
+  background: #fe2c55;
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+  background: #e91e3a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(254, 44, 85, 0.3);
+}
+
+/* Fullscreen modal */
 .fullscreen-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(10px);
-  animation: fadeIn 0.3s ease forwards;
+  -webkit-backdrop-filter: blur(10px);
+  animation: fadeIn 0.3s ease;
   z-index: 999;
 }
 
@@ -126,52 +241,55 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 20px;
 }
 
 .fullscreen-video-wrapper {
   position: relative;
-  width: 90%;
-  max-width: 800px;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
   background: #000;
-  border-radius: 16px;
-  overflow: hidden;
-  animation: scaleIn 0.3s ease forwards;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
+  animation: scaleIn 0.3s ease;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
 }
 
 .fullscreen-video {
   width: 100%;
   height: 100%;
+  max-height: 90vh;
   object-fit: contain;
   background: #000;
 }
 
-/* زر الإغلاق */
+/* Close button */
 .fullscreen-close-btn {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background: rgba(255, 255, 255, 0.2);
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: none;
   color: #fff;
-  font-size: 20px;
+  font-size: 24px;
   border-radius: 50%;
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s ease;
+  transition: all 0.3s ease;
   z-index: 10;
 }
 
 .fullscreen-close-btn:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.2);
   transform: rotate(90deg);
 }
 
-/* ==================== 🎞️ أنيميشن ==================== */
+/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -192,26 +310,141 @@
   }
 }
 
-/* ==================== 📱 استجابة للهاتف ==================== */
+/* Special classes for different contexts */
+.video-player-split.main-video {
+  cursor: default;
+}
+
+.video-player-split.reply-video {
+  cursor: pointer;
+}
+
+/* Mobile optimizations */
 @media (max-width: 768px) {
   .play-button {
     width: 60px;
     height: 60px;
-    font-size: 20px;
+    font-size: 24px;
+  }
+
+  .play-button svg {
+    margin-left: 2px;
+  }
+
+  .fullscreen-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .fullscreen-btn svg {
+    font-size: 16px;
   }
 
   .fullscreen-video-wrapper {
     width: 100%;
     height: 100%;
-    border-radius: 0;
+    max-width: 100%;
+    max-height: 100%;
   }
 
   .fullscreen-close-btn {
-    width: 38px;
-    height: 38px;
-    font-size: 18px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    top: 10px;
+    right: 10px;
+  }
+
+  .time-display {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .video-progress {
+    height: 2px;
+  }
+
+  .progress-bar::after {
+    width: 8px;
+    height: 8px;
+    right: -4px;
   }
 }
+
+/* Performance optimizations */
+.video-element-split {
+  will-change: transform;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Touch optimizations */
+.play-button,
+.fullscreen-btn,
+.fullscreen-close-btn,
+.retry-btn {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Prevent iOS video controls */
+.video-element-split::-webkit-media-controls {
+  display: none !important;
+}
+
+.video-element-split::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+
+/* Prevent text selection */
 .video-player-split {
-  touch-action: pan-y;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Smooth transitions */
+.video-player-split * {
+  transition-property: opacity, transform, background;
+  transition-duration: 0.3s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading animation improvements */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner,
+  .progress-bar,
+  .play-button,
+  .fullscreen-btn,
+  .fullscreen-close-btn {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .video-player-split {
+    background: #000;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .play-button,
+  .fullscreen-btn,
+  .fullscreen-close-btn {
+    border: 2px solid #fff;
+  }
+  
+  .video-progress {
+    background: #333;
+  }
+  
+  .progress-bar {
+    background: #fff;
+  }
 }

@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
-  FaHome, FaUser, FaPlus, FaShieldAlt, FaCompass,
-  FaBell, FaInbox, FaUserFriends, FaSearch, FaHeart
+  FaHome, FaUser, FaPlus, FaShieldAlt, FaMoon, FaSun
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import './NavigationBar.css';
 
 const NavigationBar = ({ currentPage }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [showUploadTip, setShowUploadTip] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
 
   const canUpload = user && (user.role === 'creator' || user.role === 'admin');
   const isAdmin = user && user.role === 'admin';
@@ -52,24 +52,9 @@ const NavigationBar = ({ currentPage }) => {
     }
   };
 
-  // Handle discover/explore
-  const handleDiscoverClick = () => {
-    navigate('/discover');
-  };
-
-  // Handle notifications (future feature)
-  const handleNotificationsClick = () => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-    navigate('/notifications');
-  };
-
   // Determine active page
   const isActive = (page) => {
     if (page === 'home' && location.pathname === '/') return true;
-    if (page === 'discover' && location.pathname === '/discover') return true;
     if (page === 'profile' && location.pathname.includes('/profile')) return true;
     if (page === 'admin' && location.pathname === '/admin') return true;
     return currentPage === page;
@@ -84,7 +69,7 @@ const NavigationBar = ({ currentPage }) => {
           <Link 
             to="/" 
             className={`nav-item ${isActive('home') ? 'active' : ''}`}
-            aria-label="Home"
+            aria-label="الرئيسية"
           >
             <div className="nav-icon-wrapper">
               <FaHome className="nav-icon" />
@@ -93,24 +78,30 @@ const NavigationBar = ({ currentPage }) => {
             <span className="nav-label">الرئيسية</span>
           </Link>
 
-          {/* Discover */}
+          {/* Theme Toggle */}
           <button 
-            onClick={handleDiscoverClick}
-            className={`nav-item ${isActive('discover') ? 'active' : ''}`}
-            aria-label="Discover"
+            onClick={toggleTheme}
+            className="nav-item theme-toggle-nav"
+            aria-label={theme === 'dark' ? 'الوضع الفاتح' : 'الوضع الداكن'}
+            title={theme === 'dark' ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
           >
             <div className="nav-icon-wrapper">
-              <FaCompass className="nav-icon" />
-              {isActive('discover') && <div className="active-indicator"></div>}
+              {theme === 'dark' ? (
+                <FaSun className="nav-icon theme-icon" />
+              ) : (
+                <FaMoon className="nav-icon theme-icon" />
+              )}
             </div>
-            <span className="nav-label">اكتشف</span>
+            <span className="nav-label">
+              {theme === 'dark' ? 'فاتح' : 'داكن'}
+            </span>
           </button>
 
           {/* Upload Button - Center */}
           <button 
             className="nav-item upload-button"
             onClick={handleUploadClick}
-            aria-label="Upload Video"
+            aria-label="رفع فيديو"
           >
             <div className="upload-icon-wrapper">
               <div className="upload-icon-bg">
@@ -123,27 +114,11 @@ const NavigationBar = ({ currentPage }) => {
             </div>
           </button>
 
-          {/* Notifications/Inbox */}
-          <button 
-            onClick={handleNotificationsClick}
-            className={`nav-item ${isActive('notifications') ? 'active' : ''}`}
-            aria-label="Notifications"
-          >
-            <div className="nav-icon-wrapper">
-              <FaInbox className="nav-icon" />
-              {notificationCount > 0 && (
-                <span className="notification-badge">{notificationCount}</span>
-              )}
-              {isActive('notifications') && <div className="active-indicator"></div>}
-            </div>
-            <span className="nav-label">البريد</span>
-          </button>
-
           {/* Profile */}
           <button 
             onClick={handleProfileClick}
             className={`nav-item ${isActive('profile') ? 'active' : ''}`}
-            aria-label="Profile"
+            aria-label="الملف الشخصي"
           >
             <div className="nav-icon-wrapper">
               {isAuthenticated && user ? (
@@ -152,6 +127,7 @@ const NavigationBar = ({ currentPage }) => {
                     src={getProfileImage()} 
                     alt={user.username}
                     className="nav-profile-img"
+                    onError={(e) => e.target.src = '/default-avatar.png'}
                   />
                   {isActive('profile') && <div className="active-ring"></div>}
                 </div>
@@ -172,7 +148,7 @@ const NavigationBar = ({ currentPage }) => {
             <Link 
               to="/admin" 
               className={`nav-item admin-item ${isActive('admin') ? 'active' : ''}`}
-              aria-label="Admin Dashboard"
+              aria-label="لوحة التحكم"
             >
               <div className="nav-icon-wrapper">
                 <FaShieldAlt className="nav-icon admin-icon" />

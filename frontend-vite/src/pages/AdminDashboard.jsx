@@ -50,52 +50,59 @@ const AdminDashboard = () => {
     }
   }, [user]);
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      console.log('Fetching users from API...');
-      
-      // استخدام الطريقة البسيطة التي كانت تعمل
-      const response = await api.get('/api/users');
-      
-      console.log('Users fetched successfully:', response.data);
-      
-      if (response.data && Array.isArray(response.data)) {
-        setUsers(response.data);
-        setFilteredUsers(response.data);
-        showNotification(`تم تحميل ${response.data.length} مستخدم بنجاح`, 'success');
-      } else {
-        throw new Error('البيانات المستلمة غير صحيحة');
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      
-      let errorMessage = 'فشل في جلب المستخدمين';
-      
-      if (error.response) {
-        // الخادم رد بخطأ
-        errorMessage = error.response.data?.message || `خطأ ${error.response.status}: ${error.response.statusText}`;
-        console.error('Server error:', error.response.data);
-      } else if (error.request) {
-        // لم يتم استلام رد من الخادم
-        errorMessage = 'لا يمكن الاتصال بالخادم. تأكد من تشغيل الخادم.';
-        console.error('No response received:', error.request);
-      } else {
-        // خطأ في إعداد الطلب
-        errorMessage = error.message || 'حدث خطأ غير متوقع';
-        console.error('Request error:', error.message);
-      }
-      
-      setError(errorMessage);
-      showNotification(errorMessage, 'error');
-      setUsers([]);
-      setFilteredUsers([]);
-    } finally {
-      setLoading(false);
+const fetchUsers = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    
+    console.log('Fetching users from API...');
+    
+    // استخدام الطريقة البسيطة التي كانت تعمل
+    const response = await api.get('/api/users');
+    
+    console.log('Users fetched successfully:', response.data);
+    
+    // ✅ التحقق من البنية الجديدة للبيانات
+    if (response.data && response.data.users && Array.isArray(response.data.users)) {
+      // البيانات تأتي في شكل { users: [...], pagination: {...} }
+      setUsers(response.data.users);
+      setFilteredUsers(response.data.users);
+      showNotification(`تم تحميل ${response.data.users.length} مستخدم بنجاح`, 'success');
+    } else if (response.data && Array.isArray(response.data)) {
+      // البيانات تأتي مباشرة كـ Array (الطريقة القديمة)
+      setUsers(response.data);
+      setFilteredUsers(response.data);
+      showNotification(`تم تحميل ${response.data.length} مستخدم بنجاح`, 'success');
+    } else {
+      throw new Error('البيانات المستلمة غير صحيحة');
     }
-  };
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    
+    let errorMessage = 'فشل في جلب المستخدمين';
+    
+    if (error.response) {
+      // الخادم رد بخطأ
+      errorMessage = error.response.data?.message || `خطأ ${error.response.status}: ${error.response.statusText}`;
+      console.error('Server error:', error.response.data);
+    } else if (error.request) {
+      // لم يتم استلام رد من الخادم
+      errorMessage = 'لا يمكن الاتصال بالخادم. تأكد من تشغيل الخادم.';
+      console.error('No response received:', error.request);
+    } else {
+      // خطأ في إعداد الطلب
+      errorMessage = error.message || 'حدث خطأ غير متوقع';
+      console.error('Request error:', error.message);
+    }
+    
+    setError(errorMessage);
+    showNotification(errorMessage, 'error');
+    setUsers([]);
+    setFilteredUsers([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // البحث والفلترة
   useEffect(() => {

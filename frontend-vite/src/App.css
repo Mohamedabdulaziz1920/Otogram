@@ -1,4 +1,55 @@
-/* في بداية الملف */
+/* ========================================
+   THEME VARIABLES & GLOBAL STYLES
+   ======================================== */
+
+/* Dark Theme Variables (Default) */
+:root,
+[data-theme="dark"] {
+  --primary-color: #fe2c55;
+  --secondary-color: #25f4ee;
+  --bg-primary: #000000;
+  --bg-secondary: #161823;
+  --bg-tertiary: #1a1a2e;
+  --bg-input: #121212;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.75);
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-input: #333333;
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+  --card-bg: rgba(255, 255, 255, 0.1);
+  --nav-height: 60px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --radius: 12px;
+  --error-color: #ff4458;
+  --success-color: #00f2ea;
+}
+
+/* Light Theme Variables */
+[data-theme="light"] {
+  --primary-color: #fe2c55;
+  --secondary-color: #00d4ff;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f1f2f6;
+  --bg-tertiary: #e8eaed;
+  --bg-input: #f8f9fa;
+  --text-primary: #000000;
+  --text-secondary: rgba(0, 0, 0, 0.75);
+  --text-muted: rgba(0, 0, 0, 0.5);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-input: #d1d5db;
+  --overlay-bg: rgba(255, 255, 255, 0.9);
+  --card-bg: rgba(0, 0, 0, 0.05);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --error-color: #dc2626;
+  --success-color: #059669;
+}
+
+/* ========================================
+   GLOBAL RESET
+   ======================================== */
+
 * {
   margin: 0;
   padding: 0;
@@ -6,13 +57,21 @@
   font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
+html {
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
+}
+
 body {
   font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background-color: #000;
-  color: #fff;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0;
+  line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* تحديث جميع العناصر لاستخدام Cairo */
@@ -22,13 +81,10 @@ label, a, li, td, th {
   font-family: 'Cairo', sans-serif !important;
 }
 
-/* تحسين مظهر النص العربي */
-body {
-  letter-spacing: 0;
-  line-height: 1.6;
-}
+/* ========================================
+   FONT WEIGHTS
+   ======================================== */
 
-/* أوزان الخط المختلفة */
 .font-light {
   font-weight: 300;
 }
@@ -53,18 +109,49 @@ body {
   font-weight: 800;
 }
 
-/* باقي الأنماط الموجودة */
+/* ========================================
+   APP CONTAINER
+   ======================================== */
+
 .App {
   min-height: 100vh;
   position: relative;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
 }
 
-/* Hide scrollbar */
+/* ========================================
+   SCROLLBAR STYLING
+   ======================================== */
+
 ::-webkit-scrollbar {
-  display: none;
+  width: 8px;
+  height: 8px;
 }
 
-/* Button styles */
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-muted) var(--bg-secondary);
+}
+
+/* ========================================
+   BUTTON STYLES
+   ======================================== */
+
 .btn {
   padding: 10px 20px;
   border: none;
@@ -74,81 +161,447 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'Cairo', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .btn-primary {
-  background-color: #fe2c55;
+  background-color: var(--primary-color);
   color: white;
+  box-shadow: 0 2px 8px rgba(254, 44, 85, 0.3);
 }
 
 .btn-primary:hover {
   background-color: #e91e3a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(254, 44, 85, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .btn-secondary {
   background-color: transparent;
-  color: #fff;
-  border: 1px solid #fff;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
 }
 
 .btn-secondary:hover {
-  background-color: #fff;
-  color: #000;
+  background-color: var(--text-primary);
+  color: var(--bg-primary);
 }
 
-/* Form styles */
+[data-theme="light"] .btn-secondary {
+  border-color: var(--text-primary);
+}
+
+/* ========================================
+   FORM STYLES
+   ======================================== */
+
 .form-group {
   margin-bottom: 20px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
-  color: #fff;
+  margin-bottom: 8px;
+  color: var(--text-primary);
   font-size: 14px;
   font-weight: 500; /* Cairo Medium */
   font-family: 'Cairo', sans-serif;
+  transition: color 0.3s ease;
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
   width: 100%;
   padding: 12px;
-  border: 1px solid #333;
-  border-radius: 4px;
-  background-color: #121212;
-  color: #fff;
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  background-color: var(--bg-input);
+  color: var(--text-primary);
   font-size: 16px;
   font-family: 'Cairo', sans-serif;
   font-weight: 400;
+  transition: all 0.3s ease;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-muted);
 }
 
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group select:focus {
   outline: none;
-  border-color: #fe2c55;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(254, 44, 85, 0.1);
 }
 
-/* Error message */
+[data-theme="light"] .form-group input:focus,
+[data-theme="light"] .form-group textarea:focus,
+[data-theme="light"] .form-group select:focus {
+  box-shadow: 0 0 0 3px rgba(254, 44, 85, 0.15);
+}
+
+/* ========================================
+   MESSAGE STYLES
+   ======================================== */
+
 .error-message {
-  color: #ff4458;
+  color: var(--error-color);
   font-size: 14px;
   margin-top: 5px;
   font-family: 'Cairo', sans-serif;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* Success message */
 .success-message {
-  color: #00f2ea;
+  color: var(--success-color);
   font-size: 14px;
   margin-top: 5px;
   font-family: 'Cairo', sans-serif;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* Loading text */
+/* ========================================
+   LOADING STYLES
+   ======================================== */
+
 .loading {
   font-family: 'Cairo', sans-serif;
   font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+/* ========================================
+   SELECTION STYLING
+   ======================================== */
+
+::selection {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+::-moz-selection {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* ========================================
+   FOCUS OUTLINE
+   ======================================== */
+
+*:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   LINK STYLING
+   ======================================== */
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+a:hover {
+  color: var(--secondary-color);
+}
+
+/* ========================================
+   IMAGE RENDERING
+   ======================================== */
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ========================================
+   SMOOTH TRANSITIONS
+   ======================================== */
+
+* {
+  transition-property: background-color, color, border-color;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
+
+/* Exclude certain elements from transitions */
+video,
+img,
+svg,
+.no-transition {
+  transition: none !important;
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ========================================
+   MOBILE OPTIMIZATIONS
+   ======================================== */
+
+/* Prevent iOS zoom on input focus */
+@media screen and (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Safe Area for Mobile Devices */
+@supports (padding: max(0px)) {
+  .App {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}
+
+/* ========================================
+   THEME SPECIFIC ADJUSTMENTS
+   ======================================== */
+
+/* Dark Mode */
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* Light Mode */
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease;
+}
+
+.slide-down {
+  animation: slideDown 0.3s ease;
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease;
+}
+
+/* ========================================
+   CARD COMPONENT
+   ======================================== */
+
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+[data-theme="light"] .card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* ========================================
+   BADGE COMPONENT
+   ======================================== */
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Cairo', sans-serif;
+}
+
+.badge-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.badge-secondary {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.badge-success {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.badge-error {
+  background-color: var(--error-color);
+  color: white;
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* ========================================
+   RTL SUPPORT
+   ======================================== */
+
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="rtl"] .form-group input,
+[dir="rtl"] .form-group textarea {
+  text-align: right;
 }

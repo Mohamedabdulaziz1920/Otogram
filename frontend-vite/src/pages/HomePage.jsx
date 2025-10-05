@@ -3,11 +3,12 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper';
 import { 
   FaHeart, FaComment, FaShare, FaChevronLeft, FaChevronRight,
-  FaPlay, FaPause, FaVolumeUp, FaVolumeMute, FaBookmark
+  FaPlay, FaPause, FaVolumeUp, FaVolumeMute, FaBookmark, FaMoon, FaSun
 } from 'react-icons/fa';
 import NavigationBar from '../components/NavigationBar';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, api } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -28,6 +29,7 @@ const HomePage = () => {
 
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const mainVideoRef = useRef(null);
   const replyVideoRef = useRef(null);
   const replySwiperRef = useRef(null);
@@ -344,6 +346,11 @@ const HomePage = () => {
 
   return (
     <div className="home-page">
+      {/* Theme Toggle Button */}
+      <button className="theme-toggle" onClick={toggleTheme} title={theme === 'dark' ? 'التبديل للوضع الفاتح' : 'التبديل للوضع الداكن'}>
+        {theme === 'dark' ? <FaSun /> : <FaMoon />}
+      </button>
+
       <div className="content-wrapper">
         {/* Left Half - Main Video */}
         <div className="main-video-section">

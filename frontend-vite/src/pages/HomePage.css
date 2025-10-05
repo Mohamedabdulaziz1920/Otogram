@@ -1,4 +1,4 @@
-:root { 
+:root {
   --primary-color: #fe2c55;
   --bg-primary: #000;
   --bg-secondary: #111;
@@ -9,7 +9,6 @@
   --transition-speed: 0.3s;
 }
 
-/* RESET */
 * {
   margin: 0;
   padding: 0;
@@ -44,29 +43,32 @@ body {
   flex-direction: column;
   background: var(--bg-primary);
   position: relative;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
 }
 
 /* ====================================
-   TOP & BOTTOM HALVES (متساويين بعد خصم الفوتر)
+   TOP & BOTTOM HALVES
    ==================================== */
-.top-half,
-.bottom-half {
+.top-half {
   width: 100%;
+  height: 50vh;
+  height: 50dvh;
   position: relative;
   overflow: hidden;
-}
-
-.top-half {
-  height: calc((100dvh - var(--nav-height)) / 2);
   background: var(--bg-primary);
 }
 
 .bottom-half {
-  height: calc((100dvh - var(--nav-height)) / 2);
+  width: 100%;
+  height: calc(50dvh - var(--nav-height)); /* نصف الشاشة ناقص ارتفاع الفوتر */
+  position: relative;
+  overflow: hidden;
   background: var(--bg-secondary);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: var(--safe-area-bottom);
+  padding-bottom: var(--nav-height); /* لإبعاد الأزرار عن الفوتر */
 }
 
 /* ====================================
@@ -102,6 +104,7 @@ body {
   object-fit: cover;
   background: #000;
   will-change: transform;
+  -webkit-transform: translateZ(0);
   transform: translateZ(0);
   backface-visibility: hidden;
 }
@@ -124,8 +127,13 @@ body {
   transition: transform var(--transition-speed) ease;
 }
 
-.profile-avatar:hover { transform: scale(1.1); }
-.profile-avatar:active { transform: scale(0.95); }
+.profile-avatar:hover {
+  transform: scale(1.1);
+}
+
+.profile-avatar:active {
+  transform: scale(0.95);
+}
 
 .profile-avatar img {
   width: 100%;
@@ -145,13 +153,13 @@ body {
    ==================================== */
 .video-actions,
 .reply-actions {
-  bottom: 20px;
+  bottom: 20px; /* أو أقل إذا أحببت */
   right: 20px;
 }
-
 .action-btn {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: none;
   border-radius: 50%;
   width: 52px;
@@ -214,6 +222,9 @@ body {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
   user-select: text;
 }
 
@@ -226,6 +237,7 @@ body {
   transform: translateY(-50%);
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: none;
   border-radius: 50%;
   width: 40px;
@@ -246,9 +258,17 @@ body {
   transform: translateY(-50%) scale(1.1);
 }
 
-.nav-prev { right: 10px; }
-.nav-next { left: 10px; }
-.nav-btn svg { font-size: 16px; }
+.nav-prev {
+  right: 10px;
+}
+
+.nav-next {
+  left: 10px;
+}
+
+.nav-btn svg {
+  font-size: 16px;
+}
 
 /* ====================================
    NO REPLIES STATE
@@ -266,6 +286,11 @@ body {
   text-align: center;
 }
 
+.no-replies p {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
 .primary-btn {
   background: var(--primary-color);
   color: #fff;
@@ -278,7 +303,62 @@ body {
   transition: all var(--transition-speed) ease;
 }
 
-.primary-btn:hover { background: #e91e3a; transform: scale(1.05); }
+.primary-btn:hover {
+  background: #e91e3a;
+  transform: scale(1.05);
+}
+
+.primary-btn:active {
+  transform: scale(0.98);
+}
+
+/* ====================================
+   LOADING & ERROR STATES
+   ==================================== */
+.loading-container,
+.error-container,
+.empty-state-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  color: #fff;
+  gap: 20px;
+  padding: 20px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error-container h2,
+.empty-state-container h2 { font-size: 24px; margin-bottom: 10px; }
+.error-container p,
+.empty-state-container p { font-size: 16px; color: var(--text-secondary); margin-bottom: 20px; }
+
+.error-container button {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
+
+.error-container button:hover { background: #e91e3a; }
 
 /* ====================================
    NAVIGATION BAR
@@ -289,41 +369,205 @@ body {
   left: 0;
   right: 0;
   z-index: 100;
-  height: var(--nav-height);
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ====================================
-   VIDEO PLAYER SPLIT
+   VIDEOPLAYER SPLIT (FULLSCREEN + PLAY OVERLAY)
    ==================================== */
 .video-player-split {
   position: relative;
   width: 100%;
   height: 100%;
   background: #000;
+  cursor: pointer;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.play-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+  z-index: 5;
+}
+
+.play-button {
+  width: 70px;
+  height: 70px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+
+.play-button:hover { transform: scale(1.1); background: #fff; }
+
+.fullscreen-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 999;
+}
+
+.fullscreen-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.fullscreen-video-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.fullscreen-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.fullscreen-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.fullscreen-close-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+
 /* ====================================
-   REPLY SWIPER
+   REPLYSWIPER
    ==================================== */
 .reply-swiper-container {
   position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.95);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.95);
   z-index: 10;
 }
 
+.reply-indicator {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.1);
+  padding: 8px 20px;
+  border-radius: 20px;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+}
+
+.reply-indicator span {
+  color: #fff;
+  font-size: 14px;
+}
+
+.reply-swiper .swiper-button-next,
+.reply-swiper .swiper-button-prev {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+}
+
+.reply-swiper .swiper-button-next::after,
+.reply-swiper .swiper-button-prev::after {
+  font-size: 20px;
+}
+
 /* ====================================
-   RESPONSIVE
+   RESPONSIVE DESIGN
    ==================================== */
 @media (max-width: 768px) {
-  .top-half,
+  .profile-avatar { width: 42px; height: 42px; top: 15px; right: 15px; }
+  .reply-avatar { width: 36px; height: 36px; }
+  .action-btn { width: 46px; height: 46px; }
+  .action-btn svg { font-size: 20px; }
+  .action-btn span { font-size: 11px; }
+  .video-actions, .reply-actions { bottom: 15px; right: 15px; gap: 12px; }
+  .video-info { bottom: 15px; left: 15px; right: 85px; }
+  .video-description { font-size: 13px; }
+  .nav-btn { width: 36px; height: 36px; }
+  .nav-btn svg { font-size: 14px; }
   .bottom-half {
-    height: calc((100dvh - var(--nav-height)) / 2);
+    height: calc(50dvh - var(--nav-height));
+    padding-bottom: var(--nav-height);
   }
 }
+
+@media (max-width: 480px) {
+  .profile-avatar { width: 38px; height: 38px; top: 12px; right: 12px; }
+  .reply-avatar { width: 32px; height: 32px; }
+  .action-btn { width: 42px; height: 42px; }
+  .action-btn svg { font-size: 18px; }
+  .action-btn span { font-size: 10px; }
+  .video-actions, .reply-actions { bottom: 12px; right: 12px; gap: 10px; }
+  .video-info { bottom: 12px; left: 12px; right: 75px; }
+  .video-description { font-size: 12px; -webkit-line-clamp: 1; }
+  .bottom-half {
+    height: calc(50dvh - var(--nav-height));
+    padding-bottom: var(--nav-height);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .home-container { flex-direction: row; }
+  .top-half, .bottom-half { width: 50vw; height: 100vh; border-top: none; }
+  .top-half { border-right: 1px solid rgba(255,255,255,0.1); }
+}
+
+/* Safe area support */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .home-container { padding-bottom: env(safe-area-inset-bottom); }
+  .navigation-bar { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* Mobile-friendly touch optimizations */
+.action-btn,
+.profile-avatar,
+.nav-btn,
+.primary-btn {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+

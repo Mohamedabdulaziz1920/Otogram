@@ -2,39 +2,15 @@
 <html lang="ar" dir="rtl" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    
-    <!-- Favicons -->
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     
-    <!-- Web App Manifest -->
-    <link rel="manifest" href="/site.webmanifest" id="manifest-link" />
-    
-    <!-- Meta Tags -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Otogram - شارك لحظاتك مع العالم. منصة مشاركة الفيديوهات القصيرة والردود التفاعلية" />
-    <meta name="keywords" content="otogram, فيديوهات, مشاركة, تواصل اجتماعي, ردود" />
-    <meta name="author" content="Otogram" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Otogram - شارك لحظاتك مع العالم" />
-    <meta property="og:description" content="منصة مشاركة الفيديوهات القصيرة والردود التفاعلية" />
-    <meta property="og:locale" content="ar_AR" />
-    
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Otogram - شارك لحظاتك مع العالم" />
-    <meta name="twitter:description" content="منصة مشاركة الفيديوهات القصيرة والردود التفاعلية" />
-    
-    <!-- PWA Meta -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Otogram" />
-    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="description" content="Otogram - شارك لحظاتك مع العالم" />
     
     <!-- إضافة خط Cairo من Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,7 +22,17 @@
       (function() {
         try {
           const savedTheme = localStorage.getItem('theme') || 'dark';
-          document.documentElement.setAttribute('data-theme', savedTheme);
+          const html = document.documentElement;
+          
+          if (html) {
+            html.setAttribute('data-theme', savedTheme);
+            html.style.backgroundColor = savedTheme === 'dark' ? '#000000' : '#ffffff';
+          }
+          
+          const body = document.body;
+          if (body) {
+            body.style.backgroundColor = savedTheme === 'dark' ? '#000000' : '#ffffff';
+          }
           
           // تحديث meta theme-color
           const metaThemeColor = document.querySelector('meta[name="theme-color"]');
@@ -55,16 +41,15 @@
           }
           
           // تحديث manifest
-          const manifestLink = document.getElementById('manifest-link');
+          const manifestLink = document.querySelector('link[rel="manifest"]');
           if (manifestLink) {
-            manifestLink.setAttribute('href', savedTheme === 'dark' ? '/site.webmanifest' : '/site-light.webmanifest');
+            const manifestUrl = savedTheme === 'dark' ? '/site.webmanifest' : '/site-light.webmanifest';
+            manifestLink.setAttribute('href', manifestUrl);
           }
-          
-          // منع الوميض
-          document.documentElement.style.backgroundColor = savedTheme === 'dark' ? '#000000' : '#ffffff';
-          document.body.style.backgroundColor = savedTheme === 'dark' ? '#000000' : '#ffffff';
         } catch (e) {
           console.error('Theme initialization error:', e);
+          // تطبيق الدارك مود كافتراضي في حالة الخطأ
+          document.documentElement.setAttribute('data-theme', 'dark');
         }
       })();
     </script>

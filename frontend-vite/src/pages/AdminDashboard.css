@@ -1207,3 +1207,47 @@ select:focus-visible {
     font-size: 20px;
   }
 }
+/* Spinning Animation for Refresh Button */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Error Details */
+.error-details {
+  margin: 20px 0;
+  text-align: right;
+  background: rgba(255, 77, 79, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-danger);
+}
+
+.error-details p {
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.error-details ul {
+  margin: 0;
+  padding-right: 20px;
+  list-style: disc;
+}
+
+.error-details li {
+  margin: 5px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.error-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}

@@ -33,20 +33,17 @@ const AdminDashboard = () => {
 
   // التحقق من صلاحيات الأدمن
   useEffect(() => {
-    console.log('Current user:', user);
     if (!user) {
-      console.log('No user found, redirecting to login...');
       navigate('/login');
       return;
     }
     if (user.role !== 'admin') {
-      console.log('User is not admin, redirecting to home...');
       showNotification('ليس لديك صلاحية الوصول لهذه الصفحة', 'error');
       setTimeout(() => navigate('/'), 1500);
     }
   }, [user, navigate]);
 
-  // جلب المستخدمين مع timeout
+  // جلب المستخدمين - بدون AbortController
   useEffect(() => {
     if (user && user.role === 'admin') {
       fetchUsers();
@@ -54,46 +51,45 @@ const AdminDashboard = () => {
   }, [user]);
 
   const fetchUsers = async () => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
-
     try {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching users...');
-      const response = await api.get('/api/users', {
-        signal: controller.signal
-      });
+      console.log('Fetching users from API...');
       
-      console.log('Users fetched:', response.data);
-      clearTimeout(timeoutId);
+      // استخدام الطريقة البسيطة التي كانت تعمل
+      const response = await api.get('/api/users');
+      
+      console.log('Users fetched successfully:', response.data);
       
       if (response.data && Array.isArray(response.data)) {
         setUsers(response.data);
         setFilteredUsers(response.data);
-        showNotification('تم تحميل البيانات بنجاح', 'success');
+        showNotification(`تم تحميل ${response.data.length} مستخدم بنجاح`, 'success');
       } else {
         throw new Error('البيانات المستلمة غير صحيحة');
       }
     } catch (error) {
-      clearTimeout(timeoutId);
       console.error('Error fetching users:', error);
       
       let errorMessage = 'فشل في جلب المستخدمين';
       
-      if (error.name === 'AbortError') {
-        errorMessage = 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.';
-      } else if (error.response) {
-        errorMessage = error.response.data?.message || 'خطأ في الخادم';
+      if (error.response) {
+        // الخادم رد بخطأ
+        errorMessage = error.response.data?.message || `خطأ ${error.response.status}: ${error.response.statusText}`;
+        console.error('Server error:', error.response.data);
       } else if (error.request) {
-        errorMessage = 'لا يمكن الاتصال بالخادم';
+        // لم يتم استلام رد من الخادم
+        errorMessage = 'لا يمكن الاتصال بالخادم. تأكد من تشغيل الخادم.';
+        console.error('No response received:', error.request);
+      } else {
+        // خطأ في إعداد الطلب
+        errorMessage = error.message || 'حدث خطأ غير متوقع';
+        console.error('Request error:', error.message);
       }
       
       setError(errorMessage);
       showNotification(errorMessage, 'error');
-      
-      // Set empty array to show empty state instead of infinite loading
       setUsers([]);
       setFilteredUsers([]);
     } finally {
@@ -145,8 +141,11 @@ const AdminDashboard = () => {
 
   // تحديث صلاحيات المستخدم
   const updateUserRole = async (userId, newRole) => {
+    if (updating) return; // منع الطلبات المتعددة
+    
     setUpdating(userId);
     try {
+      console.log(`Updating user ${userId} to role: ${newRole}`);
       await api.patch(`/api/users/role/${userId}`, { role: newRole });
       
       setUsers(users.map(u => 
@@ -170,6 +169,7 @@ const AdminDashboard = () => {
     if (!userToDelete) return;
     
     try {
+      console.log(`Deleting user: ${userToDelete._id}`);
       await api.delete(`/api/users/${userToDelete._id}`);
       setUsers(users.filter(u => u._id !== userToDelete._id));
       showNotification('تم حذف المستخدم بنجاح', 'success');
@@ -253,37 +253,51 @@ const AdminDashboard = () => {
   };
 
   // Loading state
-  if (loading) return (
-    <div className="loading-container">
-      <div className="loading-wrapper">
-        <div className="loading-spinner"></div>
-        <p>جاري تحميل لوحة التحكم...</p>
-        <p className="loading-hint">قد يستغرق هذا بضع ثوان</p>
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-wrapper">
+          <div className="loading-spinner"></div>
+          <p>جاري تحميل لوحة التحكم...</p>
+          <p className="loading-hint">الرجاء الانتظار...</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   // Error state with retry
-  if (error && users.length === 0) return (
-    <div className="error-container">
-      <div className="error-wrapper">
-        <FaExclamationTriangle className="error-icon" />
-        <h2>خطأ في تحميل البيانات</h2>
-        <p>{error}</p>
-        <button onClick={fetchUsers} className="retry-btn">
-          <FaSync /> إعادة المحاولة
-        </button>
-        <button onClick={() => navigate('/')} className="back-btn">
-          العودة للرئيسية
-        </button>
+  if (error && users.length === 0) {
+    return (
+      <div className="error-container">
+        <div className="error-wrapper">
+          <FaExclamationTriangle className="error-icon" />
+          <h2>خطأ في تحميل البيانات</h2>
+          <p>{error}</p>
+          <div className="error-details">
+            <p>تأكد من:</p>
+            <ul>
+              <li>تشغيل الخادم (Backend)</li>
+              <li>صحة عنوان API في ملف .env</li>
+              <li>اتصالك بالإنترنت</li>
+            </ul>
+          </div>
+          <div className="error-actions">
+            <button onClick={fetchUsers} className="retry-btn">
+              <FaSync /> إعادة المحاولة
+            </button>
+            <button onClick={() => navigate('/')} className="back-btn">
+              العودة للرئيسية
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <div className="admin-dashboard">
       {/* Theme Toggle */}
-      <button className="theme-toggle-admin" onClick={toggleTheme}>
+      <button className="theme-toggle-admin" onClick={toggleTheme} title="تبديل الثيم">
         {theme === 'dark' ? <FaSun /> : <FaMoon />}
       </button>
 
@@ -413,8 +427,9 @@ const AdminDashboard = () => {
                 className="refresh-btn"
                 onClick={fetchUsers}
                 title="تحديث البيانات"
+                disabled={loading}
               >
-                <FaSync />
+                <FaSync className={loading ? 'spinning' : ''} />
               </button>
             </div>
           </div>

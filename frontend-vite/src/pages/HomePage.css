@@ -529,6 +529,10 @@ body {
   .video-description { font-size: 13px; }
   .nav-btn { width: 36px; height: 36px; }
   .nav-btn svg { font-size: 14px; }
+  .bottom-half {
+    height: calc(50dvh - var(--nav-height));
+    padding-bottom: var(--nav-height);
+  }
 }
 
 @media (max-width: 480px) {
@@ -540,6 +544,10 @@ body {
   .video-actions, .reply-actions { bottom: 12px; right: 12px; gap: 10px; }
   .video-info { bottom: 12px; left: 12px; right: 75px; }
   .video-description { font-size: 12px; -webkit-line-clamp: 1; }
+  .bottom-half {
+    height: calc(50dvh - var(--nav-height));
+    padding-bottom: var(--nav-height);
+  }
 }
 
 @media (orientation: landscape) and (max-height: 600px) {
@@ -562,17 +570,4 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
-/* في الأجهزة الصغيرة */
-@media (max-width: 768px) {
-  .bottom-half {
-    height: calc(50dvh - var(--nav-height));
-    padding-bottom: var(--nav-height);
-  }
-}
 
-@media (max-width: 480px) {
-  .bottom-half {
-    height: calc(50dvh - var(--nav-height));
-    padding-bottom: var(--nav-height);
-  }
-}

@@ -3,11 +3,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const router = express.Router();
-const auth = require('../middleware/auth'); // استيراد الـ middleware المُحسّن
+const auth = require('../middleware/auth');
 
 // --- Register a new user ---
 // POST /api/auth/register
-
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -19,27 +18,30 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters.' });
     }
 
-    const existingUser = await User.findOne({ $or: [{ email: email.toLowerCase() }, { username }] });
+    const existingUser = await User.findOne({ 
+      $or: [{ email: email.toLowerCase() }, { username }] 
+    });
+    
     if (existingUser) {
-      return res.status(409).json({ error: 'User with this email or username already exists.' });
+      return res.status(409).json({ 
+        error: 'User with this email or username already exists.' 
+      });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
-
+    // ✅ لا تشفير يدوي - دع middleware يقوم بذلك
     const user = new User({
       username,
       email: email.toLowerCase(),
-      password: hashedPassword,
+      password: password, // ← كلمة مرور عادية
     });
 
-    await user.save();
+    await user.save(); // ← middleware في User.js سيشفرها تلقائياً
     
-    // حذف كلمة المرور من الكائن الذي سنعيده
     const userResponse = user.toObject();
     delete userResponse.password;
 
     const token = jwt.sign(
-      { userId: user._id, role: user.role }, // ✨ التأكد من استخدام userId هنا
+      { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -65,42 +67,41 @@ router.post('/login', async (req, res) => {
     console.log('=====================================');
     console.log('🔐 LOGIN ATTEMPT');
     console.log('📧 Email:', email);
-    console.log('🔑 Password:', password);
     console.log('=====================================');
 
     if (!email || !password) {
-      return res.status(400).json({ error: 'Please provide both email and password.' });
+      return res.status(400).json({ 
+        error: 'Please provide both email and password.' 
+      });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    const user = await User.findOne({ 
+      email: email.toLowerCase() 
+    }).select('+password');
     
     console.log('👤 User found:', user ? '✓ YES' : '✗ NO');
     
     if (user) {
       console.log('📋 User Details:');
-      console.log('  - ID:', user._id);
       console.log('  - Username:', user.username);
-      console.log('  - Email:', user.email);
       console.log('  - Role:', user.role);
       console.log('  - Password exists:', user.password ? '✓ YES' : '✗ NO');
-      console.log('  - Password length:', user.password?.length || 0);
-      console.log('  - Password starts with $2:', user.password?.startsWith('$2') ? '✓ YES' : '✗ NO');
-      console.log('  - Password first 30 chars:', user.password?.substring(0, 30));
+      console.log('  - Password hash valid:', user.password?.startsWith('$2') ? '✓ YES' : '✗ NO');
     }
 
     if (!user) {
-      console.log('❌ FAILED: User not found');
+      console.log('❌ User not found');
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
-    console.log('🔐 Starting password comparison...');
+    console.log('🔐 Comparing passwords...');
 
     const isMatch = await bcrypt.compare(password, user.password);
     
-    console.log('✅ Password comparison result:', isMatch ? '✓ MATCH' : '✗ NO MATCH');
+    console.log('✅ Result:', isMatch ? '✓ MATCH' : '✗ NO MATCH');
 
     if (!isMatch) {
-      console.log('❌ FAILED: Password mismatch');
+      console.log('❌ Password mismatch');
       console.log('=====================================');
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
@@ -114,7 +115,7 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    console.log('✅ SUCCESS: Login completed');
+    console.log('✅ Login successful');
     console.log('=====================================');
 
     res.status(200).json({
@@ -130,6 +131,11 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// --- Get Logged-in User Data ---
+// GET /api/auth/me
+router.get('/me', auth, (req, res) => {
+  res.status(200).json({ user: req.user });
+});
 
 
 module.exports = router;

@@ -16,7 +16,8 @@ import {
   Film,
   MessageSquare,
   Play,
-  Loader2
+  Loader2,
+  Music
 } from 'lucide-react';
 import './UploadPage.css';
 
@@ -42,7 +43,7 @@ const UploadPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+  const MAX_FILE_SIZE = 100 * 1024 * 1024;
   const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
 
   useEffect(() => {
@@ -212,32 +213,37 @@ const UploadPage = () => {
 
   return (
     <div className="upload-page">
-      {/* خلفية متحركة */}
-      <div className="animated-background">
-        <div className="gradient-orb orb-1"></div>
-        <div className="gradient-orb orb-2"></div>
-        <div className="gradient-orb orb-3"></div>
+      {/* خلفية TikTok المتحركة */}
+      <div className="tiktok-background">
+        <div className="neon-orb cyan-orb orb-1"></div>
+        <div className="neon-orb pink-orb orb-2"></div>
+        <div className="neon-orb cyan-orb orb-3"></div>
+        <div className="grid-overlay"></div>
       </div>
 
       <div className="upload-container">
-        {/* Header */}
+        {/* Header بأسلوب TikTok */}
         <div className="upload-header">
-          <button className="back-button" onClick={() => navigate(-1)}>
-            <ArrowLeft size={20} />
+          <button className="tiktok-back-btn" onClick={() => navigate(-1)}>
+            <ArrowLeft size={22} strokeWidth={2.5} />
           </button>
+          
           <div className="header-content">
-            <div className="icon-wrapper">
+            <div className="tiktok-icon-wrapper">
               {replyToId ? (
-                <MessageSquare className="header-icon" size={32} />
+                <MessageSquare className="header-icon" size={36} strokeWidth={2} />
               ) : (
-                <Sparkles className="header-icon" size={32} />
+                <Music className="header-icon" size={36} strokeWidth={2} />
               )}
+              <div className="icon-glow"></div>
             </div>
-            <h1 className="upload-title">
-              {replyToId ? 'إضافة رد جديد' : 'نشر فيديو جديد'}
+            
+            <h1 className="tiktok-title">
+              {replyToId ? 'إضافة رد' : 'رفع فيديو'}
             </h1>
-            <p className="upload-subtitle">
-              {replyToId ? 'شارك ردك مع المجتمع' : 'شارك إبداعك مع العالم'}
+            
+            <p className="tiktok-subtitle">
+              {replyToId ? 'شارك ردك الإبداعي 🎬' : 'اصنع محتوى مميز ✨'}
             </p>
           </div>
         </div>
@@ -246,22 +252,25 @@ const UploadPage = () => {
           {/* منطقة رفع الفيديو */}
           <div className="video-upload-section">
             {preview ? (
-              <div className="video-preview-container">
-                <div className="preview-wrapper">
+              <div className="video-preview-card">
+                <div className="preview-container">
                   <video 
                     src={preview} 
                     controls 
                     className="preview-video"
+                    playsInline
                   />
-                  <div className="video-overlay">
-                    <Play className="play-icon" size={48} />
+                  <div className="play-overlay">
+                    <div className="play-button">
+                      <Play size={32} fill="white" />
+                    </div>
                   </div>
                 </div>
                 
-                <div className="video-details">
-                  <div className="file-info">
-                    <FileVideo className="file-icon" size={24} />
-                    <div className="file-text">
+                <div className="video-info-card">
+                  <div className="file-details">
+                    <FileVideo className="file-icon cyan-icon" size={24} strokeWidth={2} />
+                    <div className="file-meta">
                       <p className="file-name">{videoFile?.name}</p>
                       <p className="file-size">{formatFileSize(videoFile?.size || 0)}</p>
                     </div>
@@ -269,18 +278,18 @@ const UploadPage = () => {
                   
                   <button
                     type="button"
-                    className="change-video-btn"
+                    className="tiktok-btn-secondary"
                     onClick={resetUpload}
                     disabled={uploading}
                   >
-                    <RefreshCw size={18} />
-                    تغيير الفيديو
+                    <RefreshCw size={18} strokeWidth={2.5} />
+                    تغيير
                   </button>
                 </div>
               </div>
             ) : (
               <div 
-                className={`upload-drop-zone ${isDragging ? 'dragging' : ''}`}
+                className={`tiktok-drop-zone ${isDragging ? 'dragging' : ''}`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -294,36 +303,39 @@ const UploadPage = () => {
                   hidden 
                 />
                 
-                <div className="upload-icon-container">
-                  <div className="upload-icon-bg">
-                    <Upload className="upload-icon" size={48} />
+                <div className="upload-visual">
+                  <div className="upload-icon-ring">
+                    <Upload className="upload-icon" size={52} strokeWidth={2} />
+                    <div className="ring-pulse"></div>
+                    <div className="ring-pulse ring-pulse-delayed"></div>
                   </div>
-                  <div className="icon-pulse"></div>
                 </div>
                 
-                <h3 className="upload-main-text">
-                  اسحب وأفلت الفيديو هنا
+                <h3 className="drop-zone-title">
+                  اسحب الفيديو وأفلته هنا
                 </h3>
-                <p className="upload-sub-text">
+                
+                <p className="drop-zone-subtitle">
                   أو اضغط للاختيار من جهازك
                 </p>
                 
-                <div className="supported-formats">
-                  <Film size={16} />
-                  <span>MP4, MOV, AVI, WebM (حتى 100MB)</span>
+                <div className="format-badge">
+                  <Film size={16} strokeWidth={2.5} />
+                  <span>MP4, MOV, WebM • حتى 100MB</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* وصف الفيديو */}
-          <div className="form-group">
-            <label htmlFor="description" className="form-label">
-              <Video size={20} />
-              وصف الفيديو
-              <span className="optional-badge">اختياري</span>
+          {/* حقل الوصف */}
+          <div className="tiktok-form-group">
+            <label htmlFor="description" className="tiktok-label">
+              <Video size={20} strokeWidth={2.5} />
+              <span>أضف وصفاً</span>
+              <span className="optional-tag">اختياري</span>
             </label>
-            <div className="textarea-wrapper">
+            
+            <div className="textarea-container">
               <textarea
                 id="description"
                 value={description}
@@ -332,93 +344,99 @@ const UploadPage = () => {
                     setDescription(e.target.value);
                   }
                 }}
-                placeholder="أضف وصفاً جذاباً لفيديوك... اجعله مميزاً! ✨"
+                placeholder="اكتب شيئاً مميزاً... #viral #فيديو 🔥"
                 rows="4"
                 disabled={uploading}
-                className="form-textarea"
+                className="tiktok-textarea"
               />
-              <div className="char-counter">
+              
+              <div className="char-badge">
                 <span className={description.length > 450 ? 'warning' : ''}>
-                  {description.length}/500
+                  {description.length}
                 </span>
+                <span className="separator">/</span>
+                <span className="max">500</span>
               </div>
             </div>
           </div>
 
           {/* شريط التقدم */}
           {uploading && (
-            <div className="upload-progress-container">
+            <div className="tiktok-progress-card">
               <div className="progress-header">
-                <span className="progress-label">جاري الرفع...</span>
-                <span className="progress-percentage">{uploadProgress}%</span>
+                <div className="progress-info">
+                  <Loader2 className="spinning cyan-icon" size={20} strokeWidth={2.5} />
+                  <span className="progress-text">جاري الرفع...</span>
+                </div>
+                <span className="progress-percent">{uploadProgress}%</span>
               </div>
-              <div className="progress-bar">
+              
+              <div className="tiktok-progress-bar">
                 <div 
-                  className="progress-fill" 
+                  className="progress-fill-gradient" 
                   style={{ width: `${uploadProgress}%` }}
                 >
-                  <div className="progress-shine"></div>
+                  <div className="progress-shimmer"></div>
                 </div>
               </div>
-              <p className="progress-info">
-                <Loader2 className="spinning" size={16} />
-                يرجى عدم إغلاق الصفحة حتى اكتمال الرفع
+              
+              <p className="progress-note">
+                لا تغلق الصفحة حتى انتهاء الرفع
               </p>
             </div>
           )}
 
-          {/* رسائل الخطأ والنجاح */}
+          {/* رسائل التنبيه */}
           {error && (
-            <div className="alert alert-error">
-              <AlertCircle size={20} />
+            <div className="tiktok-alert error-alert">
+              <AlertCircle size={20} strokeWidth={2.5} />
               <span>{error}</span>
               <button 
                 type="button" 
-                className="alert-close"
+                className="alert-close-btn"
                 onClick={() => setError('')}
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
           )}
           
           {success && (
-            <div className="alert alert-success">
-              <CheckCircle2 size={20} />
+            <div className="tiktok-alert success-alert">
+              <CheckCircle2 size={20} strokeWidth={2.5} />
               <span>{success}</span>
             </div>
           )}
 
           {/* أزرار التحكم */}
-          <div className="button-group">
+          <div className="tiktok-actions">
             {uploading ? (
               <button 
                 type="button" 
-                className="btn btn-danger btn-large" 
+                className="tiktok-btn-danger" 
                 onClick={cancelUpload}
               >
-                <X size={20} />
+                <X size={20} strokeWidth={2.5} />
                 إلغاء الرفع
               </button>
             ) : (
               <>
                 <button 
                   type="submit" 
-                  className="btn btn-primary btn-large" 
+                  className="tiktok-btn-primary" 
                   disabled={!videoFile}
                 >
-                  <Sparkles size={20} />
-                  نشر الفيديو
-                  <div className="btn-shine"></div>
+                  <Sparkles size={20} strokeWidth={2.5} />
+                  <span>نشر الفيديو</span>
+                  <div className="btn-glow"></div>
                 </button>
                 
                 <button 
                   type="button" 
-                  className="btn btn-secondary" 
+                  className="tiktok-btn-ghost" 
                   onClick={() => navigate(-1)}
                 >
-                  <ArrowLeft size={18} />
-                  رجوع
+                  إلغاء
                 </button>
               </>
             )}

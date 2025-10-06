@@ -12,10 +12,11 @@
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Otogram - شارك لحظاتك مع العالم" />
     
-     <!-- تحميل الخط بشكل async -->
+    <!-- تحميل الخط بشكل async -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    
     <!-- منع وميض الشاشة عند تحميل الثيم -->
     <script>
       (function() {
@@ -67,10 +68,11 @@
         margin: 0;
         padding: 0;
         overflow-x: hidden;
+        font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
       }
       
       /* شاشة التحميل */
-       #otogram-loader {
+      #otogram-loader {
         position: fixed;
         top: 0;
         left: 0;
@@ -82,10 +84,16 @@
         align-items: center;
         justify-content: center;
         z-index: 9999;
-        transition: opacity 0.5s ease, visibility 0.5s ease;
+        transition: opacity 0.8s ease, visibility 0.8s ease;
       }
       
-      [data-theme="light"] .otogram-loader {
+      #otogram-loader.hide {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      
+      [data-theme="light"] #otogram-loader {
         background: #ffffff;
       }
       
@@ -279,13 +287,6 @@
         }
       }
       
-      /* إخفاء شاشة التحميل عند التحميل */
-      #root:not(:empty) ~ .otogram-loader {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-      }
-      
       /* Responsive */
       @media (max-width: 480px) {
         .loader-icon-wrapper {
@@ -309,6 +310,18 @@
         
         .orb-1, .orb-2 {
           filter: blur(60px);
+        }
+      }
+      
+      /* تحسينات الأداء */
+      @media (prefers-reduced-motion: reduce) {
+        .loader-icon-wrapper,
+        .loader-icon,
+        .loader-ring,
+        .loader-orb,
+        .loader-glow,
+        .dot {
+          animation: none !important;
         }
       }
     </style>
@@ -348,34 +361,63 @@
     
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-        <!-- إخفاء شاشة التحميل عند جاهزية React -->
+    
+    <!-- سكريبت إخفاء شاشة التحميل بعد 5 ثوانٍ -->
     <script>
-      // مراقبة تحميل React
-      const checkRoot = setInterval(function() {
-        const root = document.getElementById('root');
-        if (root && root.children.length > 0) {
-          const loader = document.getElementById('otogram-loader');
-          if (loader) {
+      (function() {
+        const loader = document.getElementById('otogram-loader');
+        const startTime = Date.now();
+        const minDisplayTime = 5000; // 5 ثوانٍ
+        
+        let reactReady = false;
+        let timeElapsed = false;
+        
+        // مراقبة تحميل React
+        const checkRoot = setInterval(function() {
+          const root = document.getElementById('root');
+          if (root && root.children.length > 0) {
+            reactReady = true;
+            clearInterval(checkRoot);
+            tryHideLoader();
+          }
+        }, 100);
+        
+        // انتظار 5 ثوانٍ على الأقل
+        setTimeout(function() {
+          timeElapsed = true;
+          tryHideLoader();
+        }, minDisplayTime);
+        
+        // دالة إخفاء الشاشة
+        function tryHideLoader() {
+          // إخفاء فقط عند استيفاء الشرطين: React جاهز + مرور 5 ثوانٍ
+          if (reactReady && timeElapsed) {
+            if (loader) {
+              loader.classList.add('hide');
+              // إزالة العنصر من DOM بعد انتهاء الانتقال
+              setTimeout(function() {
+                if (loader.parentNode) {
+                  loader.parentNode.removeChild(loader);
+                }
+              }, 800); // يتطابق مع مدة transition في CSS
+            }
+            clearInterval(checkRoot);
+          }
+        }
+        
+        // حد أقصى 15 ثانية (احتياطي)
+        setTimeout(function() {
+          if (loader && loader.parentNode) {
             loader.classList.add('hide');
             setTimeout(function() {
-              loader.remove();
-            }, 300);
+              if (loader.parentNode) {
+                loader.parentNode.removeChild(loader);
+              }
+            }, 800);
           }
           clearInterval(checkRoot);
-        }
-      }, 100);
-      
-      // إخفاء إجباري بعد 10 ثواني كحد أقصى
-      setTimeout(function() {
-        const loader = document.getElementById('otogram-loader');
-        if (loader) {
-          loader.classList.add('hide');
-          setTimeout(function() {
-            loader.remove();
-          }, 300);
-        }
-        clearInterval(checkRoot);
-      }, 10000);
+        }, 15000);
+      })();
     </script>
   </body>
 

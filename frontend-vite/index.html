@@ -2,96 +2,62 @@
 <html lang="ar" dir="rtl" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Otogram - شارك لحظاتك مع العالم" />
     
-    <!-- إضافة خط Cairo من Google Fonts -->
+    <!-- تحميل الخط بشكل async -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     
-    <!-- منع وميض الشاشة عند تحميل الثيم -->
+    <!-- سكريبت الثيم -->
     <script>
-      (function() {
-        try {
-          const savedTheme = localStorage.getItem('theme') || 'dark';
-          const html = document.documentElement;
-          
-          if (html) {
-            html.setAttribute('data-theme', savedTheme);
-            html.style.backgroundColor = savedTheme === 'dark' ? '#000000' : '#ffffff';
-          }
-          
-          const body = document.body;
-          if (body) {
-            body.style.backgroundColor = savedTheme === 'dark' ? '#000000' : '#ffffff';
-          }
-          
-          // تحديث meta theme-color
-          const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-          if (metaThemeColor) {
-            metaThemeColor.setAttribute('content', savedTheme === 'dark' ? '#000000' : '#ffffff');
-          }
-          
-          // تحديث manifest
-          const manifestLink = document.querySelector('link[rel="manifest"]');
-          if (manifestLink) {
-            const manifestUrl = savedTheme === 'dark' ? '/site.webmanifest' : '/site-light.webmanifest';
-            manifestLink.setAttribute('href', manifestUrl);
-          }
-        } catch (e) {
-          console.error('Theme initialization error:', e);
-          document.documentElement.setAttribute('data-theme', 'dark');
-        }
-      })();
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.documentElement.style.backgroundColor = savedTheme === 'dark' ? '#000000' : '#ffffff';
     </script>
     
-    <!-- شاشة التحميل البسيطة والسريعة -->
+    <!-- شاشة التحميل -->
     <style>
-      /* منع وميض المحتوى */
-      html {
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
         background-color: #0A0A0A;
-      }
-      
-      [data-theme="light"] html {
-        background-color: #ffffff;
+        overflow-x: hidden;
       }
       
       body {
-        margin: 0;
-        padding: 0;
-        overflow-x: hidden;
-        font-family: 'Cairo', sans-serif;
+        font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
       }
       
       /* شاشة التحميل */
-      .otogram-loader {
+      #otogram-loader {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%);
+        background: #0A0A0A;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         z-index: 9999;
-        transition: opacity 0.5s ease, visibility 0.5s ease;
+        transition: opacity 0.3s ease;
       }
       
-      [data-theme="light"] .otogram-loader {
-        background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+      #otogram-loader.hide {
+        opacity: 0;
+        pointer-events: none;
       }
       
-      /* حاوية الأيقونة */
       .loader-icon-container {
         position: relative;
         width: 100px;
@@ -99,111 +65,60 @@
         margin-bottom: 30px;
       }
       
-      /* الأيقونة */
       .loader-icon-image {
         width: 100%;
         height: 100%;
         object-fit: contain;
-        animation: eyeFloat 2s ease-in-out infinite;
-        filter: drop-shadow(0 0 20px rgba(200, 168, 130, 0.6));
-        position: relative;
-        z-index: 2;
+        animation: float 2s ease-in-out infinite;
       }
       
-      @keyframes eyeFloat {
-        0%, 100% { 
-          transform: translateY(0) scale(1);
-        }
-        50% { 
-          transform: translateY(-10px) scale(1.05);
-        }
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
       }
       
-      /* Spinner الدائري */
       .loader-spinner {
         position: absolute;
         top: -20px;
         left: -20px;
         width: 140px;
         height: 140px;
-        border: 3px solid rgba(200, 168, 130, 0.1);
+        border: 3px solid rgba(200, 168, 130, 0.2);
         border-top-color: #C8A882;
-        border-right-color: #C8A882;
         border-radius: 50%;
-        animation: spin 1.2s linear infinite;
-        z-index: 1;
+        animation: spin 1s linear infinite;
       }
       
       @keyframes spin {
         to { transform: rotate(360deg); }
       }
       
-      /* النصوص */
       .loader-brand {
-        font-family: 'Cairo', sans-serif;
         font-size: 32px;
         font-weight: 900;
-        background: linear-gradient(135deg, #E5D4B8 0%, #C8A882 50%, #A8845F 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: #C8A882;
         margin-bottom: 8px;
-        letter-spacing: 0.5px;
       }
       
       .loader-subtitle {
-        font-family: 'Cairo', sans-serif;
         font-size: 14px;
-        color: #C8A882;
-        font-weight: 600;
-        opacity: 0.8;
-      }
-      
-      [data-theme="light"] .loader-subtitle {
         color: #A8845F;
+        font-weight: 600;
       }
       
-      /* إخفاء شاشة التحميل عند جاهزية التطبيق */
-      #root:not(:empty) ~ .otogram-loader {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-      }
-      
-      /* Responsive */
       @media (max-width: 480px) {
         .loader-icon-container {
           width: 80px;
           height: 80px;
-          margin-bottom: 25px;
         }
-        
         .loader-spinner {
-          top: -16px;
-          left: -16px;
-          width: 112px;
-          height: 112px;
-          border-width: 2.5px;
+          width: 120px;
+          height: 120px;
+          top: -20px;
+          left: -20px;
         }
-        
         .loader-brand {
           font-size: 28px;
-        }
-        
-        .loader-subtitle {
-          font-size: 13px;
-        }
-      }
-      
-      /* تحسينات الأداء */
-      @media (prefers-reduced-motion: reduce) {
-        .loader-icon-image,
-        .loader-spinner {
-          animation: none !important;
-        }
-        
-        .loader-icon-image {
-          transform: none !important;
         }
       }
     </style>
@@ -212,7 +127,7 @@
   </head>
   <body>
     <!-- شاشة التحميل -->
-    <div class="otogram-loader">
+    <div id="otogram-loader">
       <div class="loader-icon-container">
         <div class="loader-spinner"></div>
         <img src="/favicon.svg" alt="Otogram" class="loader-icon-image" />
@@ -223,5 +138,36 @@
     
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- إخفاء شاشة التحميل عند جاهزية React -->
+    <script>
+      // مراقبة تحميل React
+      const checkRoot = setInterval(function() {
+        const root = document.getElementById('root');
+        if (root && root.children.length > 0) {
+          const loader = document.getElementById('otogram-loader');
+          if (loader) {
+            loader.classList.add('hide');
+            setTimeout(function() {
+              loader.remove();
+            }, 300);
+          }
+          clearInterval(checkRoot);
+        }
+      }, 100);
+      
+      // إخفاء إجباري بعد 10 ثواني كحد أقصى
+      setTimeout(function() {
+        const loader = document.getElementById('otogram-loader');
+        if (loader) {
+          loader.classList.add('hide');
+          setTimeout(function() {
+            loader.remove();
+          }, 300);
+        }
+        clearInterval(checkRoot);
+      }, 10000);
+    </script>
   </body>
+
 </html>

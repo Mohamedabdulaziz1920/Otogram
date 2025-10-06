@@ -41,6 +41,7 @@ const UploadPage = () => {
   
   const cancelTokenRef = useRef(null);
   const fileInputRef = useRef(null);
+  const isSubmittingRef = useRef(false); // ✨ لمنع الإرسال المتكرر
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -138,11 +139,20 @@ const UploadPage = () => {
       setUploading(false);
       setUploadProgress(0);
       setError('تم إلغاء الرفع');
+      isSubmittingRef.current = false; // ✨ إعادة تعيين الحالة
     }
   };
 
+  // ✨✨✨ الدالة المُحدثة - أهم تعديل ✨✨✨
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    if (isSubmittingRef.current || uploading) {
+      console.log('⚠️ Upload already in progress, ignoring duplicate request');
+      return;
+    }
+    
     setError('');
     setSuccess('');
 
@@ -151,6 +161,7 @@ const UploadPage = () => {
       return;
     }
 
+    isSubmittingRef.current = true;
     setUploading(true);
     setUploadProgress(0);
 
@@ -181,25 +192,36 @@ const UploadPage = () => {
         ? `/api/videos/reply/${replyToId}` 
         : '/api/videos/upload';
 
-      await api.post(endpoint, formData, config);
+      console.log('📤 Uploading to:', endpoint);
+      console.log('📝 Is Reply:', !!replyToId);
+      
+      const response = await api.post(endpoint, formData, config);
+      
+      console.log('✅ Upload successful:', response.data);
 
       setSuccess('تم رفع الفيديو بنجاح!');
       
+      // ✨✨ التوجيه إلى الصفحة الرئيسية في جميع الحالات ✨✨
       setTimeout(() => {
-        navigate(replyToId ? `/video/${replyToId}` : '/');
+        console.log('🔄 Redirecting to home page...');
+        navigate('/', { replace: true }); // ✅ دائماً إلى الصفحة الرئيسية
       }, 1500);
       
     } catch (err) {
+      isSubmittingRef.current = false;
+      
       if (axios.isCancel(err)) {
-        console.log('Upload cancelled:', err.message);
+        console.log('🚫 Upload cancelled:', err.message);
+        setError('تم إلغاء الرفع');
       } else {
+        console.error('❌ Upload error:', err);
         const errorMessage = err.response?.data?.error 
           || err.response?.data?.message 
           || 'حدث خطأ غير متوقع أثناء الرفع. يرجى المحاولة مرة أخرى.';
         setError(errorMessage);
       }
-    } finally {
       setUploading(false);
+    } finally {
       cancelTokenRef.current = null;
     }
   };
@@ -214,7 +236,6 @@ const UploadPage = () => {
 
   return (
     <div className="upload-page">
-      {/* خلفية TikTok المتحركة */}
       <div className="tiktok-background">
         <div className="neon-orb cyan-orb orb-1"></div>
         <div className="neon-orb pink-orb orb-2"></div>
@@ -223,7 +244,6 @@ const UploadPage = () => {
       </div>
 
       <div className="upload-container">
-        {/* Header بأسلوب TikTok */}
         <div className="upload-header">
           <button className="tiktok-back-btn" onClick={() => navigate(-1)}>
             <ArrowLeft size={22} strokeWidth={2.5} />
@@ -250,7 +270,6 @@ const UploadPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="upload-form">
-          {/* منطقة رفع الفيديو */}
           <div className="video-upload-section">
             {preview ? (
               <div className="video-preview-card">
@@ -328,7 +347,6 @@ const UploadPage = () => {
             )}
           </div>
 
-          {/* حقل الوصف */}
           <div className="tiktok-form-group">
             <label htmlFor="description" className="tiktok-label">
               <Video size={20} strokeWidth={2.5} />
@@ -361,7 +379,6 @@ const UploadPage = () => {
             </div>
           </div>
 
-          {/* شريط التقدم */}
           {uploading && (
             <div className="tiktok-progress-card">
               <div className="progress-header">
@@ -387,7 +404,6 @@ const UploadPage = () => {
             </div>
           )}
 
-          {/* رسائل التنبيه */}
           {error && (
             <div className="tiktok-alert error-alert">
               <AlertCircle size={20} strokeWidth={2.5} />
@@ -409,7 +425,6 @@ const UploadPage = () => {
             </div>
           )}
 
-          {/* أزرار التحكم */}
           <div className="tiktok-actions">
             {uploading ? (
               <button 
@@ -425,17 +440,27 @@ const UploadPage = () => {
                 <button 
                   type="submit" 
                   className="tiktok-btn-primary" 
-                  disabled={!videoFile}
+                  disabled={!videoFile || uploading}
                 >
-                  <Sparkles size={20} strokeWidth={2.5} />
-                  <span>نشر الفيديو</span>
-                  <div className="btn-glow"></div>
+                  {uploading ? (
+                    <>
+                      <Loader2 className="spinning" size={20} strokeWidth={2.5} />
+                      <span>جاري النشر...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={20} strokeWidth={2.5} />
+                      <span>نشر الفيديو</span>
+                      <div className="btn-glow"></div>
+                    </>
+                  )}
                 </button>
                 
                 <button 
                   type="button" 
                   className="tiktok-btn-ghost" 
                   onClick={() => navigate(-1)}
+                  disabled={uploading}
                 >
                   إلغاء
                 </button>
@@ -449,6 +474,5 @@ const UploadPage = () => {
     </div>
   );
 };
-
 
 export default UploadPage;

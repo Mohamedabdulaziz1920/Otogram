@@ -17,7 +17,7 @@ import {
   Heart,
   MessageCircle
 } from 'lucide-react';
-import './AuthPages.css';
+import './RegisterPage.css';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',

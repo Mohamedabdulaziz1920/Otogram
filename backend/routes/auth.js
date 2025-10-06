@@ -85,7 +85,7 @@ router.post('/login', async (req, res) => {
       console.log('  - Password exists:', user.password ? '✓ YES' : '✗ NO');
       console.log('  - Password length:', user.password?.length || 0);
       console.log('  - Password starts with $2:', user.password?.startsWith('$2') ? '✓ YES' : '✗ NO');
-      console.log('  - Password hash:', user.password?.substring(0, 20) + '...');
+      console.log('  - Password first 30 chars:', user.password?.substring(0, 30));
     }
 
     if (!user) {
@@ -94,8 +94,6 @@ router.post('/login', async (req, res) => {
     }
 
     console.log('🔐 Starting password comparison...');
-    console.log('  - Input password:', password);
-    console.log('  - Stored hash:', user.password);
 
     const isMatch = await bcrypt.compare(password, user.password);
     
@@ -132,14 +130,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// --- Get Logged-in User Data ---
-// GET /api/auth/me
-router.get('/me', auth, (req, res) => {
-  // ✨ أصبح هذا المسار أبسط وأسرع بكثير!
-  // لا حاجة لاستدعاء قاعدة البيانات مرة أخرى، لأن 'auth' middleware قام بذلك بالفعل.
-  // بيانات المستخدم موجودة في req.user.
-  res.status(200).json({ user: req.user });
-});
 
 
 module.exports = router;

@@ -208,7 +208,7 @@
 
 .upload-icon-left,
 .upload-icon-right {
-  width: 16px;
+  width: 10px;
   background: #25f4ee;
   border-radius: 4px;
 }
@@ -378,7 +378,7 @@
   }
 
   .upload-icon-center {
-    width: 30px;
+    width: 35px;
   }
 
   .upload-icon {

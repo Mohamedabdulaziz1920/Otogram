@@ -85,7 +85,6 @@ const LoginPage = () => {
           </button>
           
           <div className="header-content">
-            // في JSX، استبدل:
 <div className="tiktok-icon-wrapper">
   <OtogramIcon size={60} />
   <div className="icon-glow"></div>

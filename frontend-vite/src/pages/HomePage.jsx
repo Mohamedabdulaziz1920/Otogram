@@ -18,6 +18,12 @@ const HomePage = () => {
   const [likedVideos, setLikedVideos] = useState(new Set());
   const [likedReplies, setLikedReplies] = useState(new Set());
   const [isMuted, setIsMuted] = useState(false);
+  
+  // 🎮 States للتحكم في التشغيل
+  const [isMainPlaying, setIsMainPlaying] = useState(false);
+  const [isReplyPlaying, setIsReplyPlaying] = useState(false);
+  const [showMainPauseIcon, setShowMainPauseIcon] = useState(false);
+  const [showReplyPauseIcon, setShowReplyPauseIcon] = useState(false);
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -94,6 +100,52 @@ const HomePage = () => {
     });
   }, []);
 
+  // 🎮 التحكم في تشغيل الفيديو الرئيسي
+  const toggleMainVideo = () => {
+    if (mainVideoRef.current) {
+      if (isMainPlaying) {
+        mainVideoRef.current.pause();
+        setIsMainPlaying(false);
+      } else {
+        mainVideoRef.current.play();
+        setIsMainPlaying(true);
+        
+        // إظهار أيقونة Pause لثانية
+        setShowMainPauseIcon(true);
+        setTimeout(() => setShowMainPauseIcon(false), 1000);
+        
+        // إيقاف فيديو الرد عند تشغيل الفيديو الرئيسي
+        if (replyVideoRef.current && isReplyPlaying) {
+          replyVideoRef.current.pause();
+          setIsReplyPlaying(false);
+        }
+      }
+    }
+  };
+
+  // 🎮 التحكم في تشغيل فيديو الرد
+  const toggleReplyVideo = () => {
+    if (replyVideoRef.current) {
+      if (isReplyPlaying) {
+        replyVideoRef.current.pause();
+        setIsReplyPlaying(false);
+      } else {
+        replyVideoRef.current.play();
+        setIsReplyPlaying(true);
+        
+        // إظهار أيقونة Pause لثانية
+        setShowReplyPauseIcon(true);
+        setTimeout(() => setShowReplyPauseIcon(false), 1000);
+        
+        // إيقاف الفيديو الرئيسي عند تشغيل الرد
+        if (mainVideoRef.current && isMainPlaying) {
+          mainVideoRef.current.pause();
+          setIsMainPlaying(false);
+        }
+      }
+    }
+  };
+
   // ✅ Touch events for mobile - محسّن للردود
   useEffect(() => {
     let touchStartY = 0;
@@ -112,19 +164,15 @@ const HomePage = () => {
       const deltaY = touchStartY - touchEndY;
       const deltaTime = touchEndTime - touchStartTime;
 
-      // سرعة التمرير
       const velocity = Math.abs(deltaY) / deltaTime;
 
-      // إذا كان التمرير سريع أو المسافة كبيرة
       if (Math.abs(deltaY) > 50 || velocity > 0.3) {
         if (deltaY > 0) {
-          // Swipe up - next video
           if (activeVideoIndex < videos.length - 1) {
             setActiveVideoIndex(prev => prev + 1);
             setActiveReplyIndex(0);
           }
         } else {
-          // Swipe down - previous video
           if (activeVideoIndex > 0) {
             setActiveVideoIndex(prev => prev - 1);
             setActiveReplyIndex(0);
@@ -133,7 +181,6 @@ const HomePage = () => {
       }
     };
 
-    // 🔥 التعديل الجديد: دعم التمرير العمودي والأفقي للردود
     const handleReplyTouchStart = (e) => {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
@@ -149,37 +196,29 @@ const HomePage = () => {
       const deltaY = touchStartY - touchEndY;
       const deltaTime = touchEndTime - touchStartTime;
 
-      // حساب السرعة
       const velocityY = Math.abs(deltaY) / deltaTime;
       const velocityX = Math.abs(deltaX) / deltaTime;
 
-      // تحديد اتجاه التمرير الأساسي
       const isVerticalSwipe = Math.abs(deltaY) > Math.abs(deltaX);
       const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
 
-      // التمرير العمودي - الانتقال بين الفيديوهات
       if (isVerticalSwipe && (Math.abs(deltaY) > 50 || velocityY > 0.3)) {
         if (deltaY > 0) {
-          // Swipe up - next video
           if (activeVideoIndex < videos.length - 1) {
             setActiveVideoIndex(prev => prev + 1);
             setActiveReplyIndex(0);
           }
         } else {
-          // Swipe down - previous video
           if (activeVideoIndex > 0) {
             setActiveVideoIndex(prev => prev - 1);
             setActiveReplyIndex(0);
           }
         }
       }
-      // التمرير الأفقي - الانتقال بين الردود
       else if (isHorizontalSwipe && (Math.abs(deltaX) > 50 || velocityX > 0.3)) {
         if (deltaX > 0) {
-          // Swipe left - next reply
           goToNextReply();
         } else {
-          // Swipe right - previous reply
           goToPrevReply();
         }
       }
@@ -210,10 +249,7 @@ const HomePage = () => {
     };
   }, [activeVideoIndex, videos.length, goToNextReply, goToPrevReply]);
 
-  // ⚠️ احذف الكود المكرر من هنا إلى نهاية useEffect القديم
-  // (من السطر 161 إلى 197 في كودك الحالي)
-
-  // ✅ Scroll handler for vertical navigation - منفصل
+  // ✅ Scroll handler for vertical navigation
   useEffect(() => {
     const handleWheel = (e) => {
       const now = Date.now();
@@ -242,7 +278,7 @@ const HomePage = () => {
     return () => window.removeEventListener('wheel', handleWheel);
   }, [activeVideoIndex, videos.length]);
 
-  // ✅ Keyboard navigation - منفصل
+  // ✅ Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
       switch(e.key) {
@@ -270,6 +306,24 @@ const HomePage = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeVideoIndex, videos.length, goToNextReply, goToPrevReply]);
+
+  // 🎮 إيقاف الفيديوهات وإعادة تعيين الحالة عند تغيير الفيديو
+  useEffect(() => {
+    setIsMainPlaying(false);
+    setIsReplyPlaying(false);
+    setShowMainPauseIcon(false);
+    setShowReplyPauseIcon(false);
+    
+    if (mainVideoRef.current) {
+      mainVideoRef.current.pause();
+      mainVideoRef.current.currentTime = 0;
+    }
+    
+    if (replyVideoRef.current) {
+      replyVideoRef.current.pause();
+      replyVideoRef.current.currentTime = 0;
+    }
+  }, [activeVideoIndex, activeReplyIndex]);
 
   const toggleMute = () => {
     setIsMuted(prev => !prev);
@@ -412,17 +466,40 @@ const HomePage = () => {
       <div className="content-wrapper">
         {/* Main Video Section - 50% */}
         <div className="main-video-section">
-          <video
-            ref={mainVideoRef}
-            src={getAssetUrl(currentVideo.videoUrl)}
-            className="video-player"
-            autoPlay
-            loop
-            muted={isMuted}
-            playsInline
-          />
-          
-          <div className="video-gradient"></div>
+          <div className="video-container" onClick={toggleMainVideo}>
+            <video
+              ref={mainVideoRef}
+              src={getAssetUrl(currentVideo.videoUrl)}
+              className="video-player"
+              loop
+              muted={isMuted}
+              playsInline
+            />
+            
+            {/* Play/Pause Overlay */}
+            {!isMainPlaying && (
+              <div className="play-overlay">
+                <div className="play-button">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </div>
+              </div>
+            )}
+
+            {/* Pause Indicator - يظهر لثانية فقط */}
+            {isMainPlaying && showMainPauseIcon && (
+              <div className="pause-indicator">
+                <div className="pause-icon">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                  </svg>
+                </div>
+              </div>
+            )}
+            
+            <div className="video-gradient"></div>
+          </div>
 
           <div className="video-info">
             <div className="user-info" onClick={() => navigateToProfile(currentVideo.user.username)}>
@@ -480,18 +557,41 @@ const HomePage = () => {
         <div className="replies-section">
           {currentVideo?.replies?.length > 0 ? (
             <div className="reply-video-container">
-              <video
-                ref={replyVideoRef}
-                key={currentVideo.replies[activeReplyIndex]._id}
-                src={getAssetUrl(currentVideo.replies[activeReplyIndex].videoUrl)}
-                className="reply-video"
-                autoPlay
-                loop
-                muted={isMuted}
-                playsInline
-              />
+              <div className="reply-video-wrapper" onClick={toggleReplyVideo}>
+                <video
+                  ref={replyVideoRef}
+                  key={currentVideo.replies[activeReplyIndex]._id}
+                  src={getAssetUrl(currentVideo.replies[activeReplyIndex].videoUrl)}
+                  className="reply-video"
+                  loop
+                  muted={isMuted}
+                  playsInline
+                />
 
-              <div className="reply-gradient"></div>
+                {/* Play/Pause Overlay للرد */}
+                {!isReplyPlaying && (
+                  <div className="play-overlay">
+                    <div className="play-button">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                  </div>
+                )}
+
+                {/* Pause Indicator للرد */}
+                {isReplyPlaying && showReplyPauseIcon && (
+                  <div className="pause-indicator">
+                    <div className="pause-icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                      </svg>
+                    </div>
+                  </div>
+                )}
+
+                <div className="reply-gradient"></div>
+              </div>
 
               <div className="reply-info">
                 <div 

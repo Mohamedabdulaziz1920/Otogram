@@ -11,11 +11,10 @@ import {
   Eye,
   EyeOff,
   Sparkles,
-  ArrowRight,
+  ArrowLeft,
   Music,
-  Video,
-  Heart,
-  MessageCircle
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
 import './RegisterPage.css';
 
@@ -57,7 +56,6 @@ const RegisterPage = () => {
       [name]: value
     });
 
-    // حساب قوة كلمة المرور
     if (name === 'password') {
       setPasswordStrength(calculatePasswordStrength(value));
     }
@@ -67,19 +65,16 @@ const RegisterPage = () => {
     e.preventDefault();
     setError('');
 
-    // التحقق من اسم المستخدم
     if (formData.username.length < 3) {
       setError('اسم المستخدم يجب أن يكون 3 أحرف على الأقل');
       return;
     }
 
-    // التحقق من تطابق كلمات المرور
     if (formData.password !== formData.confirmPassword) {
       setError('كلمات المرور غير متطابقة');
       return;
     }
 
-    // التحقق من قوة كلمة المرور
     if (formData.password.length < 6) {
       setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
       return;
@@ -96,8 +91,6 @@ const RegisterPage = () => {
 
       const { token, user } = response.data;
       login(token, user);
-
-      // الانتقال إلى الصفحة الرئيسية
       navigate('/');
 
     } catch (err) {
@@ -121,48 +114,43 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="auth-page">
-      {/* خلفية TikTok المتحركة */}
-      <div className="auth-background">
+    <div className="register-page">
+      {/* خلفية TikTok المتحركة - نفس تصميم UploadPage */}
+      <div className="tiktok-background">
         <div className="neon-orb cyan-orb orb-1"></div>
         <div className="neon-orb pink-orb orb-2"></div>
         <div className="neon-orb cyan-orb orb-3"></div>
         <div className="grid-overlay"></div>
-        
-        {/* أيقونات عائمة */}
-        <div className="floating-icons">
-          <Music className="float-icon icon-1" size={40} />
-          <Video className="float-icon icon-2" size={36} />
-          <Heart className="float-icon icon-3" size={32} />
-          <MessageCircle className="float-icon icon-4" size={38} />
-          <Sparkles className="float-icon icon-5" size={34} />
-        </div>
       </div>
 
-      <div className="auth-container">
-        {/* الشعار والعنوان */}
-        <div className="auth-header">
-          <div className="logo-wrapper">
-            <div className="logo-icon">
-              <Music size={40} strokeWidth={2.5} />
-              <div className="logo-glow"></div>
-            </div>
-          </div>
+      <div className="register-container">
+        {/* Header بنفس أسلوب UploadPage */}
+        <div className="register-header">
+          <button className="tiktok-back-btn" onClick={() => navigate(-1)}>
+            <ArrowLeft size={22} strokeWidth={2.5} />
+          </button>
           
-          <h1 className="auth-title">انضم إلى Otogram</h1>
-          <p className="auth-subtitle">ابدأ مشاركة إبداعك مع العالم ✨</p>
+          <div className="header-content">
+            <div className="tiktok-icon-wrapper">
+              <Music className="header-icon" size={36} strokeWidth={2} />
+              <div className="icon-glow"></div>
+            </div>
+            
+            <h1 className="tiktok-title">انضم إلى Otogram</h1>
+            <p className="tiktok-subtitle">ابدأ مشاركة إبداعك مع العالم ✨</p>
+          </div>
         </div>
 
         {/* النموذج */}
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleSubmit} className="register-form">
           {/* اسم المستخدم */}
-          <div className="tiktok-input-group">
+          <div className="tiktok-form-group">
             <label htmlFor="username" className="tiktok-label">
-              <User size={18} strokeWidth={2.5} />
-              اسم المستخدم
+              <User size={20} strokeWidth={2.5} />
+              <span>اسم المستخدم</span>
             </label>
-            <div className="input-wrapper">
-              <User className="input-icon" size={20} />
+            <div className="input-container">
+              <User className="input-icon-left" size={20} />
               <input
                 type="text"
                 id="username"
@@ -175,19 +163,19 @@ const RegisterPage = () => {
                 minLength="3"
               />
               {formData.username.length >= 3 && (
-                <CheckCircle2 className="input-check" size={20} />
+                <CheckCircle2 className="input-icon-right check-icon" size={20} />
               )}
             </div>
           </div>
 
           {/* البريد الإلكتروني */}
-          <div className="tiktok-input-group">
+          <div className="tiktok-form-group">
             <label htmlFor="email" className="tiktok-label">
-              <Mail size={18} strokeWidth={2.5} />
-              البريد الإلكتروني
+              <Mail size={20} strokeWidth={2.5} />
+              <span>البريد الإلكتروني</span>
             </label>
-            <div className="input-wrapper">
-              <Mail className="input-icon" size={20} />
+            <div className="input-container">
+              <Mail className="input-icon-left" size={20} />
               <input
                 type="email"
                 id="email"
@@ -199,19 +187,19 @@ const RegisterPage = () => {
                 className="tiktok-input"
               />
               {formData.email.includes('@') && formData.email.includes('.') && (
-                <CheckCircle2 className="input-check" size={20} />
+                <CheckCircle2 className="input-icon-right check-icon" size={20} />
               )}
             </div>
           </div>
 
           {/* كلمة المرور */}
-          <div className="tiktok-input-group">
+          <div className="tiktok-form-group">
             <label htmlFor="password" className="tiktok-label">
-              <Lock size={18} strokeWidth={2.5} />
-              كلمة المرور
+              <Lock size={20} strokeWidth={2.5} />
+              <span>كلمة المرور</span>
             </label>
-            <div className="input-wrapper">
-              <Lock className="input-icon" size={20} />
+            <div className="input-container">
+              <Lock className="input-icon-left" size={20} />
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
@@ -225,7 +213,7 @@ const RegisterPage = () => {
               />
               <button
                 type="button"
-                className="password-toggle"
+                className="input-icon-right password-toggle-btn"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -234,18 +222,20 @@ const RegisterPage = () => {
             
             {/* مؤشر قوة كلمة المرور */}
             {formData.password && (
-              <div className="password-strength">
-                <div className="strength-bar">
+              <div className="password-strength-indicator">
+                <div className="strength-bar-container">
                   <div 
-                    className="strength-fill"
+                    className="strength-bar-fill"
                     style={{ 
                       width: `${passwordStrength}%`,
                       background: getStrengthColor()
                     }}
-                  ></div>
+                  >
+                    <div className="progress-shimmer"></div>
+                  </div>
                 </div>
                 <span 
-                  className="strength-text"
+                  className="strength-label"
                   style={{ color: getStrengthColor() }}
                 >
                   {getStrengthText()}
@@ -255,13 +245,13 @@ const RegisterPage = () => {
           </div>
 
           {/* تأكيد كلمة المرور */}
-          <div className="tiktok-input-group">
+          <div className="tiktok-form-group">
             <label htmlFor="confirmPassword" className="tiktok-label">
-              <Lock size={18} strokeWidth={2.5} />
-              تأكيد كلمة المرور
+              <ShieldCheck size={20} strokeWidth={2.5} />
+              <span>تأكيد كلمة المرور</span>
             </label>
-            <div className="input-wrapper">
-              <Lock className="input-icon" size={20} />
+            <div className="input-container">
+              <Lock className="input-icon-left" size={20} />
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 id="confirmPassword"
@@ -274,13 +264,13 @@ const RegisterPage = () => {
               />
               <button
                 type="button"
-                className="password-toggle"
+                className="input-icon-right password-toggle-btn"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
               {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                <CheckCircle2 className="input-check match" size={20} />
+                <CheckCircle2 className="input-icon-right check-icon match-icon" size={20} />
               )}
             </div>
           </div>
@@ -293,53 +283,45 @@ const RegisterPage = () => {
             </div>
           )}
 
-          {/* زر الإرسال */}
-          <button 
-            type="submit" 
-            className="tiktok-btn-submit" 
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <div className="btn-loader"></div>
-                <span>جاري إنشاء حسابك...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles size={20} strokeWidth={2.5} />
-                <span>إنشاء حساب</span>
-                <ArrowRight size={20} strokeWidth={2.5} />
-                <div className="btn-glow"></div>
-              </>
-            )}
-          </button>
+          {/* أزرار التحكم */}
+          <div className="tiktok-actions">
+            <button 
+              type="submit" 
+              className="tiktok-btn-primary" 
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="spinning" size={20} strokeWidth={2.5} />
+                  <span>جاري إنشاء حسابك...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={20} strokeWidth={2.5} />
+                  <span>إنشاء حساب</span>
+                  <div className="btn-glow"></div>
+                </>
+              )}
+            </button>
+            
+            <button 
+              type="button" 
+              className="tiktok-btn-ghost" 
+              onClick={() => navigate(-1)}
+            >
+              إلغاء
+            </button>
+          </div>
         </form>
 
         {/* رابط تسجيل الدخول */}
-        <div className="auth-footer">
-          <p className="auth-link">
+        <div className="register-footer">
+          <p className="footer-text">
             لديك حساب بالفعل؟
-            <Link to="/login" className="link-gradient">
+            <Link to="/login" className="footer-link">
               سجل الدخول
-              <ArrowRight size={16} />
             </Link>
           </p>
-        </div>
-
-        {/* ميزات المنصة */}
-        <div className="features-grid">
-          <div className="feature-item">
-            <Video className="feature-icon" size={24} />
-            <span>شارك الفيديوهات</span>
-          </div>
-          <div className="feature-item">
-            <Heart className="feature-icon" size={24} />
-            <span>تفاعل مع المحتوى</span>
-          </div>
-          <div className="feature-item">
-            <MessageCircle className="feature-icon" size={24} />
-            <span>تواصل مع الآخرين</span>
-          </div>
         </div>
       </div>
     </div>

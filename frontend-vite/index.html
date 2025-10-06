@@ -53,139 +53,175 @@
       })();
     </script>
     
-    <!-- شاشة التحميل بأيقونة العيون -->
-<style>
-  html {
-    background-color: #000000;
-  }
-  
-  [data-theme="light"] html {
-    background-color: #ffffff;
-  }
-  
-  body {
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-  }
-  
-  /* شاشة التحميل */
-  .otogram-loader {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    transition: opacity 0.5s ease, visibility 0.5s ease;
-  }
-  
-  .loader-icon-container {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    margin-bottom: 30px;
-  }
-  
-  .loader-icon-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    animation: eyeFloat 2s ease-in-out infinite;
-    filter: drop-shadow(0 0 30px rgba(200, 168, 130, 0.8));
-  }
-  
-  @keyframes eyeFloat {
-    0%, 100% { 
-      transform: translateY(0) scale(1);
-      filter: drop-shadow(0 0 30px rgba(200, 168, 130, 0.8));
-    }
-    50% { 
-      transform: translateY(-10px) scale(1.05);
-      filter: drop-shadow(0 0 40px rgba(200, 168, 130, 1));
-    }
-  }
-  
-  .loader-spinner {
-    position: absolute;
-    top: -20px;
-    left: -20px;
-    width: 140px;
-    height: 140px;
-    border: 4px solid rgba(200, 168, 130, 0.1);
-    border-top-color: #C8A882;
-    border-radius: 50%;
-    animation: spin 1.5s linear infinite;
-  }
-  
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  
-  .loader-brand {
-    font-family: 'Cairo', sans-serif;
-    font-size: 32px;
-    font-weight: 900;
-    background: linear-gradient(135deg, #E5D4B8 0%, #C8A882 50%, #A8845F 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 10px;
-  }
-  
-  .loader-subtitle {
-    font-family: 'Cairo', sans-serif;
-    font-size: 14px;
-    color: #C8A882;
-    font-weight: 600;
-  }
-  
-  #root:not(:empty) ~ .otogram-loader {
-    opacity: 0;
-    visibility: hidden;
-  }
-</style>
+    <!-- شاشة التحميل البسيطة والسريعة -->
+    <style>
+      /* منع وميض المحتوى */
+      html {
+        background-color: #0A0A0A;
+      }
+      
+      [data-theme="light"] html {
+        background-color: #ffffff;
+      }
+      
+      body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        font-family: 'Cairo', sans-serif;
+      }
+      
+      /* شاشة التحميل */
+      .otogram-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+      }
+      
+      [data-theme="light"] .otogram-loader {
+        background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+      }
+      
+      /* حاوية الأيقونة */
+      .loader-icon-container {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        margin-bottom: 30px;
+      }
+      
+      /* الأيقونة */
+      .loader-icon-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        animation: eyeFloat 2s ease-in-out infinite;
+        filter: drop-shadow(0 0 20px rgba(200, 168, 130, 0.6));
+        position: relative;
+        z-index: 2;
+      }
+      
+      @keyframes eyeFloat {
+        0%, 100% { 
+          transform: translateY(0) scale(1);
+        }
+        50% { 
+          transform: translateY(-10px) scale(1.05);
+        }
+      }
+      
+      /* Spinner الدائري */
+      .loader-spinner {
+        position: absolute;
+        top: -20px;
+        left: -20px;
+        width: 140px;
+        height: 140px;
+        border: 3px solid rgba(200, 168, 130, 0.1);
+        border-top-color: #C8A882;
+        border-right-color: #C8A882;
+        border-radius: 50%;
+        animation: spin 1.2s linear infinite;
+        z-index: 1;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      
+      /* النصوص */
+      .loader-brand {
+        font-family: 'Cairo', sans-serif;
+        font-size: 32px;
+        font-weight: 900;
+        background: linear-gradient(135deg, #E5D4B8 0%, #C8A882 50%, #A8845F 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+      
+      .loader-subtitle {
+        font-family: 'Cairo', sans-serif;
+        font-size: 14px;
+        color: #C8A882;
+        font-weight: 600;
+        opacity: 0.8;
+      }
+      
+      [data-theme="light"] .loader-subtitle {
+        color: #A8845F;
+      }
+      
+      /* إخفاء شاشة التحميل عند جاهزية التطبيق */
+      #root:not(:empty) ~ .otogram-loader {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      
+      /* Responsive */
+      @media (max-width: 480px) {
+        .loader-icon-container {
+          width: 80px;
+          height: 80px;
+          margin-bottom: 25px;
+        }
+        
+        .loader-spinner {
+          top: -16px;
+          left: -16px;
+          width: 112px;
+          height: 112px;
+          border-width: 2.5px;
+        }
+        
+        .loader-brand {
+          font-size: 28px;
+        }
+        
+        .loader-subtitle {
+          font-size: 13px;
+        }
+      }
+      
+      /* تحسينات الأداء */
+      @media (prefers-reduced-motion: reduce) {
+        .loader-icon-image,
+        .loader-spinner {
+          animation: none !important;
+        }
+        
+        .loader-icon-image {
+          transform: none !important;
+        }
+      }
+    </style>
     
     <title>Otogram - شارك لحظاتك مع العالم</title>
   </head>
   <body>
     <!-- شاشة التحميل -->
     <div class="otogram-loader">
-      <!-- خلفية متحركة -->
-      <div class="loader-background">
-        <div class="loader-orb orb-1"></div>
-        <div class="loader-orb orb-2"></div>
+      <div class="loader-icon-container">
+        <div class="loader-spinner"></div>
+        <img src="/favicon.svg" alt="Otogram" class="loader-icon-image" />
       </div>
-      
-      <!-- محتوى التحميل -->
-      <div class="loader-content">
-        <!-- حاوية الأيقونة -->
-        <div class="loader-icon-wrapper">
-          <div class="loader-glow"></div>
-          <div class="loader-ring ring-1"></div>
-          <div class="loader-ring ring-2"></div>
-          <img src="/favicon.svg" alt="Otogram" class="loader-icon" />
-        </div>
-        
-        <!-- النص -->
-        <div>
-          <div class="loader-text">Otogram</div>
-          <div class="loader-dots">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-          </div>
-        </div>
-      </div>
+      <div class="loader-brand">Otogram</div>
+      <div class="loader-subtitle">شارك لحظاتك مع العالم</div>
     </div>
     
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
-
 </html>

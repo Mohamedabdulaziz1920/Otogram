@@ -104,11 +104,6 @@ router.post('/reply/:videoId', auth, checkRole(['user', 'creator', 'admin']), up
         });
         await replyVideo.save();
 
-        // الخطوة 2: تحديث الفيديو الأصلي لإضافة هذا الرد إلى قائمة ردوده
-        await Video.findByIdAndUpdate(parentVideoId, {
-          $push: { replies: replyVideo._id }
-        });
-
         // إرسال الرد الناجح
         const replyResponse = replyVideo.toObject();
         replyResponse.user = {

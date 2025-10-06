@@ -3,6 +3,21 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import NavigationBar from '../components/NavigationBar';
+import { 
+  Upload, 
+  Video, 
+  FileVideo, 
+  CheckCircle2, 
+  AlertCircle, 
+  X, 
+  RefreshCw, 
+  ArrowLeft,
+  Sparkles,
+  Film,
+  MessageSquare,
+  Play,
+  Loader2
+} from 'lucide-react';
 import './UploadPage.css';
 
 const api = axios.create({
@@ -20,16 +35,16 @@ const UploadPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [preview, setPreview] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   
   const cancelTokenRef = useRef(null);
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // 📊 إعدادات التحقق من الملف
   const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
   const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
 
-  // 🔐 التحقق من تسجيل الدخول
   useEffect(() => {
     if (!user) {
       sessionStorage.setItem('redirectAfterLogin', window.location.pathname + window.location.search);
@@ -37,13 +52,11 @@ const UploadPage = () => {
     }
   }, [user, navigate]);
 
-  // 🧹 تنظيف الذاكرة عند إلغاء المكون
   useEffect(() => {
     return () => {
       if (preview) {
         URL.revokeObjectURL(preview);
       }
-      // إلغاء الطلب إذا كان جارياً
       if (cancelTokenRef.current) {
         cancelTokenRef.current.cancel('Component unmounted');
       }
@@ -51,25 +64,18 @@ const UploadPage = () => {
   }, [preview]);
 
   const validateFile = (file) => {
-    // التحقق من نوع الملف
     if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
       return 'نوع الملف غير مدعوم. يرجى اختيار MP4, MOV, AVI, أو WebM';
     }
-    
-    // التحقق من حجم الملف
     if (file.size > MAX_FILE_SIZE) {
       return `حجم الملف كبير جداً. الحد الأقصى هو ${MAX_FILE_SIZE / (1024 * 1024)}MB`;
     }
-    
     return null;
   };
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    
+  const handleFileSelect = (file) => {
     if (!file) return;
 
-    // التحقق من صحة الملف
     const validationError = validateFile(file);
     if (validationError) {
       setError(validationError);
@@ -78,14 +84,36 @@ const UploadPage = () => {
       return;
     }
 
-    // تنظيف preview السابق
     if (preview) {
       URL.revokeObjectURL(preview);
     }
 
     setVideoFile(file);
     setError('');
+    setSuccess('');
     setPreview(URL.createObjectURL(file));
+  };
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files[0];
+    handleFileSelect(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    handleFileSelect(file);
   };
 
   const resetUpload = () => {
@@ -95,8 +123,11 @@ const UploadPage = () => {
     setVideoFile(null);
     setPreview(null);
     setUploadProgress(0);
-    const input = document.getElementById('video-input');
-    if (input) input.value = '';
+    setError('');
+    setSuccess('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const cancelUpload = () => {
@@ -129,7 +160,6 @@ const UploadPage = () => {
       formData.append('replyToId', replyToId);
     }
 
-    // إنشاء cancel token
     cancelTokenRef.current = axios.CancelToken.source();
 
     try {
@@ -151,9 +181,8 @@ const UploadPage = () => {
 
       await api.post(endpoint, formData, config);
 
-      setSuccess('✅ تم رفع الفيديو بنجاح!');
+      setSuccess('تم رفع الفيديو بنجاح!');
       
-      // الانتقال للصفحة الرئيسية بعد النجاح
       setTimeout(() => {
         navigate(replyToId ? `/video/${replyToId}` : '/');
       }, 1500);
@@ -183,142 +212,215 @@ const UploadPage = () => {
 
   return (
     <div className="upload-page">
-      <div className="upload-container">
-        <h1 className="upload-title">
-          {replyToId ? '🎬 إضافة رد جديد' : '🚀 نشر فيديو جديد'}
-        </h1>
+      {/* خلفية متحركة */}
+      <div className="animated-background">
+        <div className="gradient-orb orb-1"></div>
+        <div className="gradient-orb orb-2"></div>
+        <div className="gradient-orb orb-3"></div>
+      </div>
 
-        <form onSubmit={handleSubmit}>
-          {/* 📹 اختيار الفيديو */}
-          <div className="video-upload-area">
+      <div className="upload-container">
+        {/* Header */}
+        <div className="upload-header">
+          <button className="back-button" onClick={() => navigate(-1)}>
+            <ArrowLeft size={20} />
+          </button>
+          <div className="header-content">
+            <div className="icon-wrapper">
+              {replyToId ? (
+                <MessageSquare className="header-icon" size={32} />
+              ) : (
+                <Sparkles className="header-icon" size={32} />
+              )}
+            </div>
+            <h1 className="upload-title">
+              {replyToId ? 'إضافة رد جديد' : 'نشر فيديو جديد'}
+            </h1>
+            <p className="upload-subtitle">
+              {replyToId ? 'شارك ردك مع المجتمع' : 'شارك إبداعك مع العالم'}
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="upload-form">
+          {/* منطقة رفع الفيديو */}
+          <div className="video-upload-section">
             {preview ? (
-              <div className="video-preview">
-                <video src={preview} controls muted loop />
-                <div className="video-info">
-                  <p className="file-name">{videoFile?.name}</p>
-                  <p className="file-size">{formatFileSize(videoFile?.size || 0)}</p>
+              <div className="video-preview-container">
+                <div className="preview-wrapper">
+                  <video 
+                    src={preview} 
+                    controls 
+                    className="preview-video"
+                  />
+                  <div className="video-overlay">
+                    <Play className="play-icon" size={48} />
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  className="change-video-btn"
-                  onClick={resetUpload}
-                  disabled={uploading}
-                >
-                  🔄 تغيير الفيديو
-                </button>
+                
+                <div className="video-details">
+                  <div className="file-info">
+                    <FileVideo className="file-icon" size={24} />
+                    <div className="file-text">
+                      <p className="file-name">{videoFile?.name}</p>
+                      <p className="file-size">{formatFileSize(videoFile?.size || 0)}</p>
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    className="change-video-btn"
+                    onClick={resetUpload}
+                    disabled={uploading}
+                  >
+                    <RefreshCw size={18} />
+                    تغيير الفيديو
+                  </button>
+                </div>
               </div>
             ) : (
-              <label htmlFor="video-input" className="upload-label">
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className="upload-svg" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth="2" 
-                    d="M12 4v16m8-8H4" 
-                  />
-                </svg>
-                <p className="upload-main-text">اضغط لاختيار فيديو من جهازك</p>
-                <p className="upload-sub-text">
-                  MP4, MOV, AVI, WebM (حتى {MAX_FILE_SIZE / (1024 * 1024)}MB)
-                </p>
+              <div 
+                className={`upload-drop-zone ${isDragging ? 'dragging' : ''}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <input 
-                  id="video-input" 
+                  ref={fileInputRef}
                   type="file" 
                   accept="video/mp4,video/quicktime,video/x-msvideo,video/webm" 
-                  onChange={handleFileSelect} 
+                  onChange={handleFileInputChange} 
                   hidden 
                 />
-              </label>
+                
+                <div className="upload-icon-container">
+                  <div className="upload-icon-bg">
+                    <Upload className="upload-icon" size={48} />
+                  </div>
+                  <div className="icon-pulse"></div>
+                </div>
+                
+                <h3 className="upload-main-text">
+                  اسحب وأفلت الفيديو هنا
+                </h3>
+                <p className="upload-sub-text">
+                  أو اضغط للاختيار من جهازك
+                </p>
+                
+                <div className="supported-formats">
+                  <Film size={16} />
+                  <span>MP4, MOV, AVI, WebM (حتى 100MB)</span>
+                </div>
+              </div>
             )}
           </div>
 
-          {/* ✏️ وصف الفيديو */}
+          {/* وصف الفيديو */}
           <div className="form-group">
-            <label htmlFor="description">
-              الوصف (اختياري) 
-              <span className="char-count">{description.length}/500</span>
+            <label htmlFor="description" className="form-label">
+              <Video size={20} />
+              وصف الفيديو
+              <span className="optional-badge">اختياري</span>
             </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => {
-                if (e.target.value.length <= 500) {
-                  setDescription(e.target.value);
-                }
-              }}
-              placeholder="أضف وصفاً جذاباً لفيديوك..."
-              rows="4"
-              disabled={uploading}
-            />
+            <div className="textarea-wrapper">
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => {
+                  if (e.target.value.length <= 500) {
+                    setDescription(e.target.value);
+                  }
+                }}
+                placeholder="أضف وصفاً جذاباً لفيديوك... اجعله مميزاً! ✨"
+                rows="4"
+                disabled={uploading}
+                className="form-textarea"
+              />
+              <div className="char-counter">
+                <span className={description.length > 450 ? 'warning' : ''}>
+                  {description.length}/500
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* 📊 شريط التقدم */}
+          {/* شريط التقدم */}
           {uploading && (
-            <div className="upload-progress">
+            <div className="upload-progress-container">
+              <div className="progress-header">
+                <span className="progress-label">جاري الرفع...</span>
+                <span className="progress-percentage">{uploadProgress}%</span>
+              </div>
               <div className="progress-bar">
                 <div 
                   className="progress-fill" 
                   style={{ width: `${uploadProgress}%` }}
-                />
+                >
+                  <div className="progress-shine"></div>
+                </div>
               </div>
-              <p className="progress-text">{uploadProgress}% مكتمل</p>
+              <p className="progress-info">
+                <Loader2 className="spinning" size={16} />
+                يرجى عدم إغلاق الصفحة حتى اكتمال الرفع
+              </p>
             </div>
           )}
 
-          {/* ⚠️ رسائل الخطأ والنجاح */}
+          {/* رسائل الخطأ والنجاح */}
           {error && (
-            <div className="error-message" role="alert">
-              ⚠️ {error}
+            <div className="alert alert-error">
+              <AlertCircle size={20} />
+              <span>{error}</span>
+              <button 
+                type="button" 
+                className="alert-close"
+                onClick={() => setError('')}
+              >
+                <X size={16} />
+              </button>
             </div>
           )}
           
           {success && (
-            <div className="success-message" role="status">
-              {success}
+            <div className="alert alert-success">
+              <CheckCircle2 size={20} />
+              <span>{success}</span>
             </div>
           )}
 
-          {/* 🎯 أزرار التحكم */}
+          {/* أزرار التحكم */}
           <div className="button-group">
-            <button 
-              type="submit" 
-              className="btn btn-primary" 
-              disabled={uploading || !videoFile}
-            >
-              {uploading ? (
-                <>
-                  <div className="loader"></div>
-                  <span>جاري الرفع...</span>
-                </>
-              ) : (
-                '🚀 نشر الفيديو'
-              )}
-            </button>
-
-            {uploading && (
+            {uploading ? (
               <button 
                 type="button" 
-                className="btn btn-danger" 
+                className="btn btn-danger btn-large" 
                 onClick={cancelUpload}
               >
-                ❌ إلغاء
+                <X size={20} />
+                إلغاء الرفع
               </button>
-            )}
-
-            {!uploading && (
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
-                onClick={() => navigate(-1)}
-              >
-                رجوع
-              </button>
+            ) : (
+              <>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary btn-large" 
+                  disabled={!videoFile}
+                >
+                  <Sparkles size={20} />
+                  نشر الفيديو
+                  <div className="btn-shine"></div>
+                </button>
+                
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => navigate(-1)}
+                >
+                  <ArrowLeft size={18} />
+                  رجوع
+                </button>
+              </>
             )}
           </div>
         </form>

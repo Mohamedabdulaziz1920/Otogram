@@ -1,24 +1,30 @@
-/* ==================== المتغيرات العامة ==================== */
+/* ==================== متغيرات TikTok ==================== */
 :root {
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-  --danger-gradient: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
-  --dark-bg: #0f0f23;
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --text-primary: #1a1a2e;
-  --text-secondary: #6b7280;
-  --border-color: rgba(0, 0, 0, 0.08);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15);
+  /* ألوان TikTok الرئيسية */
+  --tiktok-cyan: #00F2EA;
+  --tiktok-pink: #FE2C55;
+  --tiktok-dark: #0A0A0A;
+  --tiktok-darker: #050505;
+  --tiktok-gray: #161823;
+  --tiktok-light-gray: #1F1F2E;
+  --tiktok-text: #FFFFFF;
+  --tiktok-text-secondary: #A8A8B3;
+  --tiktok-border: rgba(255, 255, 255, 0.12);
+  
+  /* تدرجات */
+  --gradient-tiktok: linear-gradient(135deg, var(--tiktok-cyan) 0%, var(--tiktok-pink) 100%);
+  --gradient-neon: linear-gradient(135deg, #00F2EA 0%, #FE2C55 50%, #00F2EA 100%);
+  
+  /* ظلال نيون */
+  --shadow-cyan: 0 0 20px rgba(0, 242, 234, 0.4);
+  --shadow-pink: 0 0 20px rgba(254, 44, 85, 0.4);
+  --shadow-glow: 0 0 40px rgba(0, 242, 234, 0.3), 0 0 60px rgba(254, 44, 85, 0.2);
 }
 
 /* ==================== الصفحة الرئيسية ==================== */
 .upload-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--tiktok-darker);
   position: relative;
   overflow-x: hidden;
   padding: 20px;
@@ -26,7 +32,7 @@
 }
 
 /* ==================== الخلفية المتحركة ==================== */
-.animated-background {
+.tiktok-background {
   position: fixed;
   top: 0;
   left: 0;
@@ -37,61 +43,87 @@
   pointer-events: none;
 }
 
-.gradient-orb {
+.neon-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.5;
-  animation: float 20s infinite ease-in-out;
+  filter: blur(100px);
+  opacity: 0.25;
+  animation: neonFloat 25s infinite ease-in-out;
+}
+
+.cyan-orb {
+  background: radial-gradient(circle, var(--tiktok-cyan), transparent 70%);
+}
+
+.pink-orb {
+  background: radial-gradient(circle, var(--tiktok-pink), transparent 70%);
 }
 
 .orb-1 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, #667eea, transparent);
-  top: -200px;
-  right: -200px;
+  width: 500px;
+  height: 500px;
+  top: -250px;
+  right: -250px;
   animation-delay: 0s;
 }
 
 .orb-2 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, #764ba2, transparent);
-  bottom: -250px;
-  left: -250px;
-  animation-delay: 7s;
+  width: 600px;
+  height: 600px;
+  bottom: -300px;
+  left: -300px;
+  animation-delay: 8s;
 }
 
 .orb-3 {
-  width: 350px;
-  height: 350px;
-  background: radial-gradient(circle, #f093fb, transparent);
-  top: 50%;
+  width: 400px;
+  height: 400px;
+  top: 40%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  animation-delay: 14s;
+  animation-delay: 16s;
 }
 
-@keyframes float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -30px) scale(1.1); }
-  66% { transform: translate(-30px, 30px) scale(0.9); }
+@keyframes neonFloat {
+  0%, 100% { 
+    transform: translate(0, 0) scale(1);
+    opacity: 0.25;
+  }
+  33% { 
+    transform: translate(50px, -50px) scale(1.15);
+    opacity: 0.3;
+  }
+  66% { 
+    transform: translate(-50px, 50px) scale(0.95);
+    opacity: 0.2;
+  }
 }
 
-/* ==================== الحاوية الرئيسية ==================== */
+.grid-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(0, 242, 234, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 242, 234, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.3;
+}
+
+/* ==================== الحاوية ==================== */
 .upload-container {
-  max-width: 800px;
+  max-width: 700px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
-  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes slideUp {
+@keyframes slideUpFade {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(40px);
   }
   to {
     opacity: 1;
@@ -101,13 +133,11 @@
 
 /* ==================== الهيدر ==================== */
 .upload-header {
-  background: var(--card-bg);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 32px;
-  margin-bottom: 24px;
-  box-shadow: var(--shadow-xl);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: var(--tiktok-gray);
+  border: 1px solid var(--tiktok-border);
+  border-radius: 20px;
+  padding: 32px 24px;
+  margin-bottom: 20px;
   position: relative;
   overflow: hidden;
 }
@@ -118,29 +148,30 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: var(--primary-gradient);
+  height: 3px;
+  background: var(--gradient-tiktok);
 }
 
-.back-button {
+.tiktok-back-btn {
   position: absolute;
-  top: 24px;
-  right: 24px;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  top: 20px;
+  right: 20px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
   border: none;
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--tiktok-text);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(10px);
 }
 
-.back-button:hover {
-  background: rgba(0, 0, 0, 0.1);
+.tiktok-back-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
   transform: translateX(3px);
 }
 
@@ -148,210 +179,256 @@
   text-align: center;
 }
 
-.icon-wrapper {
+.tiktok-icon-wrapper {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
-  border-radius: 24px;
-  background: var(--primary-gradient);
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: var(--tiktok-dark);
+  border: 3px solid transparent;
+  background-image: 
+    linear-gradient(var(--tiktok-dark), var(--tiktok-dark)),
+    var(--gradient-tiktok);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
   margin-bottom: 20px;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
-  animation: iconPulse 2s ease-in-out infinite;
+  position: relative;
+  animation: iconRotate 20s linear infinite;
 }
 
-@keyframes iconPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+@keyframes iconRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .header-icon {
-  color: white;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  color: var(--tiktok-cyan);
+  filter: drop-shadow(var(--shadow-cyan));
+  position: relative;
+  z-index: 2;
+  animation: iconFloat 3s ease-in-out infinite;
 }
 
-.upload-title {
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.icon-glow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--gradient-tiktok);
+  filter: blur(20px);
+  opacity: 0.4;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+.tiktok-title {
   font-size: 2rem;
-  font-weight: 800;
-  background: var(--primary-gradient);
+  font-weight: 900;
+  background: var(--gradient-tiktok);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin-bottom: 8px;
+  letter-spacing: -0.5px;
+  text-shadow: var(--shadow-glow);
 }
 
-.upload-subtitle {
-  color: var(--text-secondary);
+.tiktok-subtitle {
+  color: var(--tiktok-text-secondary);
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-/* ==================== نموذج الرفع ==================== */
+/* ==================== النموذج ==================== */
 .upload-form {
-  background: var(--card-bg);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: var(--shadow-xl);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: var(--tiktok-gray);
+  border: 1px solid var(--tiktok-border);
+  border-radius: 20px;
+  padding: 28px;
 }
 
-/* ==================== منطقة رفع الفيديو ==================== */
+/* ==================== منطقة الرفع ==================== */
 .video-upload-section {
   margin-bottom: 24px;
 }
 
-.upload-drop-zone {
-  border: 3px dashed rgba(102, 126, 234, 0.3);
+.tiktok-drop-zone {
+  border: 2px dashed rgba(0, 242, 234, 0.3);
   border-radius: 20px;
-  padding: 60px 40px;
+  padding: 60px 30px;
   text-align: center;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%);
+  background: rgba(0, 242, 234, 0.02);
   position: relative;
   overflow: hidden;
 }
 
-.upload-drop-zone::before {
+.tiktok-drop-zone::before {
   content: '';
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 242, 234, 0.1), transparent);
   transition: left 0.6s;
 }
 
-.upload-drop-zone:hover::before {
+.tiktok-drop-zone:hover::before {
   left: 100%;
 }
 
-.upload-drop-zone:hover {
-  border-color: rgba(102, 126, 234, 0.6);
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+.tiktok-drop-zone:hover {
+  border-color: var(--tiktok-cyan);
+  background: rgba(0, 242, 234, 0.05);
   transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-cyan);
 }
 
-.upload-drop-zone.dragging {
-  border-color: #667eea;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+.tiktok-drop-zone.dragging {
+  border-color: var(--tiktok-pink);
+  background: linear-gradient(135deg, rgba(0, 242, 234, 0.1), rgba(254, 44, 85, 0.1));
   transform: scale(1.02);
+  box-shadow: var(--shadow-glow);
 }
 
-.upload-icon-container {
+.upload-visual {
+  margin-bottom: 28px;
+}
+
+.upload-icon-ring {
   position: relative;
-  display: inline-block;
-  margin-bottom: 24px;
-}
-
-.upload-icon-bg {
-  width: 100px;
-  height: 100px;
-  border-radius: 24px;
-  background: var(--primary-gradient);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  z-index: 2;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--tiktok-dark);
+  border: 3px solid transparent;
+  background-image: 
+    linear-gradient(var(--tiktok-dark), var(--tiktok-dark)),
+    var(--gradient-tiktok);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
 }
 
 .upload-icon {
-  color: white;
-  animation: uploadBounce 2s ease-in-out infinite;
+  color: var(--tiktok-cyan);
+  filter: drop-shadow(var(--shadow-cyan));
+  animation: uploadFloat 2.5s ease-in-out infinite;
+  position: relative;
+  z-index: 3;
 }
 
-@keyframes uploadBounce {
+@keyframes uploadFloat {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-12px); }
 }
 
-.icon-pulse {
+.ring-pulse {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 24px;
-  background: var(--primary-gradient);
-  opacity: 0.5;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 50%;
+  border: 2px solid var(--tiktok-cyan);
+  opacity: 0.6;
+  animation: ringPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.5;
+.ring-pulse-delayed {
+  animation-delay: 1s;
+  border-color: var(--tiktok-pink);
+}
+
+@keyframes ringPulse {
+  0% {
+    opacity: 0.6;
     transform: scale(1);
   }
-  50% {
+  100% {
     opacity: 0;
-    transform: scale(1.3);
+    transform: scale(1.4);
   }
 }
 
-.upload-main-text {
+.drop-zone-title {
   font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-weight: 800;
+  color: var(--tiktok-text);
   margin-bottom: 8px;
+  letter-spacing: -0.3px;
 }
 
-.upload-sub-text {
+.drop-zone-subtitle {
   font-size: 1rem;
-  color: var(--text-secondary);
+  color: var(--tiktok-text-secondary);
   margin-bottom: 24px;
+  font-weight: 500;
 }
 
-.supported-formats {
+.format-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(0, 242, 234, 0.08);
+  border: 1px solid rgba(0, 242, 234, 0.2);
   border-radius: 100px;
-  color: #667eea;
+  color: var(--tiktok-cyan);
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
+  backdrop-filter: blur(10px);
 }
 
 /* ==================== معاينة الفيديو ==================== */
-.video-preview-container {
+.video-preview-card {
   animation: fadeIn 0.5s ease;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-.preview-wrapper {
+.preview-container {
   position: relative;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-lg);
+  margin-bottom: 16px;
+  border: 2px solid var(--tiktok-border);
+  background: var(--tiktok-dark);
 }
 
 .preview-video {
   width: 100%;
-  max-height: 400px;
+  max-height: 450px;
   object-fit: contain;
   background: #000;
   display: block;
 }
 
-.video-overlay {
+.play-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, rgba(0, 242, 234, 0.2), rgba(254, 44, 85, 0.2));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -360,219 +437,230 @@
   pointer-events: none;
 }
 
-.preview-wrapper:hover .video-overlay {
+.preview-container:hover .play-overlay {
   opacity: 1;
 }
 
-.play-icon {
-  color: white;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+.play-button {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: var(--gradient-tiktok);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-glow);
+  animation: playPulse 2s ease-in-out infinite;
 }
 
-.video-details {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-  border-radius: 16px;
-  padding: 20px;
+@keyframes playPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.video-info-card {
+  background: rgba(0, 242, 234, 0.03);
+  border: 1px solid rgba(0, 242, 234, 0.1);
+  border-radius: 14px;
+  padding: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: 16px;
+  backdrop-filter: blur(10px);
 }
 
-.file-info {
+.file-details {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   flex: 1;
+  min-width: 0;
 }
 
-.file-icon {
-  color: #667eea;
+.cyan-icon {
+  color: var(--tiktok-cyan);
+  filter: drop-shadow(0 0 8px rgba(0, 242, 234, 0.5));
   flex-shrink: 0;
 }
 
-.file-text {
+.file-meta {
   flex: 1;
   min-width: 0;
 }
 
 .file-name {
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--tiktok-text);
   margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 0.95rem;
 }
 
 .file-size {
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: var(--tiktok-text-secondary);
+  font-weight: 600;
 }
 
-.change-video-btn {
+.tiktok-btn-secondary {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: white;
-  border: 2px solid rgba(102, 126, 234, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  color: #667eea;
-  font-weight: 600;
+  color: var(--tiktok-text);
+  font-weight: 700;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+  white-space: nowrap;
 }
 
-.change-video-btn:hover:not(:disabled) {
-  background: #667eea;
-  color: white;
+.tiktok-btn-secondary:hover:not(:disabled) {
+  background: rgba(0, 242, 234, 0.15);
+  border-color: var(--tiktok-cyan);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 242, 234, 0.2);
 }
 
-.change-video-btn:disabled {
-  opacity: 0.5;
+.tiktok-btn-secondary:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 /* ==================== حقل النص ==================== */
-.form-group {
+.tiktok-form-group {
   margin-bottom: 24px;
 }
 
-.form-label {
+.tiktok-label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 12px;
+  gap: 10px;
+  font-weight: 700;
+  color: var(--tiktok-text);
+  margin-bottom: 14px;
   font-size: 1rem;
 }
 
-.optional-badge {
+.optional-tag {
   margin-right: auto;
-  padding: 4px 12px;
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
+  padding: 5px 14px;
+  background: rgba(0, 242, 234, 0.08);
+  border: 1px solid rgba(0, 242, 234, 0.2);
+  color: var(--tiktok-cyan);
   border-radius: 100px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.textarea-wrapper {
+.textarea-container {
   position: relative;
 }
 
-.form-textarea {
+.tiktok-textarea {
   width: 100%;
   padding: 16px;
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  border-radius: 16px;
+  padding-bottom: 40px;
+  border: 2px solid var(--tiktok-border);
+  border-radius: 14px;
   font-size: 1rem;
   font-family: inherit;
   resize: vertical;
+  min-height: 120px;
   transition: all 0.3s;
-  background: white;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--tiktok-text);
+  font-weight: 500;
 }
 
-.form-textarea:focus {
+.tiktok-textarea::placeholder {
+  color: var(--tiktok-text-secondary);
+}
+
+.tiktok-textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  border-color: var(--tiktok-cyan);
+  box-shadow: 0 0 0 4px rgba(0, 242, 234, 0.1), var(--shadow-cyan);
+  background: rgba(0, 0, 0, 0.4);
 }
 
-.form-textarea:disabled {
-  background: rgba(0, 0, 0, 0.02);
+.tiktok-textarea:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.char-counter {
+.char-badge {
   position: absolute;
   bottom: 12px;
   left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.875rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-  background: white;
-  padding: 4px 8px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 12px;
   border-radius: 8px;
+  backdrop-filter: blur(10px);
+  color: var(--tiktok-text-secondary);
 }
 
-.char-counter .warning {
-  color: #ff6a00;
+.char-badge .warning {
+  color: var(--tiktok-pink);
+}
+
+.separator {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.max {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 /* ==================== شريط التقدم ==================== */
-.upload-progress-container {
+.tiktok-progress-card {
   margin-bottom: 24px;
   padding: 24px;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  background: rgba(0, 242, 234, 0.03);
+  border: 1px solid rgba(0, 242, 234, 0.15);
   border-radius: 16px;
   animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .progress-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-}
-
-.progress-label {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.progress-percentage {
-  font-weight: 700;
-  font-size: 1.25rem;
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.progress-bar {
-  height: 12px;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 100px;
-  overflow: hidden;
-  position: relative;
-  margin-bottom: 12px;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--primary-gradient);
-  border-radius: 100px;
-  transition: width 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.progress-shine {
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-  animation: shine 1.5s infinite;
-}
-
-@keyframes shine {
-  to { left: 100%; }
+  margin-bottom: 16px;
 }
 
 .progress-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
+  gap: 10px;
+}
+
+.progress-text {
+  font-weight: 700;
+  color: var(--tiktok-text);
+  font-size: 1rem;
+}
+
+.progress-percent {
+  font-weight: 900;
+  font-size: 1.5rem;
+  background: var(--gradient-tiktok);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .spinning {
@@ -583,23 +671,65 @@
   to { transform: rotate(360deg); }
 }
 
+.tiktok-progress-bar {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 100px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.progress-fill-gradient {
+  height: 100%;
+  background: var(--gradient-tiktok);
+  border-radius: 100px;
+  transition: width 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-glow);
+}
+
+.progress-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  to { left: 100%; }
+}
+
+.progress-note {
+  font-size: 0.875rem;
+  color: var(--tiktok-text-secondary);
+  text-align: center;
+  font-weight: 600;
+}
+
 /* ==================== التنبيهات ==================== */
-.alert {
+.tiktok-alert {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  border-radius: 12px;
+  border-radius: 14px;
   margin-bottom: 24px;
-  font-weight: 500;
+  font-weight: 700;
   animation: slideDown 0.3s ease;
   position: relative;
+  backdrop-filter: blur(10px);
 }
 
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-20px);
   }
   to {
     opacity: 1;
@@ -607,122 +737,124 @@
   }
 }
 
-.alert-error {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #dc2626;
-  border: 1px solid #fca5a5;
+.error-alert {
+  background: rgba(254, 44, 85, 0.1);
+  color: var(--tiktok-pink);
+  border: 1px solid rgba(254, 44, 85, 0.3);
+  box-shadow: 0 0 20px rgba(254, 44, 85, 0.2);
 }
 
-.alert-success {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #059669;
-  border: 1px solid #6ee7b7;
+.success-alert {
+  background: rgba(0, 242, 234, 0.1);
+  color: var(--tiktok-cyan);
+  border: 1px solid rgba(0, 242, 234, 0.3);
+  box-shadow: 0 0 20px rgba(0, 242, 234, 0.2);
 }
 
-.alert-close {
+.alert-close-btn {
   margin-right: auto;
-  background: none;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  transition: background 0.2s;
+  border-radius: 8px;
+  transition: all 0.2s;
+  color: inherit;
 }
 
-.alert-close:hover {
-  background: rgba(0, 0, 0, 0.1);
+.alert-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
 }
 
 /* ==================== الأزرار ==================== */
-.button-group {
+.tiktok-actions {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-.btn {
+.tiktok-btn-primary,
+.tiktok-btn-danger,
+.tiktok-btn-ghost {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 14px 28px;
+  gap: 10px;
+  padding: 16px 32px;
   border: none;
   border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 800;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
   font-family: inherit;
-}
-
-.btn-large {
   flex: 1;
-  padding: 16px 32px;
-  font-size: 1.125rem;
 }
 
-.btn-primary {
-  background: var(--primary-gradient);
+.tiktok-btn-primary {
+  background: var(--gradient-tiktok);
   color: white;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  box-shadow: var(--shadow-glow);
+  min-height: 56px;
 }
 
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+.tiktok-btn-primary:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 0 30px rgba(0, 242, 234, 0.5), 0 0 50px rgba(254, 44, 85, 0.3);
 }
 
-.btn-primary:active:not(:disabled) {
+.tiktok-btn-primary:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.btn-primary:disabled {
-  opacity: 0.6;
+.tiktok-btn-primary:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.btn-shine {
+.btn-glow {
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
 }
 
-.btn-primary:hover .btn-shine {
-  animation: btnShine 0.8s;
+.tiktok-btn-primary:hover .btn-glow {
+  animation: btnGlow 0.8s;
 }
 
-@keyframes btnShine {
+@keyframes btnGlow {
   to { left: 100%; }
 }
 
-.btn-danger {
-  background: var(--danger-gradient);
+.tiktok-btn-danger {
+  background: linear-gradient(135deg, var(--tiktok-pink), #ff4757);
   color: white;
-  box-shadow: 0 4px 16px rgba(238, 9, 121, 0.3);
+  box-shadow: var(--shadow-pink);
 }
 
-.btn-danger:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(238, 9, 121, 0.4);
+.tiktok-btn-danger:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 30px rgba(254, 44, 85, 0.6);
 }
 
-.btn-secondary {
-  background: white;
-  color: var(--text-primary);
-  border: 2px solid rgba(0, 0, 0, 0.1);
+.tiktok-btn-ghost {
+  background: transparent;
+  color: var(--tiktok-text);
+  border: 2px solid rgba(255, 255, 255, 0.15);
 }
 
-.btn-secondary:hover {
-  background: rgba(0, 0, 0, 0.02);
-  border-color: rgba(0, 0, 0, 0.2);
+.tiktok-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
 }
 
@@ -730,134 +862,114 @@
 @media (max-width: 768px) {
   .upload-page {
     padding: 16px;
+    padding-bottom: 90px;
   }
 
   .upload-header {
-    padding: 24px 20px;
+    padding: 28px 20px;
   }
 
-  .upload-title {
-    font-size: 1.5rem;
+  .tiktok-title {
+    font-size: 1.6rem;
   }
 
-  .upload-subtitle {
-    font-size: 0.875rem;
+  .tiktok-subtitle {
+    font-size: 0.9rem;
   }
 
   .upload-form {
     padding: 24px 20px;
   }
 
-  .upload-drop-zone {
-    padding: 40px 20px;
+  .tiktok-drop-zone {
+    padding: 50px 24px;
   }
 
-  .upload-icon-bg {
-    width: 80px;
-    height: 80px;
+  .upload-icon-ring {
+    width: 100px;
+    height: 100px;
   }
 
-  .upload-main-text {
-    font-size: 1.25rem;
+  .upload-icon {
+    width: 44px;
+    height: 44px;
   }
 
-  .button-group {
+  .drop-zone-title {
+    font-size: 1.3rem;
+  }
+
+  .tiktok-actions {
     flex-direction: column;
   }
 
-  .btn {
+  .tiktok-btn-primary,
+  .tiktok-btn-danger,
+  .tiktok-btn-ghost {
     width: 100%;
   }
 
-  .video-details {
+  .video-info-card {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .change-video-btn {
+  .tiktok-btn-secondary {
     width: 100%;
     justify-content: center;
-  }
-
-  .back-button {
-    top: 16px;
-    right: 16px;
   }
 }
 
 @media (max-width: 480px) {
   .upload-header {
-    padding: 20px 16px;
+    padding: 24px 16px;
   }
 
-  .icon-wrapper {
-    width: 60px;
-    height: 60px;
+  .tiktok-icon-wrapper {
+    width: 75px;
+    height: 75px;
     margin-bottom: 16px;
   }
 
   .header-icon {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
 
-  .upload-title {
-    font-size: 1.25rem;
+  .tiktok-title {
+    font-size: 1.4rem;
   }
 
   .upload-form {
     padding: 20px 16px;
   }
 
-  .upload-drop-zone {
-    padding: 30px 16px;
+  .tiktok-drop-zone {
+    padding: 40px 20px;
   }
 
-  .upload-icon-bg {
-    width: 70px;
-    height: 70px;
+  .upload-icon-ring {
+    width: 90px;
+    height: 90px;
   }
 
   .upload-icon {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .drop-zone-title {
+    font-size: 1.2rem;
   }
 }
 
-/* ==================== Dark Mode Support ==================== */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --card-bg: rgba(26, 26, 46, 0.95);
-    --text-primary: #f3f4f6;
-    --text-secondary: #9ca3af;
-    --border-color: rgba(255, 255, 255, 0.1);
+/* ==================== تحسينات الأداء ==================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-
-  .upload-header,
-  .upload-form {
-    background: var(--card-bg);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .form-textarea {
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .char-counter {
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  .change-video-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(102, 126, 234, 0.3);
-  }
-
-  .btn-secondary {
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-    }
+}

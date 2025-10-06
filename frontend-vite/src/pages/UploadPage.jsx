@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import OtogramIcon from '../components/OtogramIcon';
 import NavigationBar from '../components/NavigationBar';
 import { 
   Upload, 
@@ -233,7 +234,7 @@ const UploadPage = () => {
               {replyToId ? (
                 <MessageSquare className="header-icon" size={36} strokeWidth={2} />
               ) : (
-                <Music className="header-icon" size={36} strokeWidth={2} />
+                <OtogramIcon className="header-icon" size={36} strokeWidth={2} />
               )}
               <div className="icon-glow"></div>
             </div>

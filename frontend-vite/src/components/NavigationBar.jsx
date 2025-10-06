@@ -139,7 +139,7 @@ const NavigationBar = ({ currentPage }) => {
               )}
             </div>
             <span className="nav-label">
-              {isAuthenticated ? ']حسابي' : 'الدخول'}
+              {isAuthenticated ? 'حسابي' : 'الدخول'}
             </span>
           </button>
 

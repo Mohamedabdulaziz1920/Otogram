@@ -403,10 +403,10 @@ const handleUsernameUpdate = async () => {
                       <FaTrash />
                     </button>
                   )}
-                  <div 
-                    className="video-thumbnail" 
-                    onClick={() => navigate(`/video/${item._id}`)}
-                  >
+              <div 
+  className="video-thumbnail" 
+  onClick={() => navigate('/', { state: { videoId: item._id } })}
+>
                     <video 
                       src={getAssetUrl(item.videoUrl)} 
                       muted 

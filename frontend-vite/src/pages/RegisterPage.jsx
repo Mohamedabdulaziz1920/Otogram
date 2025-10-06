@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import OtogramIcon from '../components/OtogramIcon';
 import { 
   User, 
   Mail, 
@@ -131,10 +132,10 @@ const RegisterPage = () => {
           </button>
           
           <div className="header-content">
-            <div className="tiktok-icon-wrapper">
-              <Music className="header-icon" size={36} strokeWidth={2} />
-              <div className="icon-glow"></div>
-            </div>
+           <div className="tiktok-icon-wrapper">
+  <OtogramIcon size={60} />
+  <div className="icon-glow"></div>
+</div>
             
             <h1 className="tiktok-title">انضم إلى Otogram</h1>
             <p className="tiktok-subtitle">ابدأ مشاركة إبداعك مع العالم ✨</p>

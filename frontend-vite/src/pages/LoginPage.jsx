@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import OtogramIcon from '../components/OtogramIcon';
 import { 
   Mail, 
   Lock, 
@@ -84,10 +85,11 @@ const LoginPage = () => {
           </button>
           
           <div className="header-content">
-            <div className="tiktok-icon-wrapper">
-              <Music className="header-icon" size={36} strokeWidth={2} />
-              <div className="icon-glow"></div>
-            </div>
+            // في JSX، استبدل:
+<div className="tiktok-icon-wrapper">
+  <OtogramIcon size={60} />
+  <div className="icon-glow"></div>
+</div>
             
             <h1 className="tiktok-title">مرحباً بعودتك</h1>
             <p className="tiktok-subtitle">سجّل دخولك لمتابعة الإبداع 🎬</p>

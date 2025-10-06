@@ -62,17 +62,48 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log('=====================================');
+    console.log('🔐 LOGIN ATTEMPT');
+    console.log('📧 Email:', email);
+    console.log('🔑 Password:', password);
+    console.log('=====================================');
+
     if (!email || !password) {
       return res.status(400).json({ error: 'Please provide both email and password.' });
     }
 
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    
+    console.log('👤 User found:', user ? '✓ YES' : '✗ NO');
+    
+    if (user) {
+      console.log('📋 User Details:');
+      console.log('  - ID:', user._id);
+      console.log('  - Username:', user.username);
+      console.log('  - Email:', user.email);
+      console.log('  - Role:', user.role);
+      console.log('  - Password exists:', user.password ? '✓ YES' : '✗ NO');
+      console.log('  - Password length:', user.password?.length || 0);
+      console.log('  - Password starts with $2:', user.password?.startsWith('$2') ? '✓ YES' : '✗ NO');
+      console.log('  - Password hash:', user.password?.substring(0, 20) + '...');
+    }
+
     if (!user) {
+      console.log('❌ FAILED: User not found');
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
+    console.log('🔐 Starting password comparison...');
+    console.log('  - Input password:', password);
+    console.log('  - Stored hash:', user.password);
+
     const isMatch = await bcrypt.compare(password, user.password);
+    
+    console.log('✅ Password comparison result:', isMatch ? '✓ MATCH' : '✗ NO MATCH');
+
     if (!isMatch) {
+      console.log('❌ FAILED: Password mismatch');
+      console.log('=====================================');
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
@@ -80,10 +111,13 @@ router.post('/login', async (req, res) => {
     delete userResponse.password;
 
     const token = jwt.sign(
-      { userId: user._id, role: user.role }, // ✨ التأكد من استخدام userId هنا
+      { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
+
+    console.log('✅ SUCCESS: Login completed');
+    console.log('=====================================');
 
     res.status(200).json({
       message: 'Logged in successfully!',
@@ -92,11 +126,11 @@ router.post('/login', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Login Error:', error);
+    console.error('❌ LOGIN ERROR:', error);
+    console.log('=====================================');
     res.status(500).json({ error: 'An internal server error occurred.' });
   }
 });
-
 
 // --- Get Logged-in User Data ---
 // GET /api/auth/me

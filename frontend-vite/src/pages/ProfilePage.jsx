@@ -73,141 +73,102 @@ const ProfilePage = () => {
     if (!authLoading) fetchProfileData();
   }, [authLoading, fetchProfileData]);
 
-  // 🔧 Image upload - مُصلح
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  // 🔧 Image upload - مُصلح// ✅ Image upload - النسخة الصحيحة 100%
+const handleImageUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    // التحقق من نوع الملف
-    if (!file.type.startsWith('image/')) {
-      showNotification('يرجى اختيار صورة صحيحة', 'error');
-      return;
-    }
+  if (!file.type.startsWith('image/')) {
+    showNotification('يرجى اختيار صورة صحيحة', 'error');
+    return;
+  }
 
-    // التحقق من حجم الملف (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showNotification('حجم الصورة يجب أن يكون أقل من 5MB', 'error');
-      return;
-    }
+  if (file.size > 5 * 1024 * 1024) {
+    showNotification('حجم الصورة يجب أن يكون أقل من 5MB', 'error');
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append('profileImage', file);
-    setUploadingImage(true);
+  const formData = new FormData();
+  formData.append('profileImage', file);
+  setUploadingImage(true);
 
-    try {
-      const response = await api.post('/api/users/me/update-profile-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      // 🔍 فحص جميع الاحتمالات لبنية الـ response
-      let newProfileImage = null;
-      
-      if (response.data) {
-        // الاحتمال 1: response.data.profileImage
-        if (response.data.profileImage) {
-          newProfileImage = response.data.profileImage;
-        }
-        // الاحتمال 2: response.data.user.profileImage
-        else if (response.data.user && response.data.user.profileImage) {
-          newProfileImage = response.data.user.profileImage;
-        }
-        // الاحتمال 3: response.data.data.profileImage
-        else if (response.data.data && response.data.data.profileImage) {
-          newProfileImage = response.data.data.profileImage;
-        }
+  try {
+    const response = await api.post('/api/users/me/update-profile-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
+    });
 
-      if (newProfileImage) {
-        setProfileUser(prev => ({ ...prev, profileImage: newProfileImage }));
-        updateUser({ profileImage: newProfileImage });
-        showNotification('تم تحديث الصورة بنجاح ✓', 'success');
-      } else {
-        // إذا لم نجد الصورة لكن الطلب نجح - نعيد تحميل البيانات
-        await fetchProfileData();
-        showNotification('تم تحديث الصورة بنجاح ✓', 'success');
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      console.error('Error response:', error.response?.data);
-      
-      const errorMessage = error.response?.data?.error 
-        || error.response?.data?.message 
-        || 'فشل تحديث الصورة';
-      
-      showNotification(errorMessage, 'error');
-    } finally {
-      setUploadingImage(false);
+    // ✅ Backend يُرجع: { profileImage, user, message }
+    console.log('✅ Response:', response.data);
+
+    if (response.data.profileImage) {
+      setProfileUser(prev => ({ ...prev, profileImage: response.data.profileImage }));
+      updateUser({ profileImage: response.data.profileImage });
+    } else if (response.data.user) {
+      setProfileUser(prev => ({ ...prev, profileImage: response.data.user.profileImage }));
+      updateUser({ profileImage: response.data.user.profileImage });
     }
-  };
 
-  // 🔧 Update username - مُصلح
-  const handleUsernameUpdate = async () => {
-    if (!newUsername || newUsername === profileUser.username) {
+    showNotification('تم تحديث الصورة بنجاح ✓', 'success');
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    showNotification(
+      error.response?.data?.error || 'فشل تحديث الصورة', 
+      'error'
+    );
+  } finally {
+    setUploadingImage(false);
+  }
+};
+
+// ✅ Username update - النسخة الصحيحة 100%
+const handleUsernameUpdate = async () => {
+  if (!newUsername || newUsername === profileUser.username) {
+    setEditingUsername(false);
+    return;
+  }
+
+  if (newUsername.length < 3) {
+    showNotification('اسم المستخدم يجب أن يكون 3 أحرف على الأقل', 'error');
+    return;
+  }
+
+  if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
+    showNotification('اسم المستخدم يجب أن يحتوي على أحرف وأرقام فقط', 'error');
+    return;
+  }
+
+  try {
+    const response = await api.patch('/api/users/me/update-username', { 
+      username: newUsername 
+    });
+
+    // ✅ Backend يُرجع: { username, user, message }
+    console.log('✅ Response:', response.data);
+
+    const updatedUsername = response.data.username || response.data.user?.username;
+
+    if (updatedUsername) {
+      setProfileUser(prev => ({ ...prev, username: updatedUsername }));
+      updateUser({ username: updatedUsername });
       setEditingUsername(false);
-      return;
+      navigate(`/profile/${updatedUsername}`, { replace: true });
+      showNotification('تم تحديث اسم المستخدم بنجاح ✓', 'success');
     }
 
-    // التحقق من صحة اسم المستخدم
-    if (newUsername.length < 3) {
-      showNotification('اسم المستخدم يجب أن يكون 3 أحرف على الأقل', 'error');
-      return;
-    }
+  } catch (error) {
+    console.error('❌ Error:', error);
+    showNotification(
+      error.response?.data?.error || 'فشل تحديث اسم المستخدم', 
+      'error'
+    );
+  }
 
-    if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
-      showNotification('اسم المستخدم يجب أن يحتوي على أحرف وأرقام فقط', 'error');
-      return;
-    }
-
-    try {
-      const response = await api.patch('/api/users/me/update-username', { 
-        username: newUsername 
-      });
-
-      // 🔍 فحص جميع الاحتمالات لبنية الـ response
-      let updatedUsername = null;
-
-      if (response.data) {
-        // الاحتمال 1: response.data.username
-        if (response.data.username) {
-          updatedUsername = response.data.username;
-        }
-        // الاحتمال 2: response.data.user.username
-        else if (response.data.user && response.data.user.username) {
-          updatedUsername = response.data.user.username;
-        }
-        // الاحتمال 3: response.data.data.username
-        else if (response.data.data && response.data.data.username) {
-          updatedUsername = response.data.data.username;
-        }
-      }
-
-      if (updatedUsername) {
-        setProfileUser(prev => ({ ...prev, username: updatedUsername }));
-        updateUser({ username: updatedUsername });
-        setEditingUsername(false);
-        navigate(`/profile/${updatedUsername}`, { replace: true });
-        showNotification('تم تحديث اسم المستخدم بنجاح ✓', 'success');
-      } else {
-        // إذا نجح الطلب لكن لم نجد اسم المستخدم
-        setEditingUsername(false);
-        await fetchProfileData();
-        showNotification('تم تحديث اسم المستخدم بنجاح ✓', 'success');
-      }
-    } catch (error) {
-      console.error('Error updating username:', error);
-      console.error('Error response:', error.response?.data);
-      
-      const errorMessage = error.response?.data?.error 
-        || error.response?.data?.message 
-        || 'فشل تحديث اسم المستخدم';
-      
-      showNotification(errorMessage, 'error');
-    }
-  };
-
+}; // 🔧 Update username - مُصلح
+ 
   // Delete
   const handleDelete = async () => {
     if (!videoToDelete) return;

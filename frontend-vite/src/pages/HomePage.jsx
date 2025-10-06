@@ -94,7 +94,7 @@ const HomePage = () => {
     });
   }, []);
 
-  // ✅ Touch events for mobile - منفصل تماماً
+  // ✅ Touch events for mobile - محسّن للردود
   useEffect(() => {
     let touchStartY = 0;
     let touchStartX = 0;
@@ -102,6 +102,7 @@ const HomePage = () => {
 
     const handleMainTouchStart = (e) => {
       touchStartY = e.touches[0].clientY;
+      touchStartX = e.touches[0].clientX;
       touchStartTime = Date.now();
     };
 
@@ -132,15 +133,48 @@ const HomePage = () => {
       }
     };
 
+    // 🔥 التعديل الجديد: دعم التمرير العمودي والأفقي للردود
     const handleReplyTouchStart = (e) => {
       touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
     };
 
     const handleReplyTouchEnd = (e) => {
       const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchEndTime = Date.now();
+      
       const deltaX = touchStartX - touchEndX;
+      const deltaY = touchStartY - touchEndY;
+      const deltaTime = touchEndTime - touchStartTime;
 
-      if (Math.abs(deltaX) > 50) {
+      // حساب السرعة
+      const velocityY = Math.abs(deltaY) / deltaTime;
+      const velocityX = Math.abs(deltaX) / deltaTime;
+
+      // تحديد اتجاه التمرير الأساسي
+      const isVerticalSwipe = Math.abs(deltaY) > Math.abs(deltaX);
+      const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
+
+      // التمرير العمودي - الانتقال بين الفيديوهات
+      if (isVerticalSwipe && (Math.abs(deltaY) > 50 || velocityY > 0.3)) {
+        if (deltaY > 0) {
+          // Swipe up - next video
+          if (activeVideoIndex < videos.length - 1) {
+            setActiveVideoIndex(prev => prev + 1);
+            setActiveReplyIndex(0);
+          }
+        } else {
+          // Swipe down - previous video
+          if (activeVideoIndex > 0) {
+            setActiveVideoIndex(prev => prev - 1);
+            setActiveReplyIndex(0);
+          }
+        }
+      }
+      // التمرير الأفقي - الانتقال بين الردود
+      else if (isHorizontalSwipe && (Math.abs(deltaX) > 50 || velocityX > 0.3)) {
         if (deltaX > 0) {
           // Swipe left - next reply
           goToNextReply();
@@ -175,6 +209,9 @@ const HomePage = () => {
       }
     };
   }, [activeVideoIndex, videos.length, goToNextReply, goToPrevReply]);
+
+  // ⚠️ احذف الكود المكرر من هنا إلى نهاية useEffect القديم
+  // (من السطر 161 إلى 197 في كودك الحالي)
 
   // ✅ Scroll handler for vertical navigation - منفصل
   useEffect(() => {

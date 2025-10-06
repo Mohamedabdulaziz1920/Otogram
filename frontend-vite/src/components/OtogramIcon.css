@@ -1,0 +1,61 @@
+.otogram-logo-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.otogram-logo-main {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 0 12px rgba(0, 242, 234, 0.6));
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+.otogram-logo-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 1;
+  filter: blur(15px) brightness(1.5);
+  opacity: 0.6;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { 
+    transform: translateY(0);
+  }
+  50% { 
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% { 
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+.otogram-logo-container:hover .otogram-logo-main {
+  filter: drop-shadow(0 0 25px rgba(0, 242, 234, 1));
+}
+
+.otogram-logo-container:hover .otogram-logo-glow {
+  opacity: 1;
+  filter: blur(20px) brightness(2);
+
+}

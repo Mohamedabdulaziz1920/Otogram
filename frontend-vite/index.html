@@ -48,13 +48,12 @@
           }
         } catch (e) {
           console.error('Theme initialization error:', e);
-          // تطبيق الدارك مود كافتراضي في حالة الخطأ
           document.documentElement.setAttribute('data-theme', 'dark');
         }
       })();
     </script>
     
-    <!-- تحسين الأداء -->
+    <!-- شاشة التحميل بأيقونة العيون -->
     <style>
       /* منع وميض المحتوى */
       html {
@@ -71,49 +70,285 @@
         overflow-x: hidden;
       }
       
-      /* Loading screen */
-      #root:empty::before {
-        content: '';
+      /* شاشة التحميل */
+      .otogram-loader {
         position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #0A0A0A;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+      }
+      
+      [data-theme="light"] .otogram-loader {
+        background: #ffffff;
+      }
+      
+      /* خلفية متحركة */
+      .loader-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 1;
+      }
+      
+      .loader-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.2;
+        animation: floatOrb 8s infinite ease-in-out;
+      }
+      
+      .orb-1 {
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, #C8A882, transparent 70%);
+        top: -150px;
+        right: -150px;
+        animation-delay: 0s;
+      }
+      
+      .orb-2 {
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, #A8845F, transparent 70%);
+        bottom: -200px;
+        left: -200px;
+        animation-delay: 2s;
+      }
+      
+      @keyframes floatOrb {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(30px, -30px) scale(1.1); }
+      }
+      
+      /* محتوى التحميل */
+      .loader-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+      }
+      
+      /* حاوية الأيقونة */
+      .loader-icon-wrapper {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        animation: iconFloat 3s ease-in-out infinite;
+      }
+      
+      @keyframes iconFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+      }
+      
+      /* الأيقونة الأساسية */
+      .loader-icon {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        position: relative;
+        z-index: 3;
+        filter: drop-shadow(0 0 20px rgba(200, 168, 130, 0.6));
+        animation: iconPulse 2s ease-in-out infinite;
+      }
+      
+      @keyframes iconPulse {
+        0%, 100% { 
+          transform: scale(1);
+          filter: drop-shadow(0 0 20px rgba(200, 168, 130, 0.6));
+        }
+        50% { 
+          transform: scale(1.05);
+          filter: drop-shadow(0 0 30px rgba(200, 168, 130, 0.9));
+        }
+      }
+      
+      /* دوائر متحركة حول الأيقونة */
+      .loader-ring {
+        position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 60px;
-        height: 60px;
-        border: 3px solid rgba(255, 255, 255, 0.1);
-        border-top-color: #fe2c55;
         border-radius: 50%;
-        animation: spin 1s linear infinite;
+        border: 3px solid transparent;
       }
       
-      #root:empty::after {
-        content: 'Otogram';
-        position: fixed;
-        top: calc(50% + 60px);
-        left: 50%;
-        transform: translateX(-50%);
-        color: #fe2c55;
-        font-family: 'Cairo', sans-serif;
-        font-size: 24px;
-        font-weight: 700;
-        margin-top: 20px;
+      .ring-1 {
+        width: 140px;
+        height: 140px;
+        border-top-color: #C8A882;
+        border-right-color: #C8A882;
+        animation: spin 2s linear infinite;
+      }
+      
+      .ring-2 {
+        width: 160px;
+        height: 160px;
+        border-bottom-color: #A8845F;
+        border-left-color: #A8845F;
+        animation: spin 3s linear infinite reverse;
       }
       
       @keyframes spin {
         to { transform: translate(-50%, -50%) rotate(360deg); }
       }
       
-      /* Hide loading after React loads */
-      #root:not(:empty)::before,
-      #root:not(:empty)::after {
-        display: none;
+      /* توهج خلف الأيقونة */
+      .loader-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(200, 168, 130, 0.3) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: glowPulse 2s ease-in-out infinite;
+        z-index: 1;
+      }
+      
+      @keyframes glowPulse {
+        0%, 100% { 
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 0.5;
+        }
+        50% { 
+          transform: translate(-50%, -50%) scale(1.3);
+          opacity: 0.8;
+        }
+      }
+      
+      /* النص */
+      .loader-text {
+        font-family: 'Cairo', sans-serif;
+        font-size: 28px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #E5D4B8 0%, #C8A882 50%, #A8845F 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: textPulse 2s ease-in-out infinite;
+        letter-spacing: 1px;
+      }
+      
+      @keyframes textPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+      }
+      
+      /* نقاط التحميل */
+      .loader-dots {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      
+      .dot {
+        width: 10px;
+        height: 10px;
+        background: linear-gradient(135deg, #C8A882, #A8845F);
+        border-radius: 50%;
+        animation: dotBounce 1.4s ease-in-out infinite;
+      }
+      
+      .dot:nth-child(1) { animation-delay: 0s; }
+      .dot:nth-child(2) { animation-delay: 0.2s; }
+      .dot:nth-child(3) { animation-delay: 0.4s; }
+      
+      @keyframes dotBounce {
+        0%, 80%, 100% { 
+          transform: scale(0.8);
+          opacity: 0.5;
+        }
+        40% { 
+          transform: scale(1.2);
+          opacity: 1;
+        }
+      }
+      
+      /* إخفاء شاشة التحميل عند التحميل */
+      #root:not(:empty) ~ .otogram-loader {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      
+      /* Responsive */
+      @media (max-width: 480px) {
+        .loader-icon-wrapper {
+          width: 100px;
+          height: 100px;
+        }
+        
+        .ring-1 {
+          width: 120px;
+          height: 120px;
+        }
+        
+        .ring-2 {
+          width: 140px;
+          height: 140px;
+        }
+        
+        .loader-text {
+          font-size: 24px;
+        }
+        
+        .orb-1, .orb-2 {
+          filter: blur(60px);
+        }
       }
     </style>
     
     <title>Otogram - شارك لحظاتك مع العالم</title>
   </head>
   <body>
+    <!-- شاشة التحميل -->
+    <div class="otogram-loader">
+      <!-- خلفية متحركة -->
+      <div class="loader-background">
+        <div class="loader-orb orb-1"></div>
+        <div class="loader-orb orb-2"></div>
+      </div>
+      
+      <!-- محتوى التحميل -->
+      <div class="loader-content">
+        <!-- حاوية الأيقونة -->
+        <div class="loader-icon-wrapper">
+          <div class="loader-glow"></div>
+          <div class="loader-ring ring-1"></div>
+          <div class="loader-ring ring-2"></div>
+          <img src="/favicon.svg" alt="Otogram" class="loader-icon" />
+        </div>
+        
+        <!-- النص -->
+        <div>
+          <div class="loader-text">Otogram</div>
+          <div class="loader-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
+
 </html>

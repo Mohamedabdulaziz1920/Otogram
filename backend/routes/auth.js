@@ -7,6 +7,7 @@ const auth = require('../middleware/auth'); // استيراد الـ middleware 
 
 // --- Register a new user ---
 // POST /api/auth/register
+
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -54,7 +55,6 @@ router.post('/register', async (req, res) => {
     res.status(500).json({ error: 'An internal server error occurred.' });
   }
 });
-
 
 // --- Login a user ---
 // POST /api/auth/login

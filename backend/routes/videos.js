@@ -29,7 +29,6 @@ const upload = multer({
 
 // 1. رفع فيديو أساسي
 router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('video'), (req, res) => {
-  // ... (هذا الكود يعمل بشكل سليم، لا تغيير هنا) ...
   try {
     if (!req.file) { return res.status(400).json({ error: 'لم يتم استلام أي ملف فيديو.' }); }
     const bucket = req.gfs;
@@ -71,8 +70,7 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
 });
 
 
-// ✨✨✨ 2. رفع فيديو كرد (المسار الجديد) ✨✨✨
-// لاحظ أننا نسمح لجميع المستخدمين المسجلين بالرد
+// 2. رفع فيديو كرد
 router.post('/reply/:videoId', auth, checkRole(['user', 'creator', 'admin']), upload.single('video'), (req, res) => {
   try {
     if (!req.file) {
@@ -93,18 +91,16 @@ router.post('/reply/:videoId', auth, checkRole(['user', 'creator', 'admin']), up
 
     uploadStream.on('finish', async () => {
       try {
-        // الخطوة 1: إنشاء وحفظ الرد كفيديو جديد
         const replyVideo = new Video({
           user: req.user._id,
           fileId: uploadStream.id,
           videoUrl: `/api/videos/stream/${uploadStream.id}`,
           description: req.body.description || '',
-          isReply: true, // <-- مهم جدًا: تحديد أن هذا الفيديو هو رد
-          parentVideo: parentVideoId, // <-- مهم جدًا: ربطه بالفيديو الأصلي
+          isReply: true,
+          parentVideo: parentVideoId,
         });
         await replyVideo.save();
 
-        // إرسال الرد الناجح
         const replyResponse = replyVideo.toObject();
         replyResponse.user = {
             _id: req.user._id,
@@ -126,7 +122,7 @@ router.post('/reply/:videoId', auth, checkRole(['user', 'creator', 'admin']), up
   }
 });
 
-// جلب جميع الفيديوهات الرئيسية
+// 3. جلب جميع الفيديوهات الرئيسية
 router.get('/', async (req, res) => {
   try {
     const videos = await Video.find({ isReply: false })
@@ -144,7 +140,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// بث الفيديو
+// 4. بث الفيديو
 router.get('/stream/:fileId', async (req, res) => {
   try {
     const bucket = req.gfs;
@@ -182,39 +178,73 @@ router.get('/stream/:fileId', async (req, res) => {
 });
 
 
-// 4. حذف فيديو
+// ✅ 5. حذف فيديو - مُحدّث للسماح لصاحب الفيديو الأصلي بحذف الردود
 router.delete('/:videoId', auth, async (req, res) => {
   try {
     const video = await Video.findById(req.params.videoId);
-    if (!video) return res.status(404).json({ error: 'لم يتم العثور على الفيديو.' });
+    if (!video) {
+      return res.status(404).json({ error: 'لم يتم العثور على الفيديو.' });
+    }
 
-    if (video.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    // ✅ التحقق من الصلاحية: 3 حالات
+    let canDelete = false;
+    
+    // 1️⃣ صاحب الفيديو/الرد نفسه
+    if (video.user.toString() === req.user._id.toString()) {
+      canDelete = true;
+    }
+    
+    // 2️⃣ الأدمن يمكنه حذف أي شيء
+    if (req.user.role === 'admin') {
+      canDelete = true;
+    }
+    
+    // 3️⃣ إذا كان رد، صاحب الفيديو الأصلي يمكنه حذفه
+    if (video.isReply && video.parentVideo) {
+      const parentVideo = await Video.findById(video.parentVideo);
+      if (parentVideo && parentVideo.user.toString() === req.user._id.toString()) {
+        canDelete = true;
+        console.log('✅ صاحب الفيديو الأصلي يحذف رد على فيديوه');
+      }
+    }
+
+    if (!canDelete) {
       return res.status(403).json({ error: 'غير مصرح لك بتنفيذ هذا الإجراء.' });
     }
 
     const bucket = req.gfs;
 
+    // حذف جميع الردود إذا كان فيديو أساسي
     if (!video.isReply) {
       const replies = await Video.find({ parentVideo: video._id });
+      console.log(`🗑️ حذف ${replies.length} رد مرتبط بالفيديو الأساسي`);
       for (const reply of replies) {
-        if (reply.fileId) await bucket.delete(new mongoose.Types.ObjectId(reply.fileId));
+        if (reply.fileId) {
+          await bucket.delete(new mongoose.Types.ObjectId(reply.fileId));
+        }
         await reply.deleteOne();
       }
     }
 
-    if (video.fileId) await bucket.delete(new mongoose.Types.ObjectId(video.fileId));
+    // حذف ملف الفيديو من GridFS
+    if (video.fileId) {
+      await bucket.delete(new mongoose.Types.ObjectId(video.fileId));
+    }
     
+    // حذف الفيديو من قاعدة البيانات
     await video.deleteOne();
+    
+    console.log('✅ تم حذف الفيديو بنجاح');
     res.json({ message: 'تم حذف الفيديو بنجاح.' });
 
   } catch (error) {
-    console.error('Delete error:', error);
+    console.error('❌ Delete error:', error);
     res.status(500).json({ error: 'فشل في حذف الفيديو.' });
   }
 });
 
 
-// 5. إعجاب/إلغاء إعجاب
+// 6. إعجاب/إلغاء إعجاب
 router.post('/:id/like', auth, async (req, res) => {
   try {
     const video = await Video.findById(req.params.id);

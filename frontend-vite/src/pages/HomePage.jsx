@@ -475,12 +475,7 @@ const goToPrevReply = useCallback(() => {
       <button className="theme-toggle" onClick={toggleTheme}>
         {theme === 'dark' ? <FaSun /> : <FaMoon />}
       </button>
-
-      {/* Volume Control */}
-      <button className="volume-btn" onClick={toggleMute}>
-        {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-      </button>
-
+      
       <div className="content-wrapper">
         {/* Main Video Section - 50% */}
         <div className="main-video-section">

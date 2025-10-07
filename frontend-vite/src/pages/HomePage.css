@@ -1082,3 +1082,179 @@ button {
     height: 24px;
   }
 }
+/* زر حذف الرد */
+.delete-reply-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 59, 59, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  z-index: 10;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.delete-reply-btn:hover {
+  background: rgba(255, 59, 59, 1);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(255, 59, 59, 0.4);
+}
+
+.delete-reply-btn:active {
+  transform: scale(0.95);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: var(--surface-color, #fff);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  margin-bottom: 16px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--text-primary, #000);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.modal-body {
+  margin-bottom: 24px;
+}
+
+.modal-body p {
+  margin: 0;
+  color: var(--text-secondary, #666);
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.confirm-delete-btn {
+  background: linear-gradient(135deg, #ff3b3b 0%, #ff1744 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.confirm-delete-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 59, 59, 0.4);
+}
+
+.cancel-modal-btn {
+  background: var(--bg-secondary, #f0f0f0);
+  color: var(--text-primary, #000);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-modal-btn:hover {
+  background: var(--bg-tertiary, #e0e0e0);
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .modal-content {
+  background: #1e1e1e;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .modal-header h3 {
+  color: #fff;
+}
+
+[data-theme="dark"] .modal-body p {
+  color: #aaa;
+}
+
+[data-theme="dark"] .cancel-modal-btn {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+[data-theme="dark"] .cancel-modal-btn:hover {
+  background: #333;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .delete-reply-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+    top: 10px;
+    right: 10px;
+  }
+
+  .modal-content {
+    padding: 20px;
+    max-width: 90%;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .confirm-delete-btn,
+  .cancel-modal-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

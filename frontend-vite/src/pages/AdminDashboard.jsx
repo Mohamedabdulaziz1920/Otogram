@@ -24,8 +24,10 @@ const AdminDashboard = () => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [notification, setNotification] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [error, setError] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -43,73 +45,65 @@ const AdminDashboard = () => {
     }
   }, [user, navigate]);
 
-  // جلب المستخدمين - بدون AbortController
+  // جلب المستخدمين
   useEffect(() => {
     if (user && user.role === 'admin') {
       fetchUsers();
     }
   }, [user]);
 
-const fetchUsers = async () => {
-  try {
-    setLoading(true);
-    setError(null);
-    
-    console.log('Fetching users from API...');
-    
-    // استخدام الطريقة البسيطة التي كانت تعمل
-    const response = await api.get('/api/users');
-    
-    console.log('Users fetched successfully:', response.data);
-    
-    // ✅ التحقق من البنية الجديدة للبيانات
-    if (response.data && response.data.users && Array.isArray(response.data.users)) {
-      // البيانات تأتي في شكل { users: [...], pagination: {...} }
-      setUsers(response.data.users);
-      setFilteredUsers(response.data.users);
-      showNotification(`تم تحميل ${response.data.users.length} مستخدم بنجاح`, 'success');
-    } else if (response.data && Array.isArray(response.data)) {
-      // البيانات تأتي مباشرة كـ Array (الطريقة القديمة)
-      setUsers(response.data);
-      setFilteredUsers(response.data);
-      showNotification(`تم تحميل ${response.data.length} مستخدم بنجاح`, 'success');
-    } else {
-      throw new Error('البيانات المستلمة غير صحيحة');
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Fetching users from API...');
+      
+      const response = await api.get('/api/users');
+      
+      console.log('Users fetched successfully:', response.data);
+      
+      if (response.data && response.data.users && Array.isArray(response.data.users)) {
+        setUsers(response.data.users);
+        setFilteredUsers(response.data.users);
+        showNotification(`تم تحميل ${response.data.users.length} مستخدم بنجاح`, 'success');
+      } else if (response.data && Array.isArray(response.data)) {
+        setUsers(response.data);
+        setFilteredUsers(response.data);
+        showNotification(`تم تحميل ${response.data.length} مستخدم بنجاح`, 'success');
+      } else {
+        throw new Error('البيانات المستلمة غير صحيحة');
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      
+      let errorMessage = 'فشل في جلب المستخدمين';
+      
+      if (error.response) {
+        errorMessage = error.response.data?.message || `خطأ ${error.response.status}: ${error.response.statusText}`;
+        console.error('Server error:', error.response.data);
+      } else if (error.request) {
+        errorMessage = 'لا يمكن الاتصال بالخادم. تأكد من تشغيل الخادم.';
+        console.error('No response received:', error.request);
+      } else {
+        errorMessage = error.message || 'حدث خطأ غير متوقع';
+        console.error('Request error:', error.message);
+      }
+      
+      setError(errorMessage);
+      showNotification(errorMessage, 'error');
+      setUsers([]);
+      setFilteredUsers([]);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    
-    let errorMessage = 'فشل في جلب المستخدمين';
-    
-    if (error.response) {
-      // الخادم رد بخطأ
-      errorMessage = error.response.data?.message || `خطأ ${error.response.status}: ${error.response.statusText}`;
-      console.error('Server error:', error.response.data);
-    } else if (error.request) {
-      // لم يتم استلام رد من الخادم
-      errorMessage = 'لا يمكن الاتصال بالخادم. تأكد من تشغيل الخادم.';
-      console.error('No response received:', error.request);
-    } else {
-      // خطأ في إعداد الطلب
-      errorMessage = error.message || 'حدث خطأ غير متوقع';
-      console.error('Request error:', error.message);
-    }
-    
-    setError(errorMessage);
-    showNotification(errorMessage, 'error');
-    setUsers([]);
-    setFilteredUsers([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // البحث والفلترة
   useEffect(() => {
     try {
       let filtered = [...users];
 
-      // Filter by search term
       if (searchTerm) {
         filtered = filtered.filter(u => 
           u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,12 +111,10 @@ const fetchUsers = async () => {
         );
       }
 
-      // Filter by role
       if (filterRole !== 'all') {
         filtered = filtered.filter(u => u.role === filterRole);
       }
 
-      // Sort
       filtered.sort((a, b) => {
         let compareValue = 0;
         switch (sortBy) {
@@ -148,7 +140,7 @@ const fetchUsers = async () => {
 
   // تحديث صلاحيات المستخدم
   const updateUserRole = async (userId, newRole) => {
-    if (updating) return; // منع الطلبات المتعددة
+    if (updating) return;
     
     setUpdating(userId);
     try {
@@ -171,14 +163,16 @@ const fetchUsers = async () => {
     }
   };
 
-  // حذف مستخدم
+  // حذف مستخدم واحد
   const deleteUser = async () => {
-    if (!userToDelete) return;
+    if (!userToDelete || deleting) return;
     
+    setDeleting(true);
     try {
       console.log(`Deleting user: ${userToDelete._id}`);
       await api.delete(`/api/users/${userToDelete._id}`);
       setUsers(users.filter(u => u._id !== userToDelete._id));
+      setSelectedUsers(selectedUsers.filter(id => id !== userToDelete._id));
       showNotification('تم حذف المستخدم بنجاح', 'success');
       setShowDeleteModal(false);
       setUserToDelete(null);
@@ -188,12 +182,50 @@ const fetchUsers = async () => {
         error.response?.data?.message || 'فشل حذف المستخدم',
         'error'
       );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // ✅ حذف المستخدمين المحددين (Bulk Delete)
+  const handleBulkDelete = async () => {
+    if (selectedUsers.length === 0 || deleting) return;
+    
+    setDeleting(true);
+    try {
+      console.log(`Deleting ${selectedUsers.length} users:`, selectedUsers);
+      
+      // حذف كل مستخدم محدد
+      const deletePromises = selectedUsers.map(userId => 
+        api.delete(`/api/users/${userId}`)
+      );
+      
+      await Promise.all(deletePromises);
+      
+      // تحديث قائمة المستخدمين
+      setUsers(users.filter(u => !selectedUsers.includes(u._id)));
+      setSelectedUsers([]);
+      
+      showNotification(`تم حذف ${selectedUsers.length} مستخدم بنجاح`, 'success');
+      setShowBulkDeleteModal(false);
+    } catch (error) {
+      console.error('Error bulk deleting users:', error);
+      showNotification(
+        error.response?.data?.message || 'فشل حذف المستخدمين',
+        'error'
+      );
+    } finally {
+      setDeleting(false);
     }
   };
 
   const confirmDelete = (user) => {
     setUserToDelete(user);
     setShowDeleteModal(true);
+  };
+
+  const confirmBulkDelete = () => {
+    setShowBulkDeleteModal(true);
   };
 
   const showNotification = (message, type) => {
@@ -272,7 +304,7 @@ const fetchUsers = async () => {
     );
   }
 
-  // Error state with retry
+  // Error state
   if (error && users.length === 0) {
     return (
       <div className="error-container">
@@ -441,11 +473,17 @@ const fetchUsers = async () => {
             </div>
           </div>
 
+          {/* ✅ Bulk Actions - مُحدّث */}
           {selectedUsers.length > 0 && (
             <div className="bulk-actions">
               <span>{selectedUsers.length} مستخدم محدد</span>
-              <button className="bulk-btn">تغيير الصلاحيات</button>
-              <button className="bulk-btn danger">حذف المحدد</button>
+              <button 
+                className="bulk-btn danger"
+                onClick={confirmBulkDelete}
+                disabled={deleting}
+              >
+                <FaTrash /> حذف المحدد
+              </button>
             </div>
           )}
         </div>
@@ -485,6 +523,7 @@ const fetchUsers = async () => {
                           checked={selectedUsers.includes(u._id)}
                           onChange={() => handleSelectUser(u._id)}
                           className="checkbox"
+                          disabled={u._id === user._id}
                         />
                       </td>
                       <td>
@@ -582,7 +621,7 @@ const fetchUsers = async () => {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Single User Modal */}
       {showDeleteModal && (
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -594,10 +633,63 @@ const fetchUsers = async () => {
               <p className="warning">هذا الإجراء لا يمكن التراجع عنه!</p>
             </div>
             <div className="modal-actions">
-              <button className="confirm-delete-btn" onClick={deleteUser}>
-                <FaTrash /> حذف نهائياً
+              <button 
+                className="confirm-delete-btn" 
+                onClick={deleteUser}
+                disabled={deleting}
+              >
+                <FaTrash /> {deleting ? 'جاري الحذف...' : 'حذف نهائياً'}
               </button>
-              <button className="cancel-modal-btn" onClick={() => setShowDeleteModal(false)}>
+              <button 
+                className="cancel-modal-btn" 
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Bulk Delete Modal */}
+      {showBulkDeleteModal && (
+        <div className="modal-overlay" onClick={() => setShowBulkDeleteModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>تأكيد الحذف الجماعي</h3>
+            </div>
+            <div className="modal-body">
+              <p>هل أنت متأكد من حذف <strong>{selectedUsers.length}</strong> مستخدم؟</p>
+              <p className="warning">
+                <FaExclamationTriangle /> هذا الإجراء لا يمكن التراجع عنه!
+              </p>
+              <div className="users-to-delete">
+                <p>المستخدمين المحددين للحذف:</p>
+                <ul>
+                  {selectedUsers.slice(0, 5).map(userId => {
+                    const u = users.find(user => user._id === userId);
+                    return u ? <li key={userId}>@{u.username}</li> : null;
+                  })}
+                  {selectedUsers.length > 5 && (
+                    <li>...و {selectedUsers.length - 5} آخرين</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button 
+                className="confirm-delete-btn" 
+                onClick={handleBulkDelete}
+                disabled={deleting}
+              >
+                <FaTrash /> {deleting ? 'جاري الحذف...' : `حذف ${selectedUsers.length} مستخدم`}
+              </button>
+              <button 
+                className="cancel-modal-btn" 
+                onClick={() => setShowBulkDeleteModal(false)}
+                disabled={deleting}
+              >
                 إلغاء
               </button>
             </div>

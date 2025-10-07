@@ -695,20 +695,7 @@ const HomePage = () => {
               <div className="reply-actions">
                 {/* 🗑️ زر الحذف - يظهر لصاحب الرد أو صاحب الفيديو */}
                 {canDeleteReply(currentVideo.replies[activeReplyIndex], currentVideo) && (
-                  <button
-                    className="delete-reply-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      confirmDeleteReply(
-                        currentVideo.replies[activeReplyIndex]._id,
-                        currentVideo._id
-                      );
-                    }}
-                    title="حذف الرد"
-                  >
-                    <FaTrash />
-                  </button>
-                )}
+ 
 
                 <div 
                   className="action-btn-unified reply-profile-btn"

@@ -151,14 +151,12 @@ const handleUsernameUpdate = async () => {
 
     const updatedUsername = response.data.username || response.data.user?.username;
 
-    if (updatedUsername) {
+   if (updatedUsername) {
       setProfileUser(prev => ({ ...prev, username: updatedUsername }));
-      updateUser({ username: updatedUsername });
-      setEditingUsername(false);
+      updateUser({ username: updatedUsername }); // ✅ يعمل الآن!
       navigate(`/profile/${updatedUsername}`, { replace: true });
-      
+      showNotification('تم تحديث اسم المستخدم بنجاح ✓', 'success');
     }
-showNotification('تم تحديث اسم المستخدم بنجاح ✓', 'success');
   } catch (error) {
     console.error('❌ Error:', error);
     showNotification(

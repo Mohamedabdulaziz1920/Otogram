@@ -4,12 +4,13 @@ import {
   FaVolumeUp, FaVolumeMute, FaMoon, FaSun
 } from 'react-icons/fa';
 import NavigationBar from '../components/NavigationBar';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate , useLocation } from 'react-router-dom';
 import { useAuth, api } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import './HomePage.css';
 
 const HomePage = () => {
+  const location = useLocation();
   const [videos, setVideos] = useState([]);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [activeReplyIndex, setActiveReplyIndex] = useState(0);
@@ -39,66 +40,83 @@ const HomePage = () => {
     return `${baseUrl}${url}`;
   };
 
-  const fetchVideos = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.get('/api/videos');
+const fetchVideos = useCallback(async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    const response = await api.get('/api/videos');
 
-      if (response.data && Array.isArray(response.data)) {
-        setVideos(response.data);
+    if (response.data && Array.isArray(response.data)) {
+      setVideos(response.data);
 
-        if (user) {
-          const userLikedVideos = new Set();
-          const userLikedReplies = new Set();
-          
-          response.data.forEach(video => {
-            if (video.likes?.includes(user._id || user.id)) {
-              userLikedVideos.add(video._id);
+      if (user) {
+        const userLikedVideos = new Set();
+        const userLikedReplies = new Set();
+        
+        response.data.forEach(video => {
+          if (video.likes?.includes(user._id || user.id)) {
+            userLikedVideos.add(video._id);
+          }
+          video.replies?.forEach(reply => {
+            if (reply.likes?.includes(user._id || user.id)) {
+              userLikedReplies.add(reply._id);
             }
-            video.replies?.forEach(reply => {
-              if (reply.likes?.includes(user._id || user.id)) {
-                userLikedReplies.add(reply._id);
-              }
-            });
           });
-          
-          setLikedVideos(userLikedVideos);
-          setLikedReplies(userLikedReplies);
-        }
+        });
+        
+        setLikedVideos(userLikedVideos);
+        setLikedReplies(userLikedReplies);
       }
-    } catch (error) {
-      console.error('Error fetching videos:', error);
-      setError(error.message || 'فشل في تحميل الفيديوهات');
-    } finally {
-      setLoading(false);
     }
-  }, [user]);
+  } catch (error) {
+    console.error('Error fetching videos:', error);
+    setError(error.message || 'فشل في تحميل الفيديوهات');
+  } finally {
+    setLoading(false);
+  }
+}, [user]);
 
-  // ✅ useEffect منفصل لجلب الفيديوهات
-  useEffect(() => {
-    fetchVideos();
-  }, [fetchVideos]);
+// 1️⃣ جلب الفيديوهات
+useEffect(() => {
+  fetchVideos();
+}, [fetchVideos]);
 
-  // Helper functions - يجب تعريفها قبل الـ useEffect
-  const goToNextReply = useCallback(() => {
-    setActiveReplyIndex(prev => {
-      const currentVideo = videos[activeVideoIndex];
-      if (currentVideo?.replies && prev < currentVideo.replies.length - 1) {
-        return prev + 1;
-      }
-      return prev;
-    });
-  }, [videos, activeVideoIndex]);
+// 2️⃣ التوجيه التلقائي للفيديو
+useEffect(() => {
+  if (location.state?.scrollToVideoId && videos.length > 0) {
+    const videoIndex = videos.findIndex(v => v._id === location.state.scrollToVideoId);
+    
+    if (videoIndex !== -1) {
+      console.log('🎯 Found video at index:', videoIndex);
+      setActiveVideoIndex(videoIndex);
+      setActiveReplyIndex(0);
+      
+      window.history.replaceState({}, document.title);
+    } else {
+      console.log('⚠️ Video not found in current list');
+    }
+  }
+}, [location.state, videos]);
 
-  const goToPrevReply = useCallback(() => {
-    setActiveReplyIndex(prev => {
-      if (prev > 0) {
-        return prev - 1;
-      }
-      return prev;
-    });
-  }, []);
+// Helper functions
+const goToNextReply = useCallback(() => {
+  setActiveReplyIndex(prev => {
+    const currentVideo = videos[activeVideoIndex];
+    if (currentVideo?.replies && prev < currentVideo.replies.length - 1) {
+      return prev + 1;
+    }
+    return prev;
+  });
+}, [videos, activeVideoIndex]);
+
+const goToPrevReply = useCallback(() => {
+  setActiveReplyIndex(prev => {
+    if (prev > 0) {
+      return prev - 1;
+    }
+    return prev;
+  });
+}, []);
 
   // 🎮 التحكم في تشغيل الفيديو الرئيسي
   const toggleMainVideo = () => {

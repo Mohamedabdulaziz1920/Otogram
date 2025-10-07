@@ -521,7 +521,7 @@ const goToPrevReply = useCallback(() => {
 
           <div className="video-info">
             <div className="user-info" onClick={() => navigateToProfile(currentVideo.user.username)}>
-              <span className="username">@{currentVideo.user.username}</span>
+              <span className="username">{currentVideo.user.username}</span>
             </div>
             <p className="video-description">{currentVideo.description}</p>
           </div>
@@ -616,7 +616,7 @@ const goToPrevReply = useCallback(() => {
                   className="reply-user"
                   onClick={() => navigateToProfile(currentVideo.replies[activeReplyIndex].user.username)}
                 >
-                  <span>@{currentVideo.replies[activeReplyIndex].user.username}</span>
+                  <span>{currentVideo.replies[activeReplyIndex].user.username}</span>
                 </div>
                 <p className="reply-description">{currentVideo.replies[activeReplyIndex].description}</p>
               </div>

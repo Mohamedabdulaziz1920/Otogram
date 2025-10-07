@@ -12,11 +12,6 @@
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Otogram - شارك لحظاتك مع العالم" />
     
-    <!-- ❌ احذف هذه الأسطر تماماً -->
-    <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet"> -->
-    
     <!-- منع وميض الشاشة عند تحميل الثيم -->
     <script>
       (function() {
@@ -53,44 +48,7 @@
     
     <!-- شاشة التحميل بأيقونة العيون -->
     <style>
-      /* ✅ تعريف خطوط Cairo محلياً مع fallback */
-      @font-face {
-        font-family: 'Cairo';
-        font-style: normal;
-        font-weight: 400;
-        font-display: swap;
-        src: local('Cairo'), local('Cairo-Regular'),
-             url('https://fonts.gstatic.com/s/cairo/v31/SLXVc1nY6HkvangtZmpQdkhzfH5lkSscRiyS8p4_RA.woff2') format('woff2');
-      }
-      
-      @font-face {
-        font-family: 'Cairo';
-        font-style: normal;
-        font-weight: 600;
-        font-display: swap;
-        src: local('Cairo SemiBold'), local('Cairo-SemiBold'),
-             url('https://fonts.gstatic.com/s/cairo/v31/SLXVc1nY6HkvangtZmpQdkhzfH5lkSscQyyS8p4_RHH1.woff2') format('woff2');
-      }
-      
-      @font-face {
-        font-family: 'Cairo';
-        font-style: normal;
-        font-weight: 700;
-        font-display: swap;
-        src: local('Cairo Bold'), local('Cairo-Bold'),
-             url('https://fonts.gstatic.com/s/cairo/v31/SLXVc1nY6HkvangtZmpQdkhzfH5lkSsc4SyS8p4_RHH1.woff2') format('woff2');
-      }
-      
-      @font-face {
-        font-family: 'Cairo';
-        font-style: normal;
-        font-weight: 800;
-        font-display: swap;
-        src: local('Cairo ExtraBold'), local('Cairo-ExtraBold'),
-             url('https://fonts.gstatic.com/s/cairo/v31/SLXVc1nY6HkvangtZmpQdkhzfH5lkSscKi2S8p4_RHH1.woff2') format('woff2');
-      }
-      
-      /* منع وميض المحتوى */
+      /* ✅ منع وميض المحتوى - خط احتياطي فقط */
       html {
         background-color: #000000;
       }
@@ -103,8 +61,8 @@
         margin: 0;
         padding: 0;
         overflow-x: hidden;
-        /* ✅ إضافة خطوط احتياطية قوية */
-        font-family: 'Cairo', 'Segoe UI', Tahoma, 'Arial Unicode MS', -apple-system, BlinkMacSystemFont, sans-serif;
+        /* ✅ خطوط احتياطية بسيطة - سيتم استبدالها بـ Cairo من main.jsx */
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Arial, sans-serif;
       }
       
       /* شاشة التحميل */
@@ -277,7 +235,6 @@
       
       /* النص */
       .loader-text {
-        font-family: 'Cairo', 'Segoe UI', sans-serif;
         font-size: 28px;
         font-weight: 800;
         background: linear-gradient(135deg, #E5D4B8 0%, #C8A882 50%, #A8845F 100%);

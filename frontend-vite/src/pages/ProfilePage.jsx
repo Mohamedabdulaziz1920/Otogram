@@ -156,9 +156,9 @@ const handleUsernameUpdate = async () => {
       updateUser({ username: updatedUsername });
       setEditingUsername(false);
       navigate(`/profile/${updatedUsername}`, { replace: true });
-      showNotification('تم تحديث اسم المستخدم بنجاح ✓', 'success');
+      
     }
-
+showNotification('تم تحديث اسم المستخدم بنجاح ✓', 'success');
   } catch (error) {
     console.error('❌ Error:', error);
     showNotification(

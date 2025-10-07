@@ -405,7 +405,7 @@ const handleUsernameUpdate = async () => {
                   )}
 <div 
   className="video-thumbnail" 
-  onClick={() => navigate(`/video/${item._id}`)}
+  onClick={() => navigate('/', { state: { scrollToVideoId: item._id } })}
 >
                     <video 
                       src={getAssetUrl(item.videoUrl)} 

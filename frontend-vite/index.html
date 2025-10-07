@@ -12,10 +12,11 @@
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Otogram - شارك لحظاتك مع العالم" />
     
- <!-- ✅ تحميل الخط بشكل صحيح -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- ❌ احذف هذه الأسطر تماماً -->
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet"> -->
+    
     <!-- منع وميض الشاشة عند تحميل الثيم -->
     <script>
       (function() {
@@ -33,13 +34,11 @@
             body.style.backgroundColor = savedTheme === 'dark' ? '#000000' : '#ffffff';
           }
           
-          // تحديث meta theme-color
           const metaThemeColor = document.querySelector('meta[name="theme-color"]');
           if (metaThemeColor) {
             metaThemeColor.setAttribute('content', savedTheme === 'dark' ? '#000000' : '#ffffff');
           }
           
-          // تحديث manifest
           const manifestLink = document.querySelector('link[rel="manifest"]');
           if (manifestLink) {
             const manifestUrl = savedTheme === 'dark' ? '/site.webmanifest' : '/site-light.webmanifest';
@@ -54,6 +53,43 @@
     
     <!-- شاشة التحميل بأيقونة العيون -->
     <style>
+      /* ✅ تعريف خطوط Cairo محلياً مع fallback */
+      @font-face {
+        font-family: 'Cairo';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: local('Cairo'), local('Cairo-Regular'),
+             url('https://fonts.gstatic.com/s/cairo/v31/SLXVc1nY6HkvangtZmpQdkhzfH5lkSscRiyS8p4_RA.woff2') format('woff2');
+      }
+      
+      @font-face {
+        font-family: 'Cairo';
+        font-style: normal;
+        font-weight: 600;
+        font-display: swap;
+        src: local('Cairo SemiBold'), local('Cairo-SemiBold'),
+             url('https://fonts.gstatic.com/s/cairo/v31/SLXVc1nY6HkvangtZmpQdkhzfH5lkSscQyyS8p4_RHH1.woff2') format('woff2');
+      }
+      
+      @font-face {
+        font-family: 'Cairo';
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+        src: local('Cairo Bold'), local('Cairo-Bold'),
+             url('https://fonts.gstatic.com/s/cairo/v31/SLXVc1nY6HkvangtZmpQdkhzfH5lkSsc4SyS8p4_RHH1.woff2') format('woff2');
+      }
+      
+      @font-face {
+        font-family: 'Cairo';
+        font-style: normal;
+        font-weight: 800;
+        font-display: swap;
+        src: local('Cairo ExtraBold'), local('Cairo-ExtraBold'),
+             url('https://fonts.gstatic.com/s/cairo/v31/SLXVc1nY6HkvangtZmpQdkhzfH5lkSscKi2S8p4_RHH1.woff2') format('woff2');
+      }
+      
       /* منع وميض المحتوى */
       html {
         background-color: #000000;
@@ -67,7 +103,8 @@
         margin: 0;
         padding: 0;
         overflow-x: hidden;
-        font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+        /* ✅ إضافة خطوط احتياطية قوية */
+        font-family: 'Cairo', 'Segoe UI', Tahoma, 'Arial Unicode MS', -apple-system, BlinkMacSystemFont, sans-serif;
       }
       
       /* شاشة التحميل */
@@ -240,7 +277,7 @@
       
       /* النص */
       .loader-text {
-        font-family: 'Cairo', sans-serif;
+        font-family: 'Cairo', 'Segoe UI', sans-serif;
         font-size: 28px;
         font-weight: 800;
         background: linear-gradient(135deg, #E5D4B8 0%, #C8A882 50%, #A8845F 100%);
@@ -366,12 +403,11 @@
       (function() {
         const loader = document.getElementById('otogram-loader');
         const startTime = Date.now();
-        const minDisplayTime = 5000; // 5 ثوانٍ
+        const minDisplayTime = 5000;
         
         let reactReady = false;
         let timeElapsed = false;
         
-        // مراقبة تحميل React
         const checkRoot = setInterval(function() {
           const root = document.getElementById('root');
           if (root && root.children.length > 0) {
@@ -381,30 +417,25 @@
           }
         }, 100);
         
-        // انتظار 5 ثوانٍ على الأقل
         setTimeout(function() {
           timeElapsed = true;
           tryHideLoader();
         }, minDisplayTime);
         
-        // دالة إخفاء الشاشة
         function tryHideLoader() {
-          // إخفاء فقط عند استيفاء الشرطين: React جاهز + مرور 5 ثوانٍ
           if (reactReady && timeElapsed) {
             if (loader) {
               loader.classList.add('hide');
-              // إزالة العنصر من DOM بعد انتهاء الانتقال
               setTimeout(function() {
                 if (loader.parentNode) {
                   loader.parentNode.removeChild(loader);
                 }
-              }, 800); // يتطابق مع مدة transition في CSS
+              }, 800);
             }
             clearInterval(checkRoot);
           }
         }
         
-        // حد أقصى 15 ثانية (احتياطي)
         setTimeout(function() {
           if (loader && loader.parentNode) {
             loader.classList.add('hide');
@@ -419,5 +450,4 @@
       })();
     </script>
   </body>
-
 </html>

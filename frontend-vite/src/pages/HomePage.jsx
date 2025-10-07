@@ -628,58 +628,58 @@ const HomePage = () => {
         <div className="replies-section">
           {currentVideo?.replies?.length > 0 ? (
             <div className="reply-video-container">
-<div className="reply-video-wrapper" onClick={toggleReplyVideo}>
-  <video
-    ref={replyVideoRef}
-    key={currentVideo.replies[activeReplyIndex]._id}
-    src={getAssetUrl(currentVideo.replies[activeReplyIndex].videoUrl)}
-    className="reply-video"
-    loop
-    muted={isMuted}
-    playsInline
-  />
+              <div className="reply-video-wrapper" onClick={toggleReplyVideo}>
+                <video
+                  ref={replyVideoRef}
+                  key={currentVideo.replies[activeReplyIndex]._id}
+                  src={getAssetUrl(currentVideo.replies[activeReplyIndex].videoUrl)}
+                  className="reply-video"
+                  loop
+                  muted={isMuted}
+                  playsInline
+                />
 
-  {/* 🗑️ زر الحذف - يظهر لصاحب الرد أو صاحب الفيديو */}
-  {canDeleteReply(currentVideo.replies[activeReplyIndex], currentVideo) && (
-    <button
-      className="delete-reply-btn"
-      onClick={(e) => {
-        e.stopPropagation();
-        confirmDeleteReply(
-          currentVideo.replies[activeReplyIndex]._id,
-          currentVideo._id
-        );
-      }}
-      title="حذف الرد"
-    >
-      <FaTrash />
-    </button>
-  )}
+                {/* 🗑️ زر الحذف - يظهر لصاحب الرد أو صاحب الفيديو */}
+                {canDeleteReply(currentVideo.replies[activeReplyIndex], currentVideo) && (
+                  <button
+                    className="delete-reply-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      confirmDeleteReply(
+                        currentVideo.replies[activeReplyIndex]._id,
+                        currentVideo._id
+                      );
+                    }}
+                    title="حذف الرد"
+                  >
+                    <FaTrash />
+                  </button>
+                )}
 
-  {/* Play/Pause Overlay للرد */}
-  {!isReplyPlaying && (
-    <div className="play-overlay">
-      <div className="play-button">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M8 5v14l11-7z"/>
-        </svg>
-      </div>
-    </div>
-  )}
+                {/* Play/Pause Overlay للرد */}
+                {!isReplyPlaying && (
+                  <div className="play-overlay">
+                    <div className="play-button">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                  </div>
+                )}
 
-  {/* Pause Indicator للرد */}
-  {isReplyPlaying && showReplyPauseIcon && (
-    <div className="pause-indicator">
-      <div className="pause-icon">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-        </svg>
-      </div>
-    </div>
-  )}
+                {/* Pause Indicator للرد */}
+                {isReplyPlaying && showReplyPauseIcon && (
+                  <div className="pause-indicator">
+                    <div className="pause-icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                      </svg>
+                    </div>
+                  </div>
+                )}
 
-  <div className="reply-gradient"></div>
-</div>
+                <div className="reply-gradient"></div>
+              </div>
 
               <div className="reply-info">
                 <div 
@@ -693,10 +693,6 @@ const HomePage = () => {
 
               {/* Reply Actions */}
               <div className="reply-actions">
-                {/* 🗑️ زر الحذف - يظهر لصاحب الرد أو صاحب الفيديو */}
-                {canDeleteReply(currentVideo.replies[activeReplyIndex], currentVideo) && (
- 
-
                 <div 
                   className="action-btn-unified reply-profile-btn"
                   onClick={() => navigateToProfile(currentVideo.replies[activeReplyIndex].user.username)}

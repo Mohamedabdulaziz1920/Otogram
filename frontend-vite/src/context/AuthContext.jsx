@@ -1,3 +1,4 @@
+// frontend-vite/src/context/AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
@@ -11,7 +12,7 @@ const api = axios.create({
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // true حتى يتم التحقق من الجلسة
+  const [loading, setLoading] = useState(true);
 
   // تسجيل الدخول
   const login = (token, userData) => {
@@ -27,6 +28,39 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // ✅ إضافة دالة updateUser
+  const updateUser = (updates) => {
+    console.log('🔄 Updating user in context:', updates);
+    setUser(prevUser => {
+      if (!prevUser) {
+        console.warn('⚠️ No user to update');
+        return prevUser;
+      }
+      const updatedUser = { ...prevUser, ...updates };
+      console.log('✅ User updated in context:', updatedUser);
+      return updatedUser;
+    });
+  };
+
+  // ✅ إضافة دالة refetchUser لإعادة جلب بيانات المستخدم
+  const refetchUser = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      const response = await api.get('/api/auth/me');
+      if (response.data && response.data.user) {
+        setUser(response.data.user);
+        console.log('✅ User refetched:', response.data.user);
+        return response.data.user;
+      }
+    } catch (error) {
+      console.error('❌ Error refetching user:', error);
+      logout();
+    }
+  };
+
   // التحقق من الجلسة عند تحميل التطبيق
   useEffect(() => {
     const verifyUserSession = async () => {
@@ -38,11 +72,12 @@ export const AuthProvider = ({ children }) => {
           const response = await api.get('/api/auth/me');
           if (response.data && response.data.user) {
             setUser(response.data.user);
+            console.log('✅ Session verified:', response.data.user);
           } else {
             logout();
           }
         } catch (error) {
-          console.error('Session token invalid or expired. Logging out.');
+          console.error('❌ Session invalid, logging out');
           logout();
         }
       } else {
@@ -55,7 +90,17 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        loading, 
+        login, 
+        logout, 
+        updateUser,      // ✅ تصدير updateUser
+        refetchUser,     // ✅ تصدير refetchUser
+        isAuthenticated: !!user 
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

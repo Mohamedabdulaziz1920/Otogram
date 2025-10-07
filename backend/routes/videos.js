@@ -24,26 +24,22 @@ const upload = multer({
   }
 });
 
-// ==================== المسارات (بالترتيب الصحيح) ====================
 
-// 1️⃣ رفع فيديو أساسي
+// --- المسارات ---
+
+// 1. رفع فيديو أساسي
 router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('video'), (req, res) => {
+  // ... (هذا الكود يعمل بشكل سليم، لا تغيير هنا) ...
   try {
-    if (!req.file) { 
-      return res.status(400).json({ error: 'لم يتم استلام أي ملف فيديو.' }); 
-    }
-    
+    if (!req.file) { return res.status(400).json({ error: 'لم يتم استلام أي ملف فيديو.' }); }
     const bucket = req.gfs;
     const filename = `${Date.now()}-vid-${req.file.originalname.replace(/\s/g, '_')}`;
     const uploadStream = bucket.openUploadStream(filename, { contentType: req.file.mimetype });
-    
     streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
-    
     uploadStream.on('error', (error) => {
       console.error('!!! GridFS Stream Error:', error);
       return res.status(500).json({ error: 'فشل أثناء بث الملف إلى قاعدة البيانات.' });
     });
-    
     uploadStream.on('finish', async () => {
       try {
         const { description } = req.body;
@@ -55,14 +51,12 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
           isReply: false,
         });
         await video.save();
-        
         const videoResponse = video.toObject();
         videoResponse.user = {
           _id: req.user._id,
           username: req.user.username,
           profileImage: req.user.profileImage
         };
-        
         res.status(201).json({ message: 'تم رفع الفيديو بنجاح', video: videoResponse });
       } catch (saveError) {
         console.error('!!! Error saving video metadata:', saveError);
@@ -76,27 +70,16 @@ router.post('/upload', auth, checkRole(['creator', 'admin']), upload.single('vid
   }
 });
 
-// 2️⃣ رفع فيديو كرد
-router.post('/reply/:videoId', auth, checkRole(['user', 'creator', 'admin']), upload.single('video'), async (req, res) => {
-  console.log('📥 Reply upload request received for video:', req.params.videoId);
-  
+
+// ✨✨✨ 2. رفع فيديو كرد (المسار الجديد) ✨✨✨
+// لاحظ أننا نسمح لجميع المستخدمين المسجلين بالرد
+router.post('/reply/:videoId', auth, checkRole(['user', 'creator', 'admin']), upload.single('video'), (req, res) => {
   try {
     if (!req.file) {
-      console.log('❌ No file received');
       return res.status(400).json({ error: 'لم يتم استلام أي ملف فيديو للرد.' });
     }
 
     const parentVideoId = req.params.videoId;
-    
-    // ✨ التحقق من وجود الفيديو الأصلي أولاً
-    const parentVideo = await Video.findById(parentVideoId);
-    if (!parentVideo) {
-      console.log('❌ Parent video not found:', parentVideoId);
-      return res.status(404).json({ error: 'الفيديو الأصلي غير موجود.' });
-    }
-    
-    console.log('✅ Parent video exists, proceeding with upload...');
-
     const bucket = req.gfs;
     const filename = `${Date.now()}-reply-${req.file.originalname.replace(/\s/g, '_')}`;
     const uploadStream = bucket.openUploadStream(filename, { contentType: req.file.mimetype });
@@ -110,29 +93,24 @@ router.post('/reply/:videoId', auth, checkRole(['user', 'creator', 'admin']), up
 
     uploadStream.on('finish', async () => {
       try {
-        console.log('✅ File uploaded to GridFS, creating reply document...');
-        
+        // الخطوة 1: إنشاء وحفظ الرد كفيديو جديد
         const replyVideo = new Video({
           user: req.user._id,
           fileId: uploadStream.id,
           videoUrl: `/api/videos/stream/${uploadStream.id}`,
           description: req.body.description || '',
-          isReply: true,
-          parentVideo: parentVideoId,
+          isReply: true, // <-- مهم جدًا: تحديد أن هذا الفيديو هو رد
+          parentVideo: parentVideoId, // <-- مهم جدًا: ربطه بالفيديو الأصلي
         });
-        
-        // ✅ الـ middleware سيقوم تلقائيًا بإضافة الرد للفيديو الأصلي
         await replyVideo.save();
-        console.log('✅ Reply video saved:', replyVideo._id);
 
+        // إرسال الرد الناجح
         const replyResponse = replyVideo.toObject();
         replyResponse.user = {
             _id: req.user._id,
             username: req.user.username,
             profileImage: req.user.profileImage
         };
-        
-        console.log('✅ Reply upload complete, sending response');
         res.status(201).json({ message: 'تم إضافة الرد بنجاح', video: replyResponse });
 
       } catch (saveError) {
@@ -148,48 +126,25 @@ router.post('/reply/:videoId', auth, checkRole(['user', 'creator', 'admin']), up
   }
 });
 
-// 3️⃣ جلب جميع الفيديوهات الرئيسية
+// جلب جميع الفيديوهات الرئيسية
 router.get('/', async (req, res) => {
   try {
-    console.log('📥 Fetching main videos...');
-    
     const videos = await Video.find({ isReply: false })
       .populate('user', 'username profileImage')
       .populate({
         path: 'replies',
-        match: { isReply: true },
-        populate: { path: 'user', select: 'username profileImage' },
-        options: { sort: { createdAt: 1 } }
+        populate: { path: 'user', select: 'username profileImage' }
       })
       .sort({ createdAt: -1 });
-    
-    const validVideos = videos
-      .filter(video => video.user)
-      .map(video => {
-        const uniqueReplies = video.replies
-          ? Array.from(new Map(
-              video.replies
-                .filter(reply => reply && reply.user)
-                .map(reply => [reply._id.toString(), reply])
-            ).values())
-          : [];
-        
-        return {
-          ...video.toObject(),
-          replies: uniqueReplies
-        };
-      });
-    
-    console.log(`✅ Fetched ${validVideos.length} videos`);
+    const validVideos = videos.filter(video => video.user);
     res.json(validVideos);
-    
   } catch (error) {
-    console.error('❌ Fetch videos error:', error);
+    console.error('Fetch videos error:', error);
     res.status(500).json({ error: 'فشل في جلب الفيديوهات.' });
   }
 });
 
-// 4️⃣ بث الفيديو
+// بث الفيديو
 router.get('/stream/:fileId', async (req, res) => {
   try {
     const bucket = req.gfs;
@@ -199,30 +154,25 @@ router.get('/stream/:fileId', async (req, res) => {
     if (!files || files.length === 0) {
       return res.status(404).json({ error: 'لم يتم العثور على الفيديو.' });
     }
-    
     const file = files[0];
     const range = req.headers.range;
-    
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : file.length - 1;
       const chunksize = (end - start) + 1;
-      
       res.writeHead(206, {
         'Content-Range': `bytes ${start}-${end}/${file.length}`,
         'Accept-Ranges': 'bytes',
         'Content-Length': chunksize,
         'Content-Type': file.contentType || 'video/mp4',
       });
-      
       bucket.openDownloadStream(fileId, { start, end: end + 1 }).pipe(res);
     } else {
       res.writeHead(200, {
         'Content-Length': file.length,
         'Content-Type': file.contentType || 'video/mp4',
       });
-      
       bucket.openDownloadStream(fileId).pipe(res);
     }
   } catch (error) {
@@ -231,7 +181,40 @@ router.get('/stream/:fileId', async (req, res) => {
   }
 });
 
-// 5️⃣ إعجاب/إلغاء إعجاب (قبل /:videoId)
+
+// 4. حذف فيديو
+router.delete('/:videoId', auth, async (req, res) => {
+  try {
+    const video = await Video.findById(req.params.videoId);
+    if (!video) return res.status(404).json({ error: 'لم يتم العثور على الفيديو.' });
+
+    if (video.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'غير مصرح لك بتنفيذ هذا الإجراء.' });
+    }
+
+    const bucket = req.gfs;
+
+    if (!video.isReply) {
+      const replies = await Video.find({ parentVideo: video._id });
+      for (const reply of replies) {
+        if (reply.fileId) await bucket.delete(new mongoose.Types.ObjectId(reply.fileId));
+        await reply.deleteOne();
+      }
+    }
+
+    if (video.fileId) await bucket.delete(new mongoose.Types.ObjectId(video.fileId));
+    
+    await video.deleteOne();
+    res.json({ message: 'تم حذف الفيديو بنجاح.' });
+
+  } catch (error) {
+    console.error('Delete error:', error);
+    res.status(500).json({ error: 'فشل في حذف الفيديو.' });
+  }
+});
+
+
+// 5. إعجاب/إلغاء إعجاب
 router.post('/:id/like', auth, async (req, res) => {
   try {
     const video = await Video.findById(req.params.id);
@@ -257,74 +240,6 @@ router.post('/:id/like', auth, async (req, res) => {
   } catch (error) {
     console.error('Like error:', error);
     res.status(500).json({ message: 'خطأ في معالجة الإعجاب.' });
-  }
-});
-
-// 6️⃣ حذف فيديو (قبل /:videoId)
-router.delete('/:videoId', auth, async (req, res) => {
-  try {
-    const video = await Video.findById(req.params.videoId);
-    if (!video) {
-      return res.status(404).json({ error: 'لم يتم العثور على الفيديو.' });
-    }
-
-    if (video.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'غير مصرح لك بتنفيذ هذا الإجراء.' });
-    }
-
-    const bucket = req.gfs;
-
-    // حذف الردود إذا كان فيديو رئيسي
-    if (!video.isReply) {
-      const replies = await Video.find({ parentVideo: video._id });
-      for (const reply of replies) {
-        if (reply.fileId) {
-          await bucket.delete(new mongoose.Types.ObjectId(reply.fileId));
-        }
-        await reply.deleteOne();
-      }
-    }
-
-    // حذف الفيديو نفسه
-    if (video.fileId) {
-      await bucket.delete(new mongoose.Types.ObjectId(video.fileId));
-    }
-    
-    await video.deleteOne();
-    
-    res.json({ message: 'تم حذف الفيديو بنجاح.' });
-
-  } catch (error) {
-    console.error('Delete error:', error);
-    res.status(500).json({ error: 'فشل في حذف الفيديو.' });
-  }
-});
-
-// 7️⃣ جلب فيديو واحد مع الردود (في النهاية!) ✨
-router.get('/:videoId', async (req, res) => {
-  try {
-    console.log('📥 Fetching single video:', req.params.videoId);
-    
-    const video = await Video.findById(req.params.videoId)
-      .populate('user', 'username profileImage')
-      .populate({
-        path: 'replies',
-        match: { isReply: true },
-        populate: { path: 'user', select: 'username profileImage' },
-        options: { sort: { createdAt: 1 } }
-      });
-
-    if (!video) {
-      console.log('❌ Video not found');
-      return res.status(404).json({ error: 'الفيديو غير موجود' });
-    }
-
-    console.log('✅ Video found:', video._id);
-    res.json(video);
-    
-  } catch (error) {
-    console.error('❌ Error fetching video:', error);
-    res.status(500).json({ error: 'فشل في جلب الفيديو' });
   }
 });
 
